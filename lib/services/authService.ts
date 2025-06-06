@@ -10,7 +10,7 @@ export interface AuthResponse {
 export class AuthService {
   static async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('api/auth/login', { email, password });
+      const response = await api.post<AuthResponse>('auth/login', { email, password });
       const { token, employee } = response.data;
       
       // Guardar token en localStorage y cookies

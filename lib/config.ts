@@ -1,5 +1,5 @@
 // URL base de la API
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.bayreshub.com'; //https://api.bayreshub.com
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.bayreshub.com/api'; //https://api.bayreshub.com
 export const API_ENDPOINT = `${API_URL}/api`;
 
 // URL base para el cliente (frontend)

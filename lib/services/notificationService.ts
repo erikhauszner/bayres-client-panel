@@ -21,8 +21,8 @@ class NotificationService {
   
   async getNotifications(limit: number = 10, offset: number = 0, showToast: boolean = false): Promise<AppNotification[]> {
     try {
-      console.log(`🔄 API Request: GET api/notifications?limit=${limit}&offset=${offset}`);
-      const response = await api.get<any>(`api/notifications?limit=${limit}&offset=${offset}`);
+      console.log(`🔄 API Request: GET notifications?limit=${limit}&offset=${offset}`);
+      const response = await api.get<any>(`notifications?limit=${limit}&offset=${offset}`);
       
       // Asegurar que siempre se devuelva un array
       let notifications: AppNotification[] = [];
