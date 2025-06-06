@@ -70,6 +70,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+// Contexto para useSearchParams
+import { createContext, useContext } from "react";
+const SearchParamsContext = createContext<ReturnType<typeof useSearchParams> | null>(null);
+
 // Definimos la interfaz para los gastos pendientes
 interface PendingExpense {
   id: string | undefined; // Cambiado para permitir undefined
@@ -100,10 +104,6 @@ const ACCOUNTS = [
   { id: "ACC002", name: "Cuenta Reservas" },
   { id: "ACC003", name: "Cuenta Impuestos" }
 ]
-
-// Contexto para useSearchParams
-import { createContext, useContext } from "react";
-const SearchParamsContext = createContext<ReturnType<typeof useSearchParams> | null>(null);
 
 // Componente para usar useSearchParams con Suspense
 function SearchParamsProvider({ children }: { children: React.ReactNode }) {
@@ -184,32 +184,34 @@ export default function EgresosConfirmarPagoPage() {
             <Card className="w-full">
               <CardContent className="p-6">
                 <Suspense fallback={<div>Cargando...</div>}>
-                  <ExpensesContent 
-                    selectedExpenses={selectedExpenses}
-                    setSelectedExpenses={setSelectedExpenses}
-                    selectedExpense={selectedExpense}
-                    setSelectedExpense={setSelectedExpense}
-                    showDetailView={showDetailView}
-                    setShowDetailView={setShowDetailView}
-                    reference={reference}
-                    setReference={setReference}
-                    notes={notes}
-                    setNotes={setNotes}
-                    accountOrigin={accountOrigin}
-                    setAccountOrigin={setAccountOrigin}
-                    isLoading={isLoading}
-                    setIsLoading={setIsLoading}
-                    pendingExpenses={pendingExpenses}
-                    setPendingExpenses={setPendingExpenses}
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    deleteDialogOpen={deleteDialogOpen}
-                    setDeleteDialogOpen={setDeleteDialogOpen}
-                    expenseToDelete={expenseToDelete}
-                    setExpenseToDelete={setExpenseToDelete}
-                    router={router}
-                    toast={toast}
-                  />
+                  <SearchParamsProvider>
+                    <ExpensesContent 
+                      selectedExpenses={selectedExpenses}
+                      setSelectedExpenses={setSelectedExpenses}
+                      selectedExpense={selectedExpense}
+                      setSelectedExpense={setSelectedExpense}
+                      showDetailView={showDetailView}
+                      setShowDetailView={setShowDetailView}
+                      reference={reference}
+                      setReference={setReference}
+                      notes={notes}
+                      setNotes={setNotes}
+                      accountOrigin={accountOrigin}
+                      setAccountOrigin={setAccountOrigin}
+                      isLoading={isLoading}
+                      setIsLoading={setIsLoading}
+                      pendingExpenses={pendingExpenses}
+                      setPendingExpenses={setPendingExpenses}
+                      searchTerm={searchTerm}
+                      setSearchTerm={setSearchTerm}
+                      deleteDialogOpen={deleteDialogOpen}
+                      setDeleteDialogOpen={setDeleteDialogOpen}
+                      expenseToDelete={expenseToDelete}
+                      setExpenseToDelete={setExpenseToDelete}
+                      router={router}
+                      toast={toast}
+                    />
+                  </SearchParamsProvider>
                 </Suspense>
               </CardContent>
             </Card>
