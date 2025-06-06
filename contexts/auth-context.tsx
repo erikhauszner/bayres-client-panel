@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Intentar realizar la llamada al servidor para logout, pero no esperar
     // El resultado de esta llamada no debe afectar la experiencia del usuario
-    api.post('/api/auth/logout')
+    api.post('/auth/logout')
       .then(() => {
         console.log("Sesión cerrada correctamente en el servidor");
       })
