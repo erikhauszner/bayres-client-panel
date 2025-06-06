@@ -14,10 +14,11 @@ import { useToast } from "@/components/ui/use-toast"
 import { AlertCircle, ArrowLeft, Check, Copy, ExternalLink, Loader2, Save } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import axios from "axios"
+import { API_URL, API_ENDPOINT, WEBHOOK_URL } from '@/lib/config';
 
 // Estructura por defecto de la configuración
 const DEFAULT_CONFIG = {
-  webhookUrl: "http://localhost:5678/webhook-test/be66b691-8c96-40f7-b761-1c0890ce5301",
+  webhookUrl: "",
   apiKey: "",
   sendEmployeeId: false,
   notificationEmail: "",
@@ -26,7 +27,7 @@ const DEFAULT_CONFIG = {
 }
 
 // API URL base para el backend - Usar el puerto correcto 3000
-const API_BASE_URL = "http://localhost:3000/api"
+const API_BASE_URL = API_ENDPOINT;
 
 // Añadir log para depuración
 console.log("Config API URL:", API_BASE_URL)

@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 import Cookies from 'js-cookie';
+import { API_URL } from './config';
 
 // Crear una instancia de axios con la URL base de la API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
 console.log('API_URL configurada en:', API_URL);
 
 const api = axios.create({

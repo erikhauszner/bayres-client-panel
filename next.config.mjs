@@ -10,7 +10,7 @@ const nextConfig = {
     unoptimized: true,
   },
   devServer: {
-    port: 3000,
+    port: process.env.PORT || 3001,
   },
   
   // Configuración para exportación independiente (Docker)
@@ -31,6 +31,8 @@ const nextConfig = {
   // Configuración de variables de entorno en tiempo de compilación
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_CLIENT_URL: process.env.NEXT_PUBLIC_CLIENT_URL || 'http://localhost:3001',
+    NEXT_PUBLIC_WEBHOOK_URL: process.env.NEXT_PUBLIC_WEBHOOK_URL || 'http://localhost:5678',
   },
 }
 

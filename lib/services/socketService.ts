@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { notificationService } from './notificationService';
+import { API_URL } from '../config';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -7,7 +8,7 @@ class SocketService {
   private employeeId: string | undefined = undefined;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
-  private apiUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  private apiUrl: string = API_URL;
 
   // Inicializar la conexión de Socket.IO
   connect(employeeId: string | undefined) {

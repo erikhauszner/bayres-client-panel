@@ -60,6 +60,7 @@ import { DropdownMenuItem, DropdownMenu, DropdownMenuContent, DropdownMenuTrigge
 import { AvatarImage } from "@radix-ui/react-avatar"
 import useHasPermission from "@/hooks/useHasPermission"
 import api from '../lib/api'
+import { CLIENT_URL } from '@/lib/config';
 
 // Interfaces adicionales
 interface LeadStageCategory {
@@ -757,9 +758,8 @@ export default function LeadProfile({ id }: { id: string }) {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       window.open(url, '_blank');
     } else {
-      // Ahora usamos la URL del frontend (no necesitamos especificar el puerto en desarrollo)
-      // Ya que estamos en el contexto del navegador, podemos usar window.location
-      const baseUrl = window.location.origin; // Esto dará http://localhost:3001
+      // Usar la URL configurada del cliente 
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : CLIENT_URL;
       
       // Asegurarse de que la URL del documento no tenga prefijo /api
       const documentUrl = url.startsWith('/api/') 

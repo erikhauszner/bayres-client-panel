@@ -15,9 +15,10 @@ import { AlertCircle, Check, ExternalLink, Loader2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import axios from "axios"
 import { useAuth } from "@/contexts/auth-context"
+import { API_URL, API_ENDPOINT, WEBHOOK_URL } from '@/lib/config';
 
-// API URL base para el backend - Usar el puerto correcto 3000
-const API_BASE_URL = "http://localhost:3000/api"
+// Reemplazar el hardcoded por las variables de configuración
+const API_BASE_URL = API_ENDPOINT;
 
 // Añadir log para depuración
 console.log("API URL:", API_BASE_URL)
@@ -28,7 +29,7 @@ const APP_KEY = "config-general"
 
 // Configuración por defecto
 const DEFAULT_CONFIG = {
-  webhookUrl: "http://localhost:5678/webhook-test/be66b691-8c96-40f7-b761-1c0890ce5301",
+  webhookUrl: `${WEBHOOK_URL}/webhook-test/be66b691-8c96-40f7-b761-1c0890ce5301`,
   apiKey: "",
   sendEmployeeId: false,
   notificationEmail: "",

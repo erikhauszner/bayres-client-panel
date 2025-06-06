@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import axios from 'axios'
+import { API_URL, API_ENDPOINT } from '@/lib/config'
 
 // Contexto para useSearchParams
 import { createContext, useContext } from "react";
@@ -159,8 +160,7 @@ function LoginContent({
     const checkServerStatus = async () => {
       try {
         // Usar la URL directa para evitar problemas con el cliente de axios configurado
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
-        const response = await fetch(`${baseUrl}/health`, { 
+        const response = await fetch(`${API_URL}/health`, { 
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           // No incluir credenciales para esta petición simple
