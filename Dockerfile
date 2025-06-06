@@ -21,6 +21,8 @@ FROM node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+# Configurar el puerto para Next.js
+ENV PORT=3001
 
 # Crear un usuario no-root para producción
 RUN addgroup --system --gid 1001 nodejs
@@ -38,7 +40,7 @@ RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 # Exponer puerto
-EXPOSE 3000
+EXPOSE 3001
 
 # Establecer host para que funcione correctamente en Docker
 ENV HOSTNAME="0.0.0.0"
