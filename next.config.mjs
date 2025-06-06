@@ -9,19 +9,19 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  devServer: {
-    port: process.env.PORT || 3001,
-  },
   
   // Configuración para exportación independiente (Docker)
   output: 'standalone',
   
   // Configurar proxy para archivos estáticos
   async rewrites() {
+    // Asegurar que siempre hay un valor válido para UPLOADS_URL
+    const uploadsUrl = process.env.NEXT_PUBLIC_UPLOADS_URL || 'https://api.bayreshub.com/uploads';
+    
     return [
       {
         source: '/uploads/:path*',
-        destination: `${process.env.NEXT_PUBLIC_UPLOADS_URL}/:path*`,
+        destination: `${uploadsUrl}/:path*`,
       },
     ];
   },
