@@ -241,6 +241,33 @@ export default function LeadProfile({ id }: { id: string }) {
     setInteractionError(null)
     setInteractionLoading(true)
 
+    // Verificar permisos según si es actualización o creación
+    if (currentInteraction?._id) {
+      // Verificar permiso para actualizar actividad
+      if (!canEditActivity && !useHasPermission("activities:update")) {
+        setInteractionError("No tienes permiso para editar esta actividad")
+        setInteractionLoading(false)
+        toast({
+          variant: "destructive",
+          title: "Permiso denegado",
+          description: "No tienes permiso para editar esta actividad"
+        })
+        return
+      }
+    } else {
+      // Verificar permiso para crear actividad
+      if (!canAddActivity && !useHasPermission("activities:create")) {
+        setInteractionError("No tienes permiso para crear una nueva actividad")
+        setInteractionLoading(false)
+        toast({
+          variant: "destructive",
+          title: "Permiso denegado",
+          description: "No tienes permiso para crear una nueva actividad"
+        })
+        return
+      }
+    }
+
     try {
       if (currentInteraction?._id) {
         // Actualizar interacción existente
@@ -801,6 +828,16 @@ export default function LeadProfile({ id }: { id: string }) {
   const handleLeadContacted = async () => {
     if (!lead?._id) return;
     
+    // Verificar el permiso específico para esta acción
+    if (!canEditAppSettersStage) {
+      toast({
+        variant: "destructive",
+        title: "Permiso denegado",
+        description: "No tienes permiso para cambiar este estado del lead"
+      });
+      return;
+    }
+    
     try {
       await leadService.updateLeadStage(id, "Contactado");
       toast({
@@ -819,6 +856,16 @@ export default function LeadProfile({ id }: { id: string }) {
 
   const handleAgendaPendiente = async () => {
     if (!lead?._id) return;
+    
+    // Verificar el permiso específico para esta acción
+    if (!canEditAppSettersStage) {
+      toast({
+        variant: "destructive",
+        title: "Permiso denegado",
+        description: "No tienes permiso para cambiar este estado del lead"
+      });
+      return;
+    }
     
     try {
       await leadService.updateLeadStage(id, "Pendiente Seguimiento");
