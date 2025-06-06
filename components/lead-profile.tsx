@@ -82,6 +82,8 @@ export default function LeadProfile({ id }: { id: string }) {
   const canEditStage = useHasPermission("leads:edit_stage")
   const canEditAppSettersStage = useHasPermission("leads:stage_edit_appsetters")
   const canEditLead = useHasPermission("leads:update")
+  const canDeleteLead = useHasPermission("leads:delete")
+  const canConvertLead = useHasPermission("leads:convert_to_client")
   
   // Permisos para pestañas
   const canViewInfoTab = useHasPermission("leads:view_info_tab")
@@ -1078,44 +1080,49 @@ export default function LeadProfile({ id }: { id: string }) {
                 </Button>
               )}
               
-              <Button variant="destructive" size="sm" className="gap-2 w-full justify-between" onClick={() => {
-                if (window.confirm("¿Estás seguro de eliminar este lead?")) {
-                  leadService.deleteLead(id).then(() => {
-                    toast({
-                      title: "Lead eliminado",
-                      description: "El lead ha sido eliminado exitosamente"
+              {canDeleteLead && (
+                <Button variant="destructive" size="sm" className="gap-2 w-full justify-between" onClick={() => {
+                  if (window.confirm("¿Estás seguro de eliminar este lead?")) {
+                    leadService.deleteLead(id).then(() => {
+                      toast({
+                        title: "Lead eliminado",
+                        description: "El lead ha sido eliminado exitosamente"
+                      });
+                      router.push('/leads');
+                    }).catch(err => {
+                      toast({
+                        variant: "destructive",
+                        title: "Error",
+                        description: err.response?.data?.message || "No se pudo eliminar el lead"
+                      });
                     });
-                    router.push('/leads');
-                  }).catch(err => {
-                    toast({
-                      variant: "destructive",
-                      title: "Error",
-                      description: err.response?.data?.message || "No se pudo eliminar el lead"
-                    });
-                  });
-                }
-              }}>
-                <span>Eliminar</span>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2 w-full justify-between">
-                    <span>Convertir a Cliente</span>
-                    <User className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={handleConvertToPersonalClient}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Convertir a Cliente Personal</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleConvertToBusinessClient}>
-                    <Building2 className="mr-2 h-4 w-4" />
-                    <span>Convertir a Cliente Empresa</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  }
+                }}>
+                  <span>Eliminar</span>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {canConvertLead && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2 w-full justify-between">
+                      <span>Convertir a Cliente</span>
+                      <User className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={handleConvertToPersonalClient}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Convertir a Cliente Personal</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleConvertToBusinessClient}>
+                      <Building2 className="mr-2 h-4 w-4" />
+                      <span>Convertir a Cliente Empresa</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               
               {/* Botón Asignar Lead - Solo visible si el usuario tiene permiso y el lead no está asignado */}
               {canAssignLeads && lead?.isApproved && !lead?.assignedTo && (
