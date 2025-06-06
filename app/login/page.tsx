@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import axios from 'axios'
-import { API_URL } from '@/lib/config'
+import { API_URL, HEALTH_CHECK_URL } from '@/lib/config'
 
 // Interfaz para las props del componente LoginContent
 interface LoginContentProps {
@@ -134,7 +134,7 @@ function LoginContent({
     const checkServerStatus = async () => {
       try {
         // Usar la URL directa para evitar problemas con el cliente de axios configurado
-        const response = await fetch(`https://api.bayreshub.com/health`, { 
+        const response = await fetch(HEALTH_CHECK_URL, { 
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           // No incluir credenciales para esta petición simple

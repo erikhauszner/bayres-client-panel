@@ -8,6 +8,12 @@ export const CLIENT_URL = process.env.NEXT_PUBLIC_CLIENT_URL || 'https://panel.b
 // URL para webhooks externos (usada en módulo de leads)
 export const WEBHOOK_URL = process.env.NEXT_PUBLIC_WEBHOOK_URL || 'https://n8n.bayreshub.com';
 
+// URL específica para notificaciones
+export const NOTIFICATIONS_URL = 'https://api.bayreshub.com/notifications';
+
+// URL específica para health check
+export const HEALTH_CHECK_URL = 'https://api.bayreshub.com/health';
+
 // Tiempo de caducidad del token JWT en segundos
 export const TOKEN_EXPIRY = 86400; // 24 horas
 
