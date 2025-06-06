@@ -30,7 +30,7 @@ const nextConfig = {
 
   // Configuración de variables de entorno en tiempo de compilación
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.bayreshub.com',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.bayreshub.com/api',
     NEXT_PUBLIC_CLIENT_URL: process.env.NEXT_PUBLIC_CLIENT_URL || 'https://panel.bayreshub.com',
     NEXT_PUBLIC_WEBHOOK_URL: process.env.NEXT_PUBLIC_WEBHOOK_URL || 'https://n8n.bayreshub.com',
   },
