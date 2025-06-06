@@ -160,7 +160,7 @@ function LoginContent({
     const checkServerStatus = async () => {
       try {
         // Usar la URL directa para evitar problemas con el cliente de axios configurado
-        const response = await fetch(`${API_URL}/health`, { 
+        const response = await fetch(`${API_URL.replace('/api', '')}/health`, { 
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           // No incluir credenciales para esta petición simple
