@@ -18,4 +18,4 @@ export const MAX_LOGIN_ATTEMPTS = 5;
 export const LOCKOUT_TIME = 15;
 
 // Conexión a MongoDB (para el servidor)
-export const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://root:wNbSKJw096Jnz2tSioZdr8wOztNOFNU1i14LTC5zinXzTYJdjSnamupFikv8nPVG@147.93.36.93:3000/bayres-panel?directConnection=true'; 
+export const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://root:b440084ce208222cc885@easypanel.bayreshub.com:27017/?tls=false'; 
