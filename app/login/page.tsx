@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Building } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,30 +11,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import axios from 'axios'
-import { API_URL, API_ENDPOINT } from '@/lib/config'
-
-// Contexto para useSearchParams
-import { createContext, useContext } from "react";
-const SearchParamsContext = createContext<ReturnType<typeof useSearchParams> | null>(null);
-
-// Componente para usar useSearchParams con Suspense
-function SearchParamsProvider({ children }: { children: React.ReactNode }) {
-  const searchParams = useSearchParams();
-  return (
-    <SearchParamsContext.Provider value={searchParams}>
-      {children}
-    </SearchParamsContext.Provider>
-  );
-}
-
-// Hook personalizado para usar searchParams
-function useSearchParamsContext() {
-  const context = useContext(SearchParamsContext);
-  if (context === null) {
-    throw new Error("useSearchParamsContext debe ser usado dentro de SearchParamsProvider");
-  }
-  return context;
-}
+import { API_URL } from '@/lib/config'
 
 // Interfaz para las props del componente LoginContent
 interface LoginContentProps {
@@ -55,7 +31,6 @@ interface LoginContentProps {
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
-  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -79,8 +54,8 @@ export default function LoginPage() {
       await login(email, password)
       
       // Redirigir al dashboard después del login exitoso
-      const callbackUrl = searchParams.get('callbackUrl')
-      router.push(callbackUrl || '/dashboard')
+      // Usamos window.location para forzar una navegación completa que funcione en producción
+      window.location.href = '/dashboard'
     } catch (error: any) {
       console.error('Error durante login:', error)
       
@@ -120,28 +95,26 @@ export default function LoginPage() {
         </CardHeader>
         
         <Suspense fallback={<CardContent className="py-6 text-center text-sm text-muted-foreground">Verificando estado del servidor...</CardContent>}>
-          <SearchParamsProvider>
-            <LoginContent
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
-              error={error}
-              setError={setError}
-              serverStatus={serverStatus}
-              setServerStatus={setServerStatus}
-              handleSubmit={handleSubmit}
-            />
-          </SearchParamsProvider>
+          <LoginContent
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            error={error}
+            setError={setError}
+            serverStatus={serverStatus}
+            setServerStatus={setServerStatus}
+            handleSubmit={handleSubmit}
+          />
         </Suspense>
       </Card>
     </div>
   )
 }
 
-// Componente que usa searchParams
+// Componente de contenido de login
 function LoginContent({
   email,
   setEmail,
@@ -155,8 +128,6 @@ function LoginContent({
   setServerStatus,
   handleSubmit
 }: LoginContentProps) {
-  const router = useRouter();
-  const searchParams = useSearchParamsContext();
   
   // Verificar si el servidor está disponible al cargar la página
   useEffect(() => {
@@ -185,14 +156,7 @@ function LoginContent({
     };
 
     checkServerStatus();
-  }, []);
-  
-  // Manejar la redirección tras un login exitoso
-  const handleSuccessfulLogin = () => {
-    // Redirigir a la URL de callback si existe, o al dashboard por defecto
-    const callbackUrl = searchParams.get('callbackUrl')
-    router.push(callbackUrl || '/dashboard')
-  }
+  }, [setError, setServerStatus]);
   
   return (
     <>
