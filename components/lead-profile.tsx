@@ -81,6 +81,7 @@ export default function LeadProfile({ id }: { id: string }) {
   const canRejectLeads = useHasPermission("leads:reject")
   const canEditStage = useHasPermission("leads:edit_stage")
   const canEditAppSettersStage = useHasPermission("leads:stage_edit_appsetters")
+  const canEditLead = useHasPermission("leads:update")
   
   // Permisos para pestañas
   const canViewInfoTab = useHasPermission("leads:view_info_tab")
@@ -1060,10 +1061,12 @@ export default function LeadProfile({ id }: { id: string }) {
               <CardDescription>Operaciones disponibles para este lead</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" size="sm" className="gap-2 w-full justify-between" onClick={() => router.push(`/leads/${id}/edit`)}>
-                <span>Editar</span>
-                <Edit className="h-4 w-4" />
-              </Button>
+              {canEditLead && (
+                <Button variant="outline" size="sm" className="gap-2 w-full justify-between" onClick={() => router.push(`/leads/${id}/edit`)}>
+                  <span>Editar</span>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
               
               {canEditStage && (
                 <Button variant="outline" size="sm" className="gap-2 w-full justify-between" onClick={() => {
