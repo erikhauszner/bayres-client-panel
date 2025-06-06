@@ -1,12 +1,12 @@
 // URL base de la API
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.bayreshub.com';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || '147.93.36.93:3000'; //https://api.bayreshub.com
 export const API_ENDPOINT = `${API_URL}/api`;
 
 // URL base para el cliente (frontend)
-export const CLIENT_URL = process.env.NEXT_PUBLIC_CLIENT_URL || 'https://panel.bayreshub.com';
+export const CLIENT_URL = process.env.NEXT_PUBLIC_CLIENT_URL || '147.93.36.93:3001';
 
 // URL para webhooks externos (usada en módulo de leads)
-export const WEBHOOK_URL = process.env.NEXT_PUBLIC_WEBHOOK_URL || 'https://n8n.bayreshub.com';
+export const WEBHOOK_URL = process.env.NEXT_PUBLIC_WEBHOOK_URL || '147.93.36.93:5678';
 
 // Tiempo de caducidad del token JWT en segundos
 export const TOKEN_EXPIRY = 86400; // 24 horas

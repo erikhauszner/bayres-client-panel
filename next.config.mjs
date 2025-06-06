@@ -23,16 +23,16 @@ const nextConfig = {
         source: '/uploads/:path*',
         destination: process.env.NEXT_PUBLIC_API_URL 
           ? `${process.env.NEXT_PUBLIC_API_URL}/uploads/:path*` 
-          : 'https://api.bayreshub.com/uploads/:path*',
+          : '147.93.36.93:3000/uploads/:path*',
       },
     ];
   },
 
   // Configuración de variables de entorno en tiempo de compilación
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.bayreshub.com',
-    NEXT_PUBLIC_CLIENT_URL: process.env.NEXT_PUBLIC_CLIENT_URL || 'https://panel.bayreshub.com',
-    NEXT_PUBLIC_WEBHOOK_URL: process.env.NEXT_PUBLIC_WEBHOOK_URL || 'https://147.93.36.93:5678',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '147.93.36.93:3000',
+    NEXT_PUBLIC_CLIENT_URL: process.env.NEXT_PUBLIC_CLIENT_URL || '147.93.36.93:3001',
+    NEXT_PUBLIC_WEBHOOK_URL: process.env.NEXT_PUBLIC_WEBHOOK_URL || '147.93.36.93:5678',
   },
 }
 
