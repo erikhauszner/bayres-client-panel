@@ -3,7 +3,7 @@
 # Script para construir y desplegar la aplicación Next.js con Docker
 
 # Configuración de variables de entorno
-export NEXT_PUBLIC_API_URL=https://api.bayreshub.com
+export NEXT_PUBLIC_API_URL=http://api.bayreshub.com
 
 # Construir la imagen Docker
 echo "Construyendo la imagen Docker..."
@@ -13,4 +13,4 @@ docker-compose build
 echo "Iniciando los contenedores..."
 docker-compose up -d
 
-echo "Despliegue completado. La aplicación está disponible en https://panel.bayreshub.com" 
+echo "Despliegue completado. La aplicación está disponible en http://panel.bayreshub.com" 
