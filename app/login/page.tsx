@@ -55,6 +55,7 @@ interface LoginContentProps {
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -77,7 +78,9 @@ export default function LoginPage() {
     try {
       await login(email, password)
       
-      // Redirección se maneja en el componente interno
+      // Redirigir al dashboard después del login exitoso
+      const callbackUrl = searchParams.get('callbackUrl')
+      router.push(callbackUrl || '/dashboard')
     } catch (error: any) {
       console.error('Error durante login:', error)
       

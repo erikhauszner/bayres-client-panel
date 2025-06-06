@@ -2,6 +2,7 @@ import api from '../api';
 import type { Notification as AppNotification, NotificationPreferences } from '../types/notification';
 import { toast } from "@/components/ui/use-toast";
 import React from 'react';
+import { API_URL } from '../config';
 
 // Definir un tipo de evento personalizado para notificaciones
 export interface NotificationEvent extends CustomEvent {
@@ -15,14 +16,25 @@ export interface NotificationEvent extends CustomEvent {
   }
 }
 
+// Función para crear la URL base de notificaciones
+const getNotificationsBaseUrl = () => {
+  // Si la API_URL tiene /api, usar la URL base sin /api
+  const baseUrlWithoutApi = API_URL.endsWith('/api') 
+    ? API_URL.replace('/api', '') 
+    : API_URL;
+  
+  return `${baseUrlWithoutApi}/notifications`;
+};
+
 class NotificationService {
   // Cache de notificaciones mostradas para evitar duplicados
   private shownNotifications: Set<string> = new Set();
   
   async getNotifications(limit: number = 10, offset: number = 0, showToast: boolean = false): Promise<AppNotification[]> {
     try {
-      console.log(`🔄 API Request: GET notifications?limit=${limit}&offset=${offset}`);
-      const response = await api.get<any>(`notifications?limit=${limit}&offset=${offset}`);
+      const url = `${getNotificationsBaseUrl()}?limit=${limit}&offset=${offset}`;
+      console.log(`🔄 API Request: GET ${url}`);
+      const response = await api.get<any>(url);
       
       // Asegurar que siempre se devuelva un array
       let notifications: AppNotification[] = [];
@@ -83,7 +95,8 @@ class NotificationService {
 
   async getUnreadCount(): Promise<number> {
     try {
-      const response = await api.get<{ count: number }>('notifications/count');
+      const url = `${getNotificationsBaseUrl()}/count`;
+      const response = await api.get<{ count: number }>(url);
       return response.data.count;
     } catch (error) {
       console.error('Error fetching unread count:', error);
@@ -93,7 +106,8 @@ class NotificationService {
 
   async markAsRead(notificationId: string): Promise<void> {
     try {
-      await api.put(`notifications/${notificationId}/read`);
+      const url = `${getNotificationsBaseUrl()}/${notificationId}/read`;
+      await api.put(url);
     } catch (error) {
       console.error(`Error marking notification ${notificationId} as read:`, error);
       throw error;
@@ -102,7 +116,8 @@ class NotificationService {
 
   async markAllAsRead(): Promise<void> {
     try {
-      await api.put('notifications/read-all');
+      const url = `${getNotificationsBaseUrl()}/read-all`;
+      await api.put(url);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       throw error;
@@ -111,7 +126,8 @@ class NotificationService {
 
   async deleteNotification(notificationId: string): Promise<void> {
     try {
-      await api.delete(`notifications/${notificationId}`);
+      const url = `${getNotificationsBaseUrl()}/${notificationId}`;
+      await api.delete(url);
     } catch (error) {
       console.error(`Error deleting notification ${notificationId}:`, error);
       throw error;
@@ -120,7 +136,8 @@ class NotificationService {
 
   async getPreferences(): Promise<NotificationPreferences> {
     try {
-      const response = await api.get<NotificationPreferences>('notifications/preferences');
+      const url = `${getNotificationsBaseUrl()}/preferences`;
+      const response = await api.get<NotificationPreferences>(url);
       return response.data;
     } catch (error) {
       console.error('Error fetching notification preferences:', error);
@@ -130,7 +147,8 @@ class NotificationService {
 
   async updatePreferences(preferences: Partial<NotificationPreferences>): Promise<NotificationPreferences> {
     try {
-      const response = await api.put<NotificationPreferences>('notifications/preferences', preferences);
+      const url = `${getNotificationsBaseUrl()}/preferences`;
+      const response = await api.put<NotificationPreferences>(url, preferences);
       return response.data;
     } catch (error) {
       console.error('Error updating notification preferences:', error);
