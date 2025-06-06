@@ -18,4 +18,4 @@ export const MAX_LOGIN_ATTEMPTS = 5;
 export const LOCKOUT_TIME = 15;
 
 // Conexión a MongoDB (para el servidor)
-export const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://root:0XdJF794RkeDQ8DbQiah7uqqZQAei7JVrYsuKXextWnKy7lqXo7QazEuEjVcbyjR@147.93.36.93:27017/?directConnection=true'; 
+export const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://root:0XdJF794RkeDQ8DbQiah7uqqZQAei7JVrYsuKXextWnKy7lqXo7QazEuEjVcbyjR@147.93.36.93:27017/default?directConnection=true'; 

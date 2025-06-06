@@ -21,8 +21,8 @@ class NotificationService {
   
   async getNotifications(limit: number = 10, offset: number = 0, showToast: boolean = false): Promise<AppNotification[]> {
     try {
-      console.log(`🔄 API Request: GET notifications?limit=${limit}&offset=${offset}`);
-      const response = await api.get<any>(`notifications?limit=${limit}&offset=${offset}`);
+      console.log(`🔄 API Request: GET api/notifications?limit=${limit}&offset=${offset}`);
+      const response = await api.get<any>(`api/notifications?limit=${limit}&offset=${offset}`);
       
       // Asegurar que siempre se devuelva un array
       let notifications: AppNotification[] = [];
@@ -83,7 +83,7 @@ class NotificationService {
 
   async getUnreadCount(): Promise<number> {
     try {
-      const response = await api.get<{ count: number }>('notifications/count');
+      const response = await api.get<{ count: number }>('api/notifications/count');
       return response.data.count;
     } catch (error) {
       console.error('Error fetching unread count:', error);
@@ -93,7 +93,7 @@ class NotificationService {
 
   async markAsRead(notificationId: string): Promise<void> {
     try {
-      await api.put(`notifications/${notificationId}/read`);
+      await api.put(`api/notifications/${notificationId}/read`);
     } catch (error) {
       console.error(`Error marking notification ${notificationId} as read:`, error);
       throw error;
@@ -102,7 +102,7 @@ class NotificationService {
 
   async markAllAsRead(): Promise<void> {
     try {
-      await api.put('notifications/read-all');
+      await api.put('api/notifications/read-all');
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       throw error;
@@ -111,7 +111,7 @@ class NotificationService {
 
   async deleteNotification(notificationId: string): Promise<void> {
     try {
-      await api.delete(`notifications/${notificationId}`);
+      await api.delete(`api/notifications/${notificationId}`);
     } catch (error) {
       console.error(`Error deleting notification ${notificationId}:`, error);
       throw error;
@@ -120,7 +120,7 @@ class NotificationService {
 
   async getPreferences(): Promise<NotificationPreferences> {
     try {
-      const response = await api.get<NotificationPreferences>('notifications/preferences');
+      const response = await api.get<NotificationPreferences>('api/notifications/preferences');
       return response.data;
     } catch (error) {
       console.error('Error fetching notification preferences:', error);
@@ -130,7 +130,7 @@ class NotificationService {
 
   async updatePreferences(preferences: Partial<NotificationPreferences>): Promise<NotificationPreferences> {
     try {
-      const response = await api.put<NotificationPreferences>('notifications/preferences', preferences);
+      const response = await api.put<NotificationPreferences>('api/notifications/preferences', preferences);
       return response.data;
     } catch (error) {
       console.error('Error updating notification preferences:', error);
