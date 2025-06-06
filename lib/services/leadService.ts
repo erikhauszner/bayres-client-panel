@@ -272,7 +272,7 @@ class LeadService {
 
   async importLeads(formData: FormData) {
     try {
-      const response = await api.post('/api/leads/import', formData, {
+      const response = await api.post('/leads/import', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

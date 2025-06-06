@@ -185,7 +185,7 @@ export default function LeadProfile({ id }: { id: string }) {
 
     const fetchLeadStages = async () => {
       try {
-        const response = await api.get('/api/leads/categories/stages')
+        const response = await api.get('/leads/categories/stages')
         setLeadStageCategories(response.data || [])
       } catch (error) {
         console.error('Error al cargar las etapas de leads:', error)

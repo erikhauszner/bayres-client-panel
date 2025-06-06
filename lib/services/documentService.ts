@@ -31,7 +31,7 @@ class DocumentService {
 
   async getDocumentById(documentId: string): Promise<Document | null> {
     try {
-      const response = await api.get<Document>(`/api/documents/${documentId}`);
+      const response = await api.get<Document>(`/documents/${documentId}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching document ${documentId}:`, error);
@@ -51,7 +51,7 @@ class DocumentService {
       const { file, ...metadata } = documentData;
       formData.append('metadata', JSON.stringify(metadata));
       
-      const response = await api.post<Document>('/api/documents', formData, {
+      const response = await api.post<Document>('/documents', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -66,7 +66,7 @@ class DocumentService {
 
   async updateDocument(documentId: string, data: Partial<Document>): Promise<Document | null> {
     try {
-      const response = await api.put<Document>(`/api/documents/${documentId}`, data);
+      const response = await api.put<Document>(`/documents/${documentId}`, data);
       return response.data;
     } catch (error) {
       console.error(`Error updating document ${documentId}:`, error);
@@ -76,7 +76,7 @@ class DocumentService {
 
   async deleteDocument(documentId: string): Promise<boolean> {
     try {
-      await api.delete(`/api/documents/${documentId}`);
+      await api.delete(`/documents/${documentId}`);
       return true;
     } catch (error) {
       console.error(`Error deleting document ${documentId}:`, error);
@@ -86,7 +86,7 @@ class DocumentService {
 
   async getDocumentVersions(documentId: string): Promise<DocumentVersion[]> {
     try {
-      const response = await api.get<DocumentVersion[]>(`/api/documents/${documentId}/versions`);
+      const response = await api.get<DocumentVersion[]>(`/documents/${documentId}/versions`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching versions for document ${documentId}:`, error);
@@ -103,7 +103,7 @@ class DocumentService {
         formData.append('notes', notes);
       }
       
-      const response = await api.post<DocumentVersion>(`/api/documents/${documentId}/versions`, formData, {
+      const response = await api.post<DocumentVersion>(`/documents/${documentId}/versions`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -118,7 +118,7 @@ class DocumentService {
 
   async revertToVersion(documentId: string, versionNumber: number): Promise<Document | null> {
     try {
-      const response = await api.post<Document>(`/api/documents/${documentId}/revert`, {
+      const response = await api.post<Document>(`/documents/${documentId}/revert`, {
         version: versionNumber
       });
       return response.data;

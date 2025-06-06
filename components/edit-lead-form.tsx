@@ -103,11 +103,11 @@ export default function EditLeadForm({ id }: { id: string }) {
       setLoadingCategories(true)
       try {
         // Cargar etapas de leads
-        const stagesResponse = await api.get('/api/leads/categories/stages')
+        const stagesResponse = await api.get('/leads/categories/stages')
         setLeadStageCategories(stagesResponse.data || [])
         
         // Cargar orígenes de leads
-        const originsResponse = await api.get('/api/leads/categories/origins')
+        const originsResponse = await api.get('/leads/categories/origins')
         setLeadOriginCategories(originsResponse.data || [])
       } catch (error) {
         console.error("Error al cargar categorías:", error)

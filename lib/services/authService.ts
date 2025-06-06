@@ -40,7 +40,7 @@ export class AuthService {
 
   static async register(data: any): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/api/auth/register', data);
+      const response = await api.post<AuthResponse>('/auth/register', data);
       const { token, employee } = response.data;
       
       // Guardar token en localStorage y cookies
@@ -77,7 +77,7 @@ export class AuthService {
         throw new Error('Token expirado');
       }
       
-      const response = await api.get<Employee>('/api/auth/me');
+      const response = await api.get<Employee>('/auth/me');
       console.log('Respuesta del servidor (getCurrentEmployee):', response.data);
       
       // Asegurarnos de que el campo phone esté correctamente procesado
@@ -99,7 +99,7 @@ export class AuthService {
 
   static async logout(): Promise<void> {
     try {
-      await api.post('/api/auth/logout');
+      await api.post('/auth/logout');
       this.clearAuthData();
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
@@ -135,7 +135,7 @@ export class AuthService {
 
   static async changePassword(data: { currentPassword: string; newPassword: string }) {
     try {
-      await api.post('/api/auth/change-password', data);
+      await api.post('/auth/change-password', data);
     } catch (error) {
       console.error('Error al cambiar contraseña:', error);
       throw error;
@@ -144,7 +144,7 @@ export class AuthService {
 
   static async resetPassword(email: string): Promise<{ message: string }> {
     try {
-      const response = await api.post<{ message: string }>('/api/auth/reset-password', { email });
+      const response = await api.post<{ message: string }>('/auth/reset-password', { email });
       return response.data;
     } catch (error) {
       console.error('Error al solicitar restablecimiento de contraseña:', error);
@@ -154,7 +154,7 @@ export class AuthService {
 
   static async verifyResetToken(token: string): Promise<{ valid: boolean }> {
     try {
-      const response = await api.get<{ valid: boolean }>(`/api/auth/verify-reset-token/${token}`);
+      const response = await api.get<{ valid: boolean }>(`/auth/verify-reset-token/${token}`);
       return response.data;
     } catch (error) {
       console.error('Error al verificar token de restablecimiento:', error);
@@ -164,7 +164,7 @@ export class AuthService {
 
   static async setNewPassword(token: string, password: string): Promise<{ message: string }> {
     try {
-      const response = await api.post<{ message: string }>('/api/auth/new-password', { token, password });
+      const response = await api.post<{ message: string }>('/auth/new-password', { token, password });
       return response.data;
     } catch (error) {
       console.error('Error al establecer nueva contraseña:', error);
@@ -206,7 +206,7 @@ export class AuthService {
    */
   static async changePasswordForced(currentPassword: string, newPassword: string): Promise<void> {
     try {
-      await api.post('/api/auth/change-password/forced', {
+      await api.post('/auth/change-password/forced', {
         currentPassword,
         newPassword
       })

@@ -116,7 +116,7 @@ export default function CategoriesSettings() {
 
       // Cargar datos de orígenes de leads
       try {
-        const leadOriginData = await api.get('/api/leads/categories/origins')
+        const leadOriginData = await api.get('/leads/categories/origins')
         setLeadOriginCategories(leadOriginData.data || [])
       } catch (error) {
         console.error("Error al cargar orígenes de leads:", error)
@@ -124,7 +124,7 @@ export default function CategoriesSettings() {
 
       // Cargar datos de etapas de leads
       try {
-        const leadStageData = await api.get('/api/leads/categories/stages')
+        const leadStageData = await api.get('/leads/categories/stages')
         setLeadStageCategories(leadStageData.data || [])
       } catch (error) {
         console.error("Error al cargar etapas de leads:", error)
@@ -132,7 +132,7 @@ export default function CategoriesSettings() {
 
       // Cargar datos de departamentos
       try {
-        const departmentData = await api.get('/api/departments')
+        const departmentData = await api.get('/departments')
         setDepartmentCategories(departmentData.data || [])
       } catch (error) {
         console.error("Error al cargar departamentos:", error)
@@ -255,12 +255,12 @@ export default function CategoriesSettings() {
         // Manejo para orígenes de leads
         if (editMode && selectedCategory) {
           const originCat = selectedCategory as LeadOriginCategory
-          result = await api.put(`/api/leads/categories/origins/${originCat._id}`, {
+          result = await api.put(`/leads/categories/origins/${originCat._id}`, {
             name: formData.name,
             description: formData.description
           })
         } else {
-          result = await api.post('/api/leads/categories/origins', {
+          result = await api.post('/leads/categories/origins', {
             name: formData.name,
             description: formData.description
           })
@@ -269,12 +269,12 @@ export default function CategoriesSettings() {
         // Manejo para etapas de leads
         if (editMode && selectedCategory) {
           const stageCat = selectedCategory as LeadStageCategory
-          result = await api.put(`/api/leads/categories/stages/${stageCat._id}`, {
+          result = await api.put(`/leads/categories/stages/${stageCat._id}`, {
             name: formData.name,
             description: formData.description
           })
         } else {
-          result = await api.post('/api/leads/categories/stages', {
+          result = await api.post('/leads/categories/stages', {
             name: formData.name,
             description: formData.description
           })
@@ -283,12 +283,12 @@ export default function CategoriesSettings() {
         // Manejo para departamentos
         if (editMode && selectedCategory) {
           const deptCat = selectedCategory as DepartmentCategory
-          result = await api.put(`/api/departments/${deptCat._id}`, {
+          result = await api.put(`/departments/${deptCat._id}`, {
             name: formData.name,
             description: formData.description
           })
         } else {
-          result = await api.post('/api/departments', {
+          result = await api.post('/departments', {
             name: formData.name,
             description: formData.description
           })
@@ -368,7 +368,7 @@ export default function CategoriesSettings() {
         if (!originCat._id) {
           throw new Error("ID de categoría no disponible");
         }
-        const response = await api.delete(`/api/leads/categories/origins/${originCat._id}`);
+        const response = await api.delete(`/leads/categories/origins/${originCat._id}`);
         success = response.status === 200;
       } else if (categoryType === 'leadStage') {
         // Eliminar etapa de lead
@@ -376,7 +376,7 @@ export default function CategoriesSettings() {
         if (!stageCat._id) {
           throw new Error("ID de categoría no disponible");
         }
-        const response = await api.delete(`/api/leads/categories/stages/${stageCat._id}`);
+        const response = await api.delete(`/leads/categories/stages/${stageCat._id}`);
         success = response.status === 200;
       } else if (categoryType === 'department') {
         // Eliminar departamento
@@ -384,7 +384,7 @@ export default function CategoriesSettings() {
         if (!deptCat._id) {
           throw new Error("ID de categoría no disponible");
         }
-        const response = await api.delete(`/api/departments/${deptCat._id}`);
+        const response = await api.delete(`/departments/${deptCat._id}`);
         success = response.status === 200;
       }
       
