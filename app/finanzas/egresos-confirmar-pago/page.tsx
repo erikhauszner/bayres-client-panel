@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -70,6 +70,30 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+// Definimos la interfaz para los gastos pendientes
+interface PendingExpense {
+  id: string | undefined; // Cambiado para permitir undefined
+  provider: {
+    id: string;
+    name: string;
+    type: string;
+    avatar: string;
+  };
+  amount: string;
+  concept: string;
+  type: string;
+  date: string;
+  dueDate: string;
+  details: {
+    category: string;
+    method: string;
+    account: string;
+    project?: string;
+    accountNumber?: string;
+  };
+  originalExpense?: Expense;
+}
+
 // Datos de ejemplo de cuentas bancarias (posteriormente se obtendrán de la API)
 const ACCOUNTS = [
   { id: "ACC001", name: "Cuenta Operativa Principal" },
@@ -77,21 +101,153 @@ const ACCOUNTS = [
   { id: "ACC003", name: "Cuenta Impuestos" }
 ]
 
+// Contexto para useSearchParams
+import { createContext, useContext } from "react";
+const SearchParamsContext = createContext<ReturnType<typeof useSearchParams> | null>(null);
+
+// Componente para usar useSearchParams con Suspense
+function SearchParamsProvider({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  return (
+    <SearchParamsContext.Provider value={searchParams}>
+      {children}
+    </SearchParamsContext.Provider>
+  );
+}
+
+// Hook personalizado para usar searchParams
+function useSearchParamsContext() {
+  const context = useContext(SearchParamsContext);
+  if (context === null) {
+    throw new Error("useSearchParamsContext debe ser usado dentro de SearchParamsProvider");
+  }
+  return context;
+}
+
+// Definimos la interfaz para las props del componente ExpensesContent
+interface ExpensesContentProps {
+  selectedExpenses: string[];
+  setSelectedExpenses: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedExpense: PendingExpense | null;
+  setSelectedExpense: React.Dispatch<React.SetStateAction<PendingExpense | null>>;
+  showDetailView: boolean;
+  setShowDetailView: React.Dispatch<React.SetStateAction<boolean>>;
+  reference: string;
+  setReference: React.Dispatch<React.SetStateAction<string>>;
+  notes: string;
+  setNotes: React.Dispatch<React.SetStateAction<string>>;
+  accountOrigin: string;
+  setAccountOrigin: React.Dispatch<React.SetStateAction<string>>;
+  isLoading: boolean;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  pendingExpenses: PendingExpense[];
+  setPendingExpenses: React.Dispatch<React.SetStateAction<PendingExpense[]>>;
+  searchTerm: string;
+  setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+  deleteDialogOpen: boolean;
+  setDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  expenseToDelete: PendingExpense | null;
+  setExpenseToDelete: React.Dispatch<React.SetStateAction<PendingExpense | null>>;
+  router: ReturnType<typeof useRouter>;
+  toast: any; // Cambiamos el tipo a 'any' para solucionar el problema temporalmente
+}
+
 export default function EgresosConfirmarPagoPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [selectedExpenses, setSelectedExpenses] = useState<string[]>([])
-  const [selectedExpense, setSelectedExpense] = useState<any>(null)
+  const [selectedExpense, setSelectedExpense] = useState<PendingExpense | null>(null)
   const [showDetailView, setShowDetailView] = useState(false)
   const [reference, setReference] = useState("")
   const [notes, setNotes] = useState("")
   const [accountOrigin, setAccountOrigin] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-  const [pendingExpenses, setPendingExpenses] = useState<any[]>([])
+  const [pendingExpenses, setPendingExpenses] = useState<PendingExpense[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [expenseToDelete, setExpenseToDelete] = useState<any>(null)
+  const [expenseToDelete, setExpenseToDelete] = useState<PendingExpense | null>(null)
+  
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header />
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-auto">
+          <div className="flex flex-col space-y-6 p-8">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => router.push('/finanzas')}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-3xl font-bold tracking-tight">Confirmar Egresos</h1>
+            </div>
+            
+            <Card className="w-full">
+              <CardContent className="p-6">
+                <Suspense fallback={<div>Cargando...</div>}>
+                  <ExpensesContent 
+                    selectedExpenses={selectedExpenses}
+                    setSelectedExpenses={setSelectedExpenses}
+                    selectedExpense={selectedExpense}
+                    setSelectedExpense={setSelectedExpense}
+                    showDetailView={showDetailView}
+                    setShowDetailView={setShowDetailView}
+                    reference={reference}
+                    setReference={setReference}
+                    notes={notes}
+                    setNotes={setNotes}
+                    accountOrigin={accountOrigin}
+                    setAccountOrigin={setAccountOrigin}
+                    isLoading={isLoading}
+                    setIsLoading={setIsLoading}
+                    pendingExpenses={pendingExpenses}
+                    setPendingExpenses={setPendingExpenses}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    deleteDialogOpen={deleteDialogOpen}
+                    setDeleteDialogOpen={setDeleteDialogOpen}
+                    expenseToDelete={expenseToDelete}
+                    setExpenseToDelete={setExpenseToDelete}
+                    router={router}
+                    toast={toast}
+                  />
+                </Suspense>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+// Componente que usa searchParams
+function ExpensesContent({ 
+  selectedExpenses,
+  setSelectedExpenses,
+  selectedExpense,
+  setSelectedExpense,
+  showDetailView,
+  setShowDetailView,
+  reference,
+  setReference,
+  notes,
+  setNotes,
+  accountOrigin,
+  setAccountOrigin,
+  isLoading,
+  setIsLoading,
+  pendingExpenses,
+  setPendingExpenses,
+  searchTerm,
+  setSearchTerm,
+  deleteDialogOpen,
+  setDeleteDialogOpen,
+  expenseToDelete,
+  setExpenseToDelete,
+  router,
+  toast
+}: ExpensesContentProps) {
+  const searchParams = useSearchParamsContext();
   
   // Cargar datos de egresos pendientes
   useEffect(() => {
@@ -113,7 +269,7 @@ export default function EgresosConfirmarPagoPage() {
       setPendingExpenses(pending)
     } catch (error) {
       console.error('Error al cargar egresos pendientes:', error)
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se pudieron cargar los egresos pendientes",
         variant: "destructive"
@@ -128,7 +284,7 @@ export default function EgresosConfirmarPagoPage() {
     const expenseId = searchParams.get('expenseId')
     if (expenseId) {
       setTimeout(() => {
-        const expense = pendingExpenses.find(p => p.id === expenseId) || getMockPendingExpenses().find(p => p.id === expenseId)
+        const expense = pendingExpenses.find((p: any) => p.id === expenseId) || getMockPendingExpenses().find((p: any) => p.id === expenseId)
         if (expense) {
           setSelectedExpense(expense)
           setShowDetailView(true)
@@ -177,7 +333,7 @@ export default function EgresosConfirmarPagoPage() {
   useEffect(() => {
     const expenseId = searchParams.get('expenseId')
     if (expenseId && pendingExpenses.length > 0) {
-      const expense = pendingExpenses.find(p => p.id === expenseId)
+      const expense = pendingExpenses.find((p: any) => p.id === expenseId)
       if (expense) {
         setSelectedExpense(expense)
         setShowDetailView(true)
@@ -187,9 +343,9 @@ export default function EgresosConfirmarPagoPage() {
   
   // Seleccionar/deseleccionar un egreso
   const toggleExpenseSelection = (expenseId: string) => {
-    setSelectedExpenses(prev => {
+    setSelectedExpenses((prev: string[]) => {
       if (prev.includes(expenseId)) {
-        return prev.filter(id => id !== expenseId)
+        return prev.filter((id: string) => id !== expenseId)
       } else {
         return [...prev, expenseId]
       }
@@ -201,12 +357,12 @@ export default function EgresosConfirmarPagoPage() {
     if (selectedExpenses.length === filteredExpenses.length) {
       setSelectedExpenses([])
     } else {
-      setSelectedExpenses(filteredExpenses.map(p => p.id))
+      setSelectedExpenses(filteredExpenses.map((p: any) => p.id))
     }
   }
   
   // Ver detalles de un egreso
-  const viewExpenseDetails = (expense: any) => {
+  const viewExpenseDetails = (expense: PendingExpense) => {
     setSelectedExpense(expense)
     setShowDetailView(true)
   }
@@ -225,7 +381,7 @@ export default function EgresosConfirmarPagoPage() {
     if (!selectedExpense) return
     
     if (!accountOrigin) {
-      toast({
+      toast.toast({
         title: "Campos requeridos",
         description: "Por favor selecciona una cuenta de origen para el pago",
         variant: "destructive"
@@ -244,7 +400,7 @@ export default function EgresosConfirmarPagoPage() {
           // Aprobar el gasto
           await financeService.approveExpense(expenseId)
           
-          toast({
+          toast.toast({
             title: "¡Éxito!",
             description: "El egreso ha sido confirmado correctamente"
           })
@@ -255,18 +411,18 @@ export default function EgresosConfirmarPagoPage() {
         }
       } else {
         // En caso de que estemos trabajando con datos simulados
-        toast({
+        toast.toast({
           title: "¡Éxito!",
           description: "El egreso ha sido confirmado correctamente (simulado)"
         })
         
         // Eliminar el egreso de la lista local
-        setPendingExpenses(prev => prev.filter(p => p.id !== selectedExpense.id))
+        setPendingExpenses((prev: any[]) => prev.filter((p: any) => p.id !== selectedExpense.id))
         backToList()
       }
     } catch (error) {
       console.error('Error al confirmar egreso:', error)
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se pudo confirmar el egreso. Inténtalo de nuevo.",
         variant: "destructive"
@@ -286,7 +442,7 @@ export default function EgresosConfirmarPagoPage() {
       
       // Confirmar cada egreso seleccionado
       for (const expenseId of selectedExpenses) {
-        const expense = pendingExpenses.find(p => p.id === expenseId)
+        const expense = pendingExpenses.find((p: any) => p.id === expenseId)
         
         if (expense?.originalExpense?._id) {
           // Aprobar el gasto
@@ -295,7 +451,7 @@ export default function EgresosConfirmarPagoPage() {
         }
       }
       
-      toast({
+      toast.toast({
         title: "¡Éxito!",
         description: `Se han confirmado ${successCount} egresos correctamente`
       })
@@ -305,7 +461,7 @@ export default function EgresosConfirmarPagoPage() {
       setSelectedExpenses([])
     } catch (error) {
       console.error('Error al confirmar egresos:', error)
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se pudieron confirmar algunos egresos",
         variant: "destructive"
@@ -346,7 +502,7 @@ export default function EgresosConfirmarPagoPage() {
   }
   
   // Filtrar egresos según término de búsqueda
-  const filteredExpenses = pendingExpenses.filter(expense => {
+  const filteredExpenses = pendingExpenses.filter((expense: any) => {
     if (!searchTerm) return true
     const searchLower = searchTerm.toLowerCase()
     return (
@@ -557,7 +713,7 @@ export default function EgresosConfirmarPagoPage() {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : filteredExpenses.map(expense => (
+            ) : filteredExpenses.map((expense: any) => (
               <TableRow key={expense.id} className={selectedExpenses.includes(expense.id) ? "bg-primary/5" : ""}>
                 <TableCell>
                   <Checkbox 
@@ -876,7 +1032,7 @@ export default function EgresosConfirmarPagoPage() {
   }
   
   // Abrir diálogo de eliminación
-  const openDeleteDialog = (expense: any) => {
+  const openDeleteDialog = (expense: PendingExpense) => {
     setExpenseToDelete(expense)
     setDeleteDialogOpen(true)
   }
@@ -892,7 +1048,7 @@ export default function EgresosConfirmarPagoPage() {
         // Eliminar el egreso usando el servicio
         await financeService.deleteExpense(expenseToDelete.originalExpense._id);
         
-        toast({
+        toast.toast({
           title: "Éxito",
           description: "El egreso ha sido eliminado correctamente"
         });
@@ -901,9 +1057,9 @@ export default function EgresosConfirmarPagoPage() {
         await loadPendingExpenses();
       } else {
         // Simular eliminación para datos de ejemplo
-        setPendingExpenses(prev => prev.filter(e => e.id !== expenseToDelete.id));
+        setPendingExpenses((prev: any[]) => prev.filter((e: any) => e.id !== expenseToDelete.id));
         
-        toast({
+        toast.toast({
           title: "Éxito",
           description: "El egreso ha sido eliminado correctamente (simulado)"
         });
@@ -912,7 +1068,7 @@ export default function EgresosConfirmarPagoPage() {
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error('Error al eliminar egreso:', error);
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se pudo eliminar el egreso",
         variant: "destructive"
@@ -922,28 +1078,5 @@ export default function EgresosConfirmarPagoPage() {
     }
   }
   
-  return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">
-          <div className="flex flex-col space-y-6 p-8">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => router.push('/finanzas')}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-3xl font-bold tracking-tight">Confirmar Egresos</h1>
-            </div>
-            
-            <Card className="w-full">
-              <CardContent className="p-6">
-                {showDetailView ? renderExpenseDetail() : renderExpensesList()}
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-    </div>
-  )
+  return showDetailView ? renderExpenseDetail() : renderExpensesList();
 } 
