@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,6 +26,29 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 import { financeService } from "@/lib/services/financeService"
 
+// Contexto para useSearchParams
+import { createContext, useContext } from "react";
+const SearchParamsContext = createContext<ReturnType<typeof useSearchParams> | null>(null);
+
+// Componente para usar useSearchParams con Suspense
+function SearchParamsProvider({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  return (
+    <SearchParamsContext.Provider value={searchParams}>
+      {children}
+    </SearchParamsContext.Provider>
+  );
+}
+
+// Hook personalizado para usar searchParams
+function useSearchParamsContext() {
+  const context = useContext(SearchParamsContext);
+  if (context === null) {
+    throw new Error("useSearchParamsContext debe ser usado dentro de SearchParamsProvider");
+  }
+  return context;
+}
+
 // Datos de ejemplo de cuentas bancarias (posteriormente se obtendrán de la API)
 const ACCOUNTS = [
   { id: "ACC001", name: "Cuenta Operativa Principal" },
@@ -33,15 +56,75 @@ const ACCOUNTS = [
   { id: "ACC003", name: "Cuenta Impuestos" }
 ]
 
+// Interfaz para las props del componente
+interface PaymentContentProps {
+  isLoading: boolean;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  invoice: any;
+  setInvoice: React.Dispatch<React.SetStateAction<any>>;
+  reference: string;
+  setReference: React.Dispatch<React.SetStateAction<string>>;
+  notes: string;
+  setNotes: React.Dispatch<React.SetStateAction<string>>;
+  accountDestination: string;
+  setAccountDestination: React.Dispatch<React.SetStateAction<string>>;
+  router: ReturnType<typeof useRouter>;
+  toast: any;
+}
+
 export default function PagoCompletoPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [invoice, setInvoice] = useState<any>(null)
   const [reference, setReference] = useState("")
   const [notes, setNotes] = useState("")
   const [accountDestination, setAccountDestination] = useState("")
+
+  return (
+    <div className="container mx-auto py-6 space-y-6">
+      <Suspense fallback={
+        <div className="flex justify-center items-center h-64">
+          <p className="text-muted-foreground">Cargando detalles de la factura...</p>
+        </div>
+      }>
+        <SearchParamsProvider>
+          <PaymentContent
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            invoice={invoice}
+            setInvoice={setInvoice}
+            reference={reference}
+            setReference={setReference}
+            notes={notes}
+            setNotes={setNotes}
+            accountDestination={accountDestination}
+            setAccountDestination={setAccountDestination}
+            router={router}
+            toast={toast}
+          />
+        </SearchParamsProvider>
+      </Suspense>
+    </div>
+  )
+}
+
+// Componente que usa searchParams
+function PaymentContent({
+  isLoading,
+  setIsLoading,
+  invoice,
+  setInvoice,
+  reference,
+  setReference,
+  notes,
+  setNotes,
+  accountDestination,
+  setAccountDestination,
+  router,
+  toast
+}: PaymentContentProps) {
+  const searchParams = useSearchParamsContext();
 
   // Cargar la factura desde la URL
   useEffect(() => {
@@ -50,7 +133,7 @@ export default function PagoCompletoPage() {
       loadInvoice(invoiceId)
     } else {
       // Si no hay ID, volver a la lista
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se encontró la factura especificada",
         variant: "destructive"
@@ -102,7 +185,7 @@ export default function PagoCompletoPage() {
       })
     } catch (error) {
       console.error("Error al cargar la factura:", error)
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se pudo cargar la factura",
         variant: "destructive"
@@ -118,7 +201,7 @@ export default function PagoCompletoPage() {
     if (!invoice) return
 
     if (!accountDestination) {
-      toast({
+      toast.toast({
         title: "Campos requeridos",
         description: "Por favor selecciona una cuenta de destino",
         variant: "destructive"
@@ -142,7 +225,7 @@ export default function PagoCompletoPage() {
       const result = await financeService.confirmInvoicePayments([invoiceId], paymentDetails)
       
       if (result && result.success && result.success.includes(invoiceId)) {
-        toast({
+        toast.toast({
           title: "Pago confirmado",
           description: "El pago ha sido registrado correctamente",
         })
@@ -152,7 +235,7 @@ export default function PagoCompletoPage() {
       }
     } catch (error) {
       console.error("Error al confirmar el pago completo:", error)
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se pudo procesar el pago",
         variant: "destructive"
@@ -170,16 +253,14 @@ export default function PagoCompletoPage() {
   // Si está cargando o no hay factura, mostrar estado de carga
   if (isLoading || !invoice) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex justify-center items-center h-64">
-          <p className="text-muted-foreground">Cargando detalles de la factura...</p>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <p className="text-muted-foreground">Cargando detalles de la factura...</p>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <>
       <div className="mb-4">
         <Button variant="ghost" size="sm" onClick={goBack} className="mb-2">
           <ArrowLeft className="mr-1 h-4 w-4" />
@@ -334,6 +415,6 @@ export default function PagoCompletoPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </>
   )
 } 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -61,6 +61,29 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+// Contexto para useSearchParams
+import { createContext, useContext } from "react";
+const SearchParamsContext = createContext<ReturnType<typeof useSearchParams> | null>(null);
+
+// Componente para usar useSearchParams con Suspense
+function SearchParamsProvider({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  return (
+    <SearchParamsContext.Provider value={searchParams}>
+      {children}
+    </SearchParamsContext.Provider>
+  );
+}
+
+// Hook personalizado para usar searchParams
+function useSearchParamsContext() {
+  const context = useContext(SearchParamsContext);
+  if (context === null) {
+    throw new Error("useSearchParamsContext debe ser usado dentro de SearchParamsProvider");
+  }
+  return context;
+}
+
 // Datos de ejemplo de cuentas bancarias (posteriormente se obtendrán de la API)
 const ACCOUNTS = [
   { id: "ACC001", name: "Cuenta Operativa Principal" },
@@ -68,9 +91,40 @@ const ACCOUNTS = [
   { id: "ACC003", name: "Cuenta Impuestos" }
 ]
 
+// Definimos la interfaz para las props del componente IncomesContent
+interface IncomesContentProps {
+  selectedIncomes: string[];
+  setSelectedIncomes: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedIncome: any;
+  setSelectedIncome: React.Dispatch<React.SetStateAction<any>>;
+  showDetailView: boolean;
+  setShowDetailView: React.Dispatch<React.SetStateAction<boolean>>;
+  reference: string;
+  setReference: React.Dispatch<React.SetStateAction<string>>;
+  notes: string;
+  setNotes: React.Dispatch<React.SetStateAction<string>>;
+  accountDestination: string;
+  setAccountDestination: React.Dispatch<React.SetStateAction<string>>;
+  isLoading: boolean;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  pendingIncomes: any[];
+  setPendingIncomes: React.Dispatch<React.SetStateAction<any[]>>;
+  searchTerm: string;
+  setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+  isPartialPayment: boolean;
+  setIsPartialPayment: React.Dispatch<React.SetStateAction<boolean>>;
+  partialAmount: string;
+  setPartialAmount: React.Dispatch<React.SetStateAction<string>>;
+  deleteDialogOpen: boolean;
+  setDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  invoiceToDelete: any;
+  setInvoiceToDelete: React.Dispatch<React.SetStateAction<any>>;
+  router: ReturnType<typeof useRouter>;
+  toast: any;
+}
+
 export default function IngresosConfirmarPagoPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [selectedIncomes, setSelectedIncomes] = useState<string[]>([])
   const [selectedIncome, setSelectedIncome] = useState<any>(null)
@@ -85,6 +139,98 @@ export default function IngresosConfirmarPagoPage() {
   const [partialAmount, setPartialAmount] = useState("")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [invoiceToDelete, setInvoiceToDelete] = useState<any>(null)
+  
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header />
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-auto">
+          <div className="flex flex-col space-y-6 p-8">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => router.push('/finanzas')}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-3xl font-bold tracking-tight">Confirmar Ingresos</h1>
+            </div>
+            
+            <Card className="w-full">
+              <CardContent className="p-6">
+                <Suspense fallback={<div>Cargando...</div>}>
+                  <SearchParamsProvider>
+                    <IncomesContent 
+                      selectedIncomes={selectedIncomes}
+                      setSelectedIncomes={setSelectedIncomes}
+                      selectedIncome={selectedIncome}
+                      setSelectedIncome={setSelectedIncome}
+                      showDetailView={showDetailView}
+                      setShowDetailView={setShowDetailView}
+                      reference={reference}
+                      setReference={setReference}
+                      notes={notes}
+                      setNotes={setNotes}
+                      accountDestination={accountDestination}
+                      setAccountDestination={setAccountDestination}
+                      isLoading={isLoading}
+                      setIsLoading={setIsLoading}
+                      pendingIncomes={pendingIncomes}
+                      setPendingIncomes={setPendingIncomes}
+                      searchTerm={searchTerm}
+                      setSearchTerm={setSearchTerm}
+                      isPartialPayment={isPartialPayment}
+                      setIsPartialPayment={setIsPartialPayment}
+                      partialAmount={partialAmount}
+                      setPartialAmount={setPartialAmount}
+                      deleteDialogOpen={deleteDialogOpen}
+                      setDeleteDialogOpen={setDeleteDialogOpen}
+                      invoiceToDelete={invoiceToDelete}
+                      setInvoiceToDelete={setInvoiceToDelete}
+                      router={router}
+                      toast={toast}
+                    />
+                  </SearchParamsProvider>
+                </Suspense>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+// Componente que usa searchParams
+function IncomesContent({
+  selectedIncomes,
+  setSelectedIncomes,
+  selectedIncome,
+  setSelectedIncome,
+  showDetailView,
+  setShowDetailView,
+  reference,
+  setReference,
+  notes,
+  setNotes,
+  accountDestination,
+  setAccountDestination,
+  isLoading,
+  setIsLoading,
+  pendingIncomes,
+  setPendingIncomes,
+  searchTerm,
+  setSearchTerm,
+  isPartialPayment,
+  setIsPartialPayment,
+  partialAmount,
+  setPartialAmount,
+  deleteDialogOpen,
+  setDeleteDialogOpen,
+  invoiceToDelete,
+  setInvoiceToDelete,
+  router,
+  toast
+}: IncomesContentProps) {
+  const searchParams = useSearchParamsContext();
   
   // Cargar datos de ingresos pendientes
   useEffect(() => {
@@ -133,7 +279,7 @@ export default function IngresosConfirmarPagoPage() {
       setPendingIncomes(formattedInvoices);
     } catch (error) {
       console.error('Error al cargar ingresos pendientes:', error);
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se pudieron cargar los ingresos pendientes",
         variant: "destructive"
@@ -209,7 +355,7 @@ export default function IngresosConfirmarPagoPage() {
     if (!selectedIncome) return;
     
     if (!accountDestination) {
-      toast({
+      toast.toast({
         title: "Campos requeridos",
         description: "Por favor selecciona una cuenta de destino",
         variant: "destructive"
@@ -223,7 +369,7 @@ export default function IngresosConfirmarPagoPage() {
       const totalValue = parseFloat(selectedIncome.originalInvoice?.total || 0);
       
       if (isNaN(amountValue) || amountValue <= 0) {
-        toast({
+        toast.toast({
           title: "Monto inválido",
           description: "Por favor ingresa un monto válido para el pago parcial",
           variant: "destructive"
@@ -232,7 +378,7 @@ export default function IngresosConfirmarPagoPage() {
       }
       
       if (amountValue >= totalValue) {
-        toast({
+        toast.toast({
           title: "Monto incorrecto",
           description: "El monto parcial debe ser menor al total de la factura",
           variant: "destructive"
@@ -269,7 +415,7 @@ export default function IngresosConfirmarPagoPage() {
             // Verificar si se creó una nueva factura por el saldo restante
             const newInvoiceCreated = result.newInvoice && result.newInvoice._id;
             
-            toast({
+            toast.toast({
               title: "¡Éxito!",
               description: isPartialPayment 
                 ? newInvoiceCreated 
@@ -295,7 +441,7 @@ export default function IngresosConfirmarPagoPage() {
         }
       } else {
         // En caso de que estemos trabajando con datos simulados
-        toast({
+        toast.toast({
           title: "¡Éxito!",
           description: isPartialPayment ? 
             "El pago parcial ha sido registrado y se ha creado una factura por el monto restante (simulado)" : 
@@ -308,7 +454,7 @@ export default function IngresosConfirmarPagoPage() {
       }
     } catch (error: any) {
       console.error('Error al confirmar ingreso:', error);
-      toast({
+      toast.toast({
         title: "Error",
         description: error.message || "No se pudo confirmar el ingreso. Inténtalo de nuevo.",
         variant: "destructive"
@@ -323,7 +469,7 @@ export default function IngresosConfirmarPagoPage() {
     if (selectedIncomes.length === 0) return;
     
     if (!accountDestination) {
-      toast({
+      toast.toast({
         title: "Campos requeridos",
         description: "Por favor selecciona una cuenta de destino",
         variant: "destructive"
@@ -352,7 +498,7 @@ export default function IngresosConfirmarPagoPage() {
         const failedCount = result.failed.length;
         
         if (successCount > 0) {
-          toast({
+          toast.toast({
             title: "¡Éxito!",
             description: `${successCount} ${successCount === 1 ? 'ingreso confirmado' : 'ingresos confirmados'} correctamente${failedCount > 0 ? `, ${failedCount} fallidos` : ''}`
           });
@@ -365,7 +511,7 @@ export default function IngresosConfirmarPagoPage() {
         }
       } else {
         // En caso de que estemos trabajando con datos simulados
-        toast({
+        toast.toast({
           title: "¡Éxito!",
           description: `${selectedIncomes.length} ${selectedIncomes.length === 1 ? 'ingreso confirmado' : 'ingresos confirmados'} correctamente (simulado)`
         });
@@ -376,7 +522,7 @@ export default function IngresosConfirmarPagoPage() {
       }
     } catch (error) {
       console.error('Error al confirmar ingresos:', error);
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se pudieron confirmar los ingresos. Inténtalo de nuevo.",
         variant: "destructive"
@@ -515,12 +661,12 @@ export default function IngresosConfirmarPagoPage() {
         // Recargar la lista completa de facturas en lugar de solo eliminar una localmente
         await loadPendingIncomes()
         
-        toast({
+        toast.toast({
           title: "Factura eliminada",
           description: "La factura ha sido eliminada correctamente",
         })
       } else {
-        toast({
+        toast.toast({
           title: "Error",
           description: "No se pudo eliminar la factura",
           variant: "destructive"
@@ -528,7 +674,7 @@ export default function IngresosConfirmarPagoPage() {
       }
     } catch (error) {
       console.error("Error al eliminar la factura:", error)
-      toast({
+      toast.toast({
         title: "Error",
         description: "No se pudo eliminar la factura",
         variant: "destructive"
@@ -971,27 +1117,8 @@ export default function IngresosConfirmarPagoPage() {
   }
   
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">
-          <div className="flex flex-col space-y-6 p-8">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => router.push('/finanzas')}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-3xl font-bold tracking-tight">Confirmar Ingresos</h1>
-            </div>
-            
-            <Card className="w-full">
-              <CardContent className="p-6">
-                {showDetailView ? renderIncomeDetail() : renderIncomesList()}
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-    </div>
+    <>
+      {showDetailView ? renderIncomeDetail() : renderIncomesList()}
+    </>
   )
 } 

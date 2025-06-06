@@ -7,7 +7,7 @@ WORKDIR /app
 # Copiar archivos de configuración
 COPY package.json package-lock.json* ./
 
-# Instalar dependencias
+# Instalar dependencias con legacy-peer-deps para compatibilidad
 RUN npm ci --legacy-peer-deps
 
 # Copiar código fuente

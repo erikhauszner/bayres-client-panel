@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -27,6 +27,29 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+
+// Contexto para useSearchParams
+import { createContext, useContext } from "react";
+const SearchParamsContext = createContext<ReturnType<typeof useSearchParams> | null>(null);
+
+// Componente para usar useSearchParams con Suspense
+function SearchParamsProvider({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  return (
+    <SearchParamsContext.Provider value={searchParams}>
+      {children}
+    </SearchParamsContext.Provider>
+  );
+}
+
+// Hook personalizado para usar searchParams
+function useSearchParamsContext() {
+  const context = useContext(SearchParamsContext);
+  if (context === null) {
+    throw new Error("useSearchParamsContext debe ser usado dentro de SearchParamsProvider");
+  }
+  return context;
+}
 
 // Datos de ejemplo para pagos pendientes
 const PENDING_PAYMENTS = [
@@ -162,15 +185,93 @@ const ACCOUNTS = [
   { id: "ACC004", name: "Cuenta Nómina" }
 ]
 
+// Interfaz para las props del componente PaymentContent
+interface PaymentContentProps {
+  selectedPayments: string[];
+  setSelectedPayments: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedPayment: any;
+  setSelectedPayment: React.Dispatch<React.SetStateAction<any>>;
+  showDetailView: boolean;
+  setShowDetailView: React.Dispatch<React.SetStateAction<boolean>>;
+  reference: string;
+  setReference: React.Dispatch<React.SetStateAction<string>>;
+  notes: string;
+  setNotes: React.Dispatch<React.SetStateAction<string>>;
+  accountOrigin: string;
+  setAccountOrigin: React.Dispatch<React.SetStateAction<string>>;
+  router: ReturnType<typeof useRouter>;
+}
+
 export default function NominaConfirmarPagoPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [selectedPayments, setSelectedPayments] = useState<string[]>([])
   const [selectedPayment, setSelectedPayment] = useState<any>(null)
   const [showDetailView, setShowDetailView] = useState(false)
   const [reference, setReference] = useState("")
   const [notes, setNotes] = useState("")
   const [accountOrigin, setAccountOrigin] = useState("")
+  
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header />
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-auto">
+          <div className="flex flex-col space-y-6 p-8">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => router.push('/finanzas')}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-3xl font-bold tracking-tight">Confirmar Pagos de Nómina</h1>
+            </div>
+            
+            <Card className="w-full">
+              <CardContent className="p-6">
+                <Suspense fallback={<div>Cargando...</div>}>
+                  <SearchParamsProvider>
+                    <PaymentContent 
+                      selectedPayments={selectedPayments}
+                      setSelectedPayments={setSelectedPayments}
+                      selectedPayment={selectedPayment}
+                      setSelectedPayment={setSelectedPayment}
+                      showDetailView={showDetailView}
+                      setShowDetailView={setShowDetailView}
+                      reference={reference}
+                      setReference={setReference}
+                      notes={notes}
+                      setNotes={setNotes}
+                      accountOrigin={accountOrigin}
+                      setAccountOrigin={setAccountOrigin}
+                      router={router}
+                    />
+                  </SearchParamsProvider>
+                </Suspense>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+// Componente que usa searchParams
+function PaymentContent({
+  selectedPayments,
+  setSelectedPayments,
+  selectedPayment,
+  setSelectedPayment,
+  showDetailView,
+  setShowDetailView,
+  reference,
+  setReference,
+  notes,
+  setNotes,
+  accountOrigin,
+  setAccountOrigin,
+  router
+}: PaymentContentProps) {
+  const searchParams = useSearchParamsContext();
   
   // Verificar si se está cargando un pago específico
   useEffect(() => {
@@ -662,27 +763,8 @@ export default function NominaConfirmarPagoPage() {
   }
   
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">
-          <div className="flex flex-col space-y-6 p-8">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => router.push('/finanzas')}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-3xl font-bold tracking-tight">Confirmar Pagos de Nómina</h1>
-            </div>
-            
-            <Card className="w-full">
-              <CardContent className="p-6">
-                {showDetailView ? renderPaymentDetail() : renderPaymentsList()}
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-    </div>
+    <>
+      {showDetailView ? renderPaymentDetail() : renderPaymentsList()}
+    </>
   )
 } 
