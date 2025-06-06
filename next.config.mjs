@@ -27,14 +27,14 @@ const nextConfig = {
   },
 
   // Propagar las variables de entorno al cliente
-  // Sin valores predeterminados para forzar su definición en .env.local
+  // Ahora con valores predeterminados para permitir la construcción sin .env.local
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_CLIENT_URL: process.env.NEXT_PUBLIC_CLIENT_URL,
-    NEXT_PUBLIC_WEBHOOK_URL: process.env.NEXT_PUBLIC_WEBHOOK_URL,
-    NEXT_PUBLIC_NOTIFICATIONS_URL: process.env.NEXT_PUBLIC_NOTIFICATIONS_URL,
-    NEXT_PUBLIC_HEALTH_CHECK_URL: process.env.NEXT_PUBLIC_HEALTH_CHECK_URL,
-    NEXT_PUBLIC_UPLOADS_URL: process.env.NEXT_PUBLIC_UPLOADS_URL,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.bayreshub.com/api',
+    NEXT_PUBLIC_CLIENT_URL: process.env.NEXT_PUBLIC_CLIENT_URL || 'https://panel.bayreshub.com',
+    NEXT_PUBLIC_WEBHOOK_URL: process.env.NEXT_PUBLIC_WEBHOOK_URL || 'https://api.bayreshub.com/external/leads/webhook',
+    NEXT_PUBLIC_NOTIFICATIONS_URL: process.env.NEXT_PUBLIC_NOTIFICATIONS_URL || 'https://api.bayreshub.com/notifications',
+    NEXT_PUBLIC_HEALTH_CHECK_URL: process.env.NEXT_PUBLIC_HEALTH_CHECK_URL || 'https://api.bayreshub.com/health',
+    NEXT_PUBLIC_UPLOADS_URL: process.env.NEXT_PUBLIC_UPLOADS_URL || 'https://api.bayreshub.com/uploads',
   },
 }
 

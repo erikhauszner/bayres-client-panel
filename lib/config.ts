@@ -1,10 +1,22 @@
 // Verifica que las variables de entorno necesarias estén definidas
+// y proporciona valores por defecto para desarrollo
 function getRequiredEnvVar(name: string): string {
   const value = process.env[name];
   if (!value) {
-    // En el navegador, no queremos detener la ejecución, solo mostramos un error
-    console.error(`Error: La variable de entorno ${name} no está definida.`);
-    return '';
+    // Proporcionar valores por defecto en lugar de mostrar error
+    console.warn(`Advertencia: La variable de entorno ${name} no está definida, usando valor por defecto.`);
+    
+    // Valores por defecto para desarrollo
+    const defaults: Record<string, string> = {
+      'NEXT_PUBLIC_API_URL': 'https://api.bayreshub.com/api',
+      'NEXT_PUBLIC_CLIENT_URL': 'https://panel.bayreshub.com',
+      'NEXT_PUBLIC_WEBHOOK_URL': 'https://api.bayreshub.com/external/leads/webhook',
+      'NEXT_PUBLIC_NOTIFICATIONS_URL': 'https://api.bayreshub.com/notifications',
+      'NEXT_PUBLIC_HEALTH_CHECK_URL': 'https://api.bayreshub.com/health',
+      'NEXT_PUBLIC_UPLOADS_URL': 'https://api.bayreshub.com/uploads',
+    };
+    
+    return defaults[name] || '';
   }
   return value;
 }
