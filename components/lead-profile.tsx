@@ -871,10 +871,10 @@ export default function LeadProfile({ id }: { id: string }) {
     }
     
     try {
-      await leadService.updateLeadStage(id, "Pendiente Seguimiento");
+      await leadService.updateLeadStage(id, "Agenda Pendiente");
       toast({
         title: "Estado actualizado",
-        description: "El lead ha sido marcado como pendiente de seguimiento"
+        description: "El lead ha sido marcado como agenda pendiente"
       });
       await refreshLeadData();
     } catch (err: any) {
