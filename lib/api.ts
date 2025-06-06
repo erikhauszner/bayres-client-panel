@@ -6,8 +6,16 @@ import { API_URL } from './config';
 // Crear una instancia de axios con la URL base de la API
 console.log('API_URL configurada en:', API_URL);
 
+// Determinar la URL base correcta
+let baseURL = API_URL;
+if (baseURL.endsWith('/api')) {
+  baseURL = baseURL.substring(0, baseURL.length - 4);
+}
+
+console.log('Usando baseURL:', baseURL);
+
 const api = axios.create({
-  baseURL: `${API_URL}`, // Ya incluye /api como parte de la URL base
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -40,6 +48,13 @@ api.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    // Añadir prefijo /api para rutas que lo requieren
+    if (config.url && !config.url.startsWith('/') && 
+        !config.url.startsWith('http') &&
+        !config.url.startsWith('notifications')) {
+      config.url = `api/${config.url}`;
     }
     
     console.log(`🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`);
