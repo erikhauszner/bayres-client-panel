@@ -828,8 +828,8 @@ export default function LeadProfile({ id }: { id: string }) {
   const handleLeadContacted = async () => {
     if (!lead?._id) return;
     
-    // Verificar el permiso específico para esta acción
-    if (!canEditAppSettersStage) {
+    // Verificar cualquiera de los dos permisos: leads:stage_edit_appsetters o leads:edit_stage
+    if (!canEditAppSettersStage && !canEditStage) {
       toast({
         variant: "destructive",
         title: "Permiso denegado",
@@ -857,8 +857,8 @@ export default function LeadProfile({ id }: { id: string }) {
   const handleAgendaPendiente = async () => {
     if (!lead?._id) return;
     
-    // Verificar el permiso específico para esta acción
-    if (!canEditAppSettersStage) {
+    // Verificar cualquiera de los dos permisos: leads:stage_edit_appsetters o leads:edit_stage
+    if (!canEditAppSettersStage && !canEditStage) {
       toast({
         variant: "destructive",
         title: "Permiso denegado",
@@ -1262,7 +1262,7 @@ export default function LeadProfile({ id }: { id: string }) {
               )}
 
               {/* Botón de Acciones para AppSetters - Solo visible si tiene permiso */}
-              {canEditAppSettersStage && lead?.currentStage === "Nuevo" && (
+              {(canEditAppSettersStage || canEditStage) && lead?.currentStage === "Nuevo" && (
                 <Button variant="default" size="sm" className="gap-2 w-full justify-between" onClick={handleLeadContacted}>
                   <span>Lead Contactado</span>
                   <Check className="h-4 w-4" />
@@ -1270,7 +1270,7 @@ export default function LeadProfile({ id }: { id: string }) {
               )}
               
               {/* Botón de Agenda Pendiente - Solo visible si tiene permiso y el lead está en etapa correcta */}
-              {canEditAppSettersStage && (lead?.currentStage === "Contactado" || lead?.currentStage === "Pendiente Seguimiento") && (
+              {(canEditAppSettersStage || canEditStage) && (lead?.currentStage === "Contactado" || lead?.currentStage === "Pendiente Seguimiento") && (
                 <Button variant="outline" size="sm" className="gap-2 w-full justify-between" onClick={handleAgendaPendiente}>
                   <span>Agenda Pendiente</span>
                   <Calendar className="h-4 w-4" />
