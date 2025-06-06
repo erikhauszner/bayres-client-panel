@@ -788,16 +788,16 @@ export default function LeadProfile({ id }: { id: string }) {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       window.open(url, '_blank');
     } else {
-      // Usar la URL configurada del cliente 
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : CLIENT_URL;
+      // Usar la URL configurada para archivos subidos desde las variables de entorno
+      const uploadsUrl = process.env.NEXT_PUBLIC_UPLOADS_URL || (typeof window !== 'undefined' ? window.location.origin : CLIENT_URL);
       
       // Asegurarse de que la URL del documento no tenga prefijo /api
       const documentUrl = url.startsWith('/api/') 
         ? url.replace('/api/', '/') 
         : url;
       
-      console.log(`Abriendo documento: ${baseUrl}${documentUrl}`);
-      window.open(`${baseUrl}${documentUrl}`, '_blank');
+      console.log(`Abriendo documento: ${uploadsUrl}${documentUrl}`);
+      window.open(`${uploadsUrl}${documentUrl}`, '_blank');
     }
   };
 
@@ -1280,7 +1280,10 @@ export default function LeadProfile({ id }: { id: string }) {
               )}
               
               {/* Botón de Agenda Pendiente - Solo visible si tiene permiso y el lead está en etapa correcta */}
-              {(canEditAppSettersStage || canEditStage) && (lead?.currentStage === "Contactado" || lead?.currentStage === "Pendiente Seguimiento") && (
+              {(canEditAppSettersStage || canEditStage) && (
+                lead?.currentStage === "Contactado" || 
+                lead?.currentStage === "Pendiente Seguimiento"
+              ) && (
                 <Button variant="outline" size="sm" className="gap-2 w-full justify-between" onClick={handleAgendaPendiente}>
                   <span>Agenda Pendiente</span>
                   <Calendar className="h-4 w-4" />
