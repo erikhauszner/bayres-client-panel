@@ -8,18 +8,18 @@ function getRequiredEnvVar(name: string): string {
     
     // Valores por defecto para desarrollo
     const defaults: Record<string, string> = {
-//      'NEXT_PUBLIC_API_URL': 'https://api.bayreshub.com/api',
-//      'NEXT_PUBLIC_CLIENT_URL': 'https://panel.bayreshub.com',
-//      'NEXT_PUBLIC_WEBHOOK_URL': 'https://api.bayreshub.com/external/',
-//      'NEXT_PUBLIC_NOTIFICATIONS_URL': 'https://api.bayreshub.com/notifications',
-//      'NEXT_PUBLIC_HEALTH_CHECK_URL': 'https://api.bayreshub.com/health',
-//      'NEXT_PUBLIC_UPLOADS_URL': 'https://api.bayreshub.com/uploads',
-      'NEXT_PUBLIC_API_URL': 'http://localhost:3000/api',
-      'NEXT_PUBLIC_CLIENT_URL': 'http://localhost:3001',
-      'NEXT_PUBLIC_WEBHOOK_URL': 'http://localhost:3000/external/',
-      'NEXT_PUBLIC_NOTIFICATIONS_URL': 'http://localhost:3000/notifications',
-      'NEXT_PUBLIC_HEALTH_CHECK_URL': 'http://localhost:3000/health',
-      'NEXT_PUBLIC_UPLOADS_URL': 'http://localhost:3000/uploads',
+      'NEXT_PUBLIC_API_URL': 'https://api.bayreshub.com/api',
+      'NEXT_PUBLIC_CLIENT_URL': 'https://panel.bayreshub.com',
+      'NEXT_PUBLIC_WEBHOOK_URL': 'https://api.bayreshub.com/external/',
+      'NEXT_PUBLIC_NOTIFICATIONS_URL': 'https://api.bayreshub.com/notifications',
+      'NEXT_PUBLIC_HEALTH_CHECK_URL': 'https://api.bayreshub.com/health',
+      'NEXT_PUBLIC_UPLOADS_URL': 'https://api.bayreshub.com/uploads',
+//      'NEXT_PUBLIC_API_URL': 'http://localhost:3000/api',
+//      'NEXT_PUBLIC_CLIENT_URL': 'http://localhost:3001',
+//      'NEXT_PUBLIC_WEBHOOK_URL': 'http://localhost:3000/external/',
+//      'NEXT_PUBLIC_NOTIFICATIONS_URL': 'http://localhost:3000/notifications',
+//      'NEXT_PUBLIC_HEALTH_CHECK_URL': 'http://localhost:3000/health',
+//      'NEXT_PUBLIC_UPLOADS_URL': 'http://localhost:3000/uploads',
     };
     
     return defaults[name] || '';

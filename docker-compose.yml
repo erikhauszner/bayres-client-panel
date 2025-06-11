@@ -8,21 +8,21 @@ services:
     ports:
       - "3001:3001"
     environment:
-#      - NODE_ENV=production
-      - NODE_ENV=development
+      - NODE_ENV=production
+#      - NODE_ENV=development
       - PORT=3001
-#      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.bayreshub.com/api}
-#      - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL:-https://panel.bayreshub.com}
-#      - NEXT_PUBLIC_WEBHOOK_URL=${NEXT_PUBLIC_WEBHOOK_URL:-https://api.bayreshub.com/external/leads/webhook}
-#      - NEXT_PUBLIC_NOTIFICATIONS_URL=${NEXT_PUBLIC_NOTIFICATIONS_URL:-https://api.bayreshub.com/notifications}
-#      - NEXT_PUBLIC_HEALTH_CHECK_URL=${NEXT_PUBLIC_HEALTH_CHECK_URL:-https://api.bayreshub.com/health}
-#     - NEXT_PUBLIC_UPLOADS_URL=${NEXT_PUBLIC_UPLOADS_URL:-https://api.bayreshub.com/uploads}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
-      - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL:-http://localhost:3001}
-      - NEXT_PUBLIC_WEBHOOK_URL=${NEXT_PUBLIC_WEBHOOK_URL:-http://localhost:3000/external/leads/webhook}
-      - NEXT_PUBLIC_NOTIFICATIONS_URL=${NEXT_PUBLIC_NOTIFICATIONS_URL:-http://localhost:3000/notifications}
-      - NEXT_PUBLIC_HEALTH_CHECK_URL=${NEXT_PUBLIC_HEALTH_CHECK_URL:-http://localhost:3000/health}
-      - NEXT_PUBLIC_UPLOADS_URL=${NEXT_PUBLIC_UPLOADS_URL:-http://localhost:3000/uploads}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.bayreshub.com/api}
+      - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL:-https://panel.bayreshub.com}
+      - NEXT_PUBLIC_WEBHOOK_URL=${NEXT_PUBLIC_WEBHOOK_URL:-https://api.bayreshub.com/external/leads/webhook}
+      - NEXT_PUBLIC_NOTIFICATIONS_URL=${NEXT_PUBLIC_NOTIFICATIONS_URL:-https://api.bayreshub.com/notifications}
+      - NEXT_PUBLIC_HEALTH_CHECK_URL=${NEXT_PUBLIC_HEALTH_CHECK_URL:-https://api.bayreshub.com/health}
+      - NEXT_PUBLIC_UPLOADS_URL=${NEXT_PUBLIC_UPLOADS_URL:-https://api.bayreshub.com/uploads}
+#      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
+#      - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL:-http://localhost:3001}
+#     - NEXT_PUBLIC_WEBHOOK_URL=${NEXT_PUBLIC_WEBHOOK_URL:-http://localhost:3000/external/leads/webhook}
+#     - NEXT_PUBLIC_NOTIFICATIONS_URL=${NEXT_PUBLIC_NOTIFICATIONS_URL:-http://localhost:3000/notifications}
+#     - NEXT_PUBLIC_HEALTH_CHECK_URL=${NEXT_PUBLIC_HEALTH_CHECK_URL:-http://localhost:3000/health}
+#     - NEXT_PUBLIC_UPLOADS_URL=${NEXT_PUBLIC_UPLOADS_URL:-http://localhost:3000/uploads}
     restart: unless-stopped
     networks:
       - bayres-network
