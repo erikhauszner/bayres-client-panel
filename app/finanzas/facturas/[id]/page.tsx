@@ -71,7 +71,8 @@ const FACTURA_EJEMPLO = {
   total: 5808,
 };
 
-export default function FacturaDetallePage({ params }: { params: { id: string } }) {
+export default async function FacturaDetallePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const [factura, setFactura] = useState(FACTURA_EJEMPLO);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -83,7 +84,7 @@ export default function FacturaDetallePage({ params }: { params: { id: string } 
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [params.id]);
+  }, [id]);
   
   if (isLoading) {
     return (

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   Briefcase,
@@ -20,6 +20,7 @@ import {
   DollarSign,
   Loader2,
   ExternalLink,
+  Building,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -146,6 +147,7 @@ export default function ProjectsDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
   const router = useRouter()
 
   const filters: ProjectFilters = {
@@ -198,11 +200,10 @@ export default function ProjectsDashboard() {
         setLoading(false)
       }
     }
-
+    
     loadProjects()
-  }, [page, limit, statusFilter, priorityFilter, searchTerm])
+  }, [page, statusFilter, priorityFilter, searchTerm, limit])
 
-  // Navegar al detalle de un proyecto
   const handleProjectClick = (projectId: string | number) => {
     router.push(`/proyectos/${projectId}`)
   }
@@ -246,85 +247,85 @@ export default function ProjectsDashboard() {
   })?.length || 0
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="w-full mx-auto max-w-full space-y-4 px-2 sm:px-4">
       {/* Encabezado */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Proyectos</h1>
-          <p className="text-muted-foreground">Gestiona los proyectos y sus asignaciones</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Proyectos</h1>
+          <p className="text-sm text-muted-foreground">Gestiona los proyectos y sus asignaciones</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button 
             variant="outline" 
             size="sm" 
-            className="h-9"
+            className="h-9 px-2 sm:px-3"
             onClick={() => router.push('/docs?section=projects')}
           >
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Documentación</span>
           </Button>
           <Button 
             variant="default" 
             size="sm" 
-            className="h-9"
+            className="h-9 px-2 sm:px-3"
             onClick={() => router.push('/proyectos/nuevo')}
           >
-            <Briefcase className="mr-2 h-4 w-4" />
-            <span>Nuevo Proyecto</span>
+            <Briefcase className="h-4 w-4 sm:mr-2" />
+            <span className="hidden xs:inline">Nuevo Proyecto</span>
           </Button>
         </div>
       </div>
 
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
         <Card className="netflix-card">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Proyectos</p>
-                <h3 className="mt-1 text-2xl font-bold">{totalProjects}</h3>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Proyectos</p>
+                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalProjects}</h3>
               </div>
-              <div className="rounded-full bg-primary/10 p-2 text-primary">
-                <Briefcase className="h-5 w-5" />
+              <div className="rounded-full bg-primary/10 p-1 sm:p-2 text-primary">
+                <Briefcase className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="netflix-card">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">En Progreso</p>
-                <h3 className="mt-1 text-2xl font-bold">{activeProjects}</h3>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">En Progreso</p>
+                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{activeProjects}</h3>
               </div>
-              <div className="rounded-full bg-blue-500/10 p-2 text-blue-500">
-                <Clock className="h-5 w-5" />
+              <div className="rounded-full bg-blue-500/10 p-1 sm:p-2 text-blue-500">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="netflix-card">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Completados</p>
-                <h3 className="mt-1 text-2xl font-bold">{completedProjects}</h3>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Completados</p>
+                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{completedProjects}</h3>
               </div>
-              <div className="rounded-full bg-green-500/10 p-2 text-green-500">
-                <CheckCircle2 className="h-5 w-5" />
+              <div className="rounded-full bg-green-500/10 p-1 sm:p-2 text-green-500">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="netflix-card">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Retrasados</p>
-                <h3 className="mt-1 text-2xl font-bold">{delayedProjects}</h3>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Retrasados</p>
+                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{delayedProjects}</h3>
               </div>
-              <div className="rounded-full bg-amber-500/10 p-2 text-amber-500">
-                <AlertTriangle className="h-5 w-5" />
+              <div className="rounded-full bg-amber-500/10 p-1 sm:p-2 text-amber-500">
+                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </div>
           </CardContent>
@@ -333,24 +334,57 @@ export default function ProjectsDashboard() {
 
       {/* Barra de búsqueda y filtros */}
       <Card className="netflix-card overflow-hidden">
-        <CardContent className="p-6">
-          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-            <div className="relative w-full sm:w-96">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+        <CardContent className="p-3 sm:p-6">
+          <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:w-auto sm:flex-1">
+              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Buscar proyectos..."
-                className="pl-10"
+                className="pl-8 w-full h-9 text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="h-9 w-full sm:w-auto"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4 mr-1" />
+                <span>Filtros</span>
+              </Button>
+              
+              <div className="flex rounded-md border h-9">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-full w-9 px-0 rounded-none rounded-l-md"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-full w-9 px-0 rounded-none rounded-r-md"
+                  onClick={() => setViewMode("list")}
+                >
+                  <LayoutList className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          {showFilters && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <Select 
                 value={statusFilter}
                 onValueChange={setStatusFilter}
               >
-                <SelectTrigger className="w-[120px] h-9">
+                <SelectTrigger className="h-9">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -368,7 +402,7 @@ export default function ProjectsDashboard() {
                 value={priorityFilter}
                 onValueChange={setPriorityFilter}
               >
-                <SelectTrigger className="w-[120px] h-9">
+                <SelectTrigger className="h-9">
                   <SelectValue placeholder="Prioridad" />
                 </SelectTrigger>
                 <SelectContent>
@@ -378,46 +412,27 @@ export default function ProjectsDashboard() {
                   <SelectItem value="high">Alta</SelectItem>
                 </SelectContent>
               </Select>
-
-              <div className="flex rounded-md border">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="icon"
-                  className="h-9 w-9 rounded-none rounded-l-md"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="icon"
-                  className="h-9 w-9 rounded-none rounded-r-md"
-                  onClick={() => setViewMode("list")}
-                >
-                  <LayoutList className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Lista de proyectos */}
       {loading ? (
-        <div className="flex h-60 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="flex h-40 sm:h-60 items-center justify-center">
+          <Loader2 className="h-7 w-7 sm:h-8 sm:w-8 animate-spin text-muted-foreground" />
         </div>
       ) : projects?.length === 0 ? (
         <Card className="netflix-card">
-          <CardContent className="p-6">
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Briefcase className="h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mt-4 text-lg font-medium">No hay proyectos</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+              <Briefcase className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
+              <h3 className="mt-3 sm:mt-4 text-base sm:text-lg font-medium">No hay proyectos</h3>
+              <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">
                 No se encontraron proyectos con los filtros actuales.
               </p>
               <Button 
-                className="mt-4" 
+                className="mt-3 sm:mt-4 text-xs sm:text-sm" 
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
@@ -431,182 +446,75 @@ export default function ProjectsDashboard() {
         </Card>
       ) : viewMode === "grid" ? (
         // Vista de cuadrícula
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {projects?.map((project) => (
             <Card 
               key={project._id} 
-              className="netflix-card h-full cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-card to-card/60"
+              className="netflix-card h-full cursor-pointer transition-all hover:shadow-lg hover:scale-[1.01] bg-gradient-to-br from-card to-card/60"
               onClick={() => handleProjectClick(project._id || '')}
             >
-              <CardHeader className="p-4 pb-2">
+              <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1.5">
-                    <CardTitle className="line-clamp-1 text-base flex items-center">
+                  <div className="space-y-1">
+                    <CardTitle className="line-clamp-1 text-sm sm:text-base flex items-center">
                       {project.name}
                       {project.priority === "high" && (
-                        <span className="ml-2 flex h-2 w-2 rounded-full bg-red-500" title="Alta prioridad"></span>
+                        <span className="ml-2 flex h-1.5 sm:h-2 w-1.5 sm:w-2 rounded-full bg-red-500" title="Alta prioridad"></span>
                       )}
                     </CardTitle>
-                    <CardDescription className="line-clamp-2 pt-1">
+                    <p className="text-xs text-muted-foreground line-clamp-2">
                       {project.description || "Sin descripción"}
-                    </CardDescription>
+                    </p>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/proyectos/${project._id}/edit`);
-                      }}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Editar</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="text-red-500 focus:text-red-500"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteConfirmation(project._id || '');
-                        }}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Eliminar</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Badge className={getStatusColor(project.status)}>
+                  <div className="flex">
+                    <Badge className={`text-xs ${getStatusColor(project.status)}`}>
                       {getStatusText(project.status)}
                     </Badge>
-                    <Badge className={getPriorityColor(project.priority || '')}>
-                      {project.priority === "high" 
-                        ? "Alta" 
-                        : project.priority === "medium" 
-                          ? "Media" 
-                          : "Baja"}
-                    </Badge>
                   </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-3 sm:p-4 pt-0">
+                <div className="space-y-2 text-xs sm:text-sm">
+                  {/* Fechas */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <CalendarDays className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
+                      <span className="text-xs sm:text-xs">Inicio: {formatDate(project.startDate)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <CalendarDays className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
+                      <span className="text-xs sm:text-xs">Fin: {formatDate(project.endDate)}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Progreso */}
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Progreso</span>
-                      <span className="font-medium">{project.progress}%</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Progreso</span>
+                      <span className="text-xs font-medium">{project.progress || 0}%</span>
                     </div>
-                    <Progress 
-                      value={project.progress || 0} 
-                      className="h-1.5" 
-                      indicatorClassName={
-                        (project.progress || 0) === 100 
-                          ? "bg-green-500" 
-                          : (project.progress || 0) > 60 
-                            ? "bg-blue-500" 
-                            : "bg-amber-500"
-                      }
-                    />
+                    <Progress value={project.progress || 0} className="h-1.5" />
                   </div>
                   
-                  {/* Días restantes */}
-                  {project.status !== 'completed' && project.status !== 'canceled' && (
-                    <div className="mt-2 text-xs">
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        <span>{calculateRemainingDays(project.endDate)} días restantes</span>
-                      </div>
+                  {/* Cliente */}
+                  {project.client && (
+                    <div className="flex items-center text-xs">
+                      <Building className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground line-clamp-1">
+                        Cliente: {typeof project.client === 'string' ? project.client : project.client.name}
+                      </span>
                     </div>
                   )}
                   
-                  <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Fecha inicio</p>
-                      <p className="font-medium">{formatDate(project.startDate)}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Fecha fin</p>
-                      <p className="font-medium">{formatDate(project.endDate)}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Cliente</p>
-                      <p className="font-medium line-clamp-1">
-                        {typeof project.client === 'string' 
-                          ? project.client 
-                          : project.client?.name || "Sin cliente"}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Responsable</p>
-                      <p className="font-medium line-clamp-1">
-                        {typeof project.manager === 'string' 
-                          ? project.manager 
-                          : project.manager?.firstName + ' ' + project.manager?.lastName || "Sin asignar"}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Presupuesto */}
-                  <div className="grid grid-cols-2 gap-2 pt-0 text-xs">
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Presupuesto</p>
-                      <p className="font-medium">${project.budget || 0}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Gastado</p>
-                      <p className="font-medium">${project.spent || 0}</p>
-                    </div>
-                  </div>
-
-                  {/* Miembros del equipo */}
-                  {Array.isArray(project.assignedTo) && project.assignedTo.length > 0 && (
-                    <div className="mt-2">
-                      <p className="text-xs text-muted-foreground mb-1.5">Equipo</p>
-                      <div className="flex -space-x-2 overflow-hidden">
-                        {project.assignedTo.slice(0, 3).map((member: any, index: number) => (
-                          <div 
-                            key={index} 
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary ring-2 ring-background"
-                            title={typeof member === 'string' 
-                              ? member
-                              : `${member.firstName} ${member.lastName}`}
-                          >
-                            {typeof member === 'string' 
-                              ? member.substring(0, 2).toUpperCase()
-                              : `${member.firstName.charAt(0)}${member.lastName.charAt(0)}`}
-                          </div>
-                        ))}
-                        {project.assignedTo.length > 3 && (
-                          <div 
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary ring-2 ring-background"
-                            title="Más miembros del equipo"
-                          >
-                            +{project.assignedTo.length - 3}
-                          </div>
-                        )}
-                      </div>
+                  {/* Presupuesto si está disponible */}
+                  {project.budget && (
+                    <div className="flex items-center text-xs">
+                      <DollarSign className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        Presupuesto: ${project.budget.toLocaleString('es-ES')}
+                      </span>
                     </div>
                   )}
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="w-full mt-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleProjectClick(project._id || '');
-                    }}
-                  >
-                    Ver detalles
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -614,172 +522,220 @@ export default function ProjectsDashboard() {
         </div>
       ) : (
         // Vista de lista
-        <Card className="netflix-card">
-          <CardContent className="p-0">
+        <Card className="netflix-card overflow-hidden">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Proyecto</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Progreso</TableHead>
-                  <TableHead className="hidden md:table-cell">Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell">Fechas</TableHead>
-                  <TableHead>Acciones</TableHead>
+                  <TableHead className="w-[250px]">Nombre del Proyecto</TableHead>
+                  <TableHead className="hidden sm:table-cell">Estado</TableHead>
+                  <TableHead className="hidden md:table-cell">Progreso</TableHead>
+                  <TableHead className="hidden lg:table-cell">Fechas</TableHead>
+                  <TableHead className="hidden xl:table-cell">Cliente</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {projects?.map((project) => (
-                  <TableRow 
-                    key={project._id} 
-                    className="cursor-pointer"
-                    onClick={() => handleProjectClick(project._id || '')}
-                  >
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{project.name}</span>
-                        <span className="text-xs text-muted-foreground line-clamp-1">
-                          {project.description || "Sin descripción"}
-                        </span>
+                  <TableRow key={project._id} className="h-[60px]">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-shrink-0">
+                          <Badge variant="outline" className={getPriorityColor(project.priority || '')}>
+                            {project.priority === "low" ? "Baja" : 
+                            project.priority === "medium" ? "Media" : "Alta"}
+                          </Badge>
+                        </div>
+                        <div className="truncate">
+                          <div className="font-medium text-sm truncate">{project.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {project.description && project.description.length > 30 ? 
+                              `${project.description.substring(0, 30)}...` : 
+                              project.description || "Sin descripción"}
+                          </div>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Badge className={getStatusColor(project.status)}>
                         {getStatusText(project.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Progress value={project.progress || 0} className="h-2 w-20" />
-                        <span className="text-xs">{project.progress}%</span>
-                      </div>
-                    </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      <span className="line-clamp-1">
-                        {typeof project.client === 'string' 
-                          ? project.client 
-                          : project.client?.name || "Sin cliente"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <div className="flex flex-col text-xs">
-                        <span>Inicio: {formatDate(project.startDate)}</span>
-                        <span>Fin: {formatDate(project.endDate)}</span>
+                      <div className="w-full space-y-1">
+                        <Progress value={project.progress || 0} className="h-1.5" />
+                        <span className="text-xs text-right block">{project.progress || 0}%</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/proyectos/${project._id}/edit`);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleProjectClick(project._id || '');
-                          }}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-red-500"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteConfirmation(project._id || '');
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    <TableCell className="hidden lg:table-cell">
+                      <div className="flex flex-col space-y-0.5">
+                        <div className="flex items-center">
+                          <CalendarDays className="mr-1 h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs">Inicio: {formatDate(project.startDate)}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CalendarDays className="mr-1 h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs">Fin: {formatDate(project.endDate)}</span>
+                        </div>
                       </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      {project.client ? (
+                        <div className="flex items-center">
+                          <Building className="mr-1 h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs truncate">
+                            {typeof project.client === 'string' ? project.client : project.client.name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No asignado</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right pr-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Abrir menú</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[180px]">
+                          <DropdownMenuItem 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleProjectClick(project._id || '')
+                            }}
+                            className="text-xs sm:text-sm"
+                          >
+                            <ExternalLink className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <span>Ver detalles</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/proyectos/${project._id}/editar`)
+                            }}
+                            className="text-xs sm:text-sm"
+                          >
+                            <Edit className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <span>Editar proyecto</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setDeleteConfirmation(project._id || '')
+                            }}
+                            className="text-red-600 text-xs sm:text-sm"
+                          >
+                            <Trash2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <span>Eliminar</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
+          </div>
         </Card>
       )}
 
       {/* Paginación */}
       {totalPages > 1 && (
-        <Pagination className="mx-auto">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (page > 1) setPage(page - 1);
-                }}
-                className={page <= 1 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-            
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <PaginationItem key={i} className={i + 1 === page ? "font-bold" : ""}>
-                <PaginationLink 
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+          <div className="text-xs sm:text-sm text-muted-foreground">
+            Mostrando {projects?.length} de {totalProjects} proyectos
+          </div>
+          <Pagination>
+            <PaginationContent className="flex space-x-1">
+              <PaginationItem>
+                <PaginationPrevious 
                   href="#" 
                   onClick={(e) => {
                     e.preventDefault();
-                    setPage(i + 1);
+                    if (page > 1) setPage(page - 1);
                   }}
-                  isActive={i + 1 === page}
-                >
-                  {i + 1}
-                </PaginationLink>
+                  className={`h-7 sm:h-8 min-w-7 sm:min-w-8 p-0 sm:px-2.5 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
+                />
               </PaginationItem>
-            ))}
-            
-            <PaginationItem>
-              <PaginationNext 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (page < totalPages) setPage(page + 1);
-                }}
-                className={page >= totalPages ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1))
+                .map((p, idx, arr) => {
+                  // Mostrar puntos suspensivos para páginas omitidas
+                  const prevPage = arr[idx - 1];
+                  const showEllipsis = prevPage && p - prevPage > 1;
+                  
+                  return (
+                    <React.Fragment key={p}>
+                      {showEllipsis && (
+                        <PaginationItem className="flex h-7 sm:h-8 w-7 sm:w-8 items-center justify-center">
+                          <span className="text-xs sm:text-sm">...</span>
+                        </PaginationItem>
+                      )}
+                      <PaginationItem>
+                        <PaginationLink 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPage(p);
+                          }}
+                          isActive={p === page}
+                          className="h-7 sm:h-8 w-7 sm:w-8 p-0"
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </React.Fragment>
+                  );
+                })}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  href="#" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (page < totalPages) setPage(page + 1);
+                  }}
+                  className={`h-7 sm:h-8 min-w-7 sm:min-w-8 p-0 sm:px-2.5 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       )}
 
       {/* Diálogo de confirmación para eliminar */}
       {deleteConfirmation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="mx-4 max-w-md netflix-card">
-            <CardHeader>
-              <CardTitle>Confirmar eliminación</CardTitle>
-              <CardDescription>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <Card className="max-w-md w-full netflix-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base sm:text-lg">Confirmar eliminación</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 ¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex justify-end gap-2">
+            <CardContent className="flex justify-end gap-2 pt-4">
               <Button 
                 variant="outline" 
+                size="sm"
+                className="text-xs sm:text-sm"
                 onClick={() => setDeleteConfirmation(null)}
               >
                 Cancelar
               </Button>
               <Button 
                 variant="destructive"
+                size="sm"
+                className="text-xs sm:text-sm"
                 onClick={() => handleDeleteProject(deleteConfirmation)}
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                     Eliminando...
                   </>
                 ) : (

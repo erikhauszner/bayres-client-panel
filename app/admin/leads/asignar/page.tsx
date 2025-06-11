@@ -220,6 +220,14 @@ export default function AsignarLeadsPage() {
     }
   }
   
+  const toggleSelectAllEmployees = () => {
+    if (selectedEmployees.length === filteredEmployees.length) {
+      setSelectedEmployees([])
+    } else {
+      setSelectedEmployees(filteredEmployees.map(employee => employee._id || ""))
+    }
+  }
+  
   const toggleAutoAssignSelectEmployee = (id: string) => {
     if (autoAssignSelectedEmployees.includes(id)) {
       setAutoAssignSelectedEmployees(autoAssignSelectedEmployees.filter(empId => empId !== id))
@@ -405,47 +413,53 @@ export default function AsignarLeadsPage() {
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl space-y-6">
-            {/* Encabezado */}
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-9"
-                  onClick={() => router.back()}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  <span>Volver</span>
-                </Button>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-center gap-2">
-                  <UserPlus className="h-6 w-6 text-primary" />
-                  <h1 className="text-2xl font-bold tracking-tight">Asignación de Leads</h1>
-                </div>
-              </div>
-              <div className="flex-1"></div>
+        <main className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
+          <div className="mx-auto max-w-7xl">
+            {/* Navegación de regreso */}
+            <div className="mb-4">
+              <Button 
+                variant="ghost" 
+                className="pl-0 h-9" 
+                onClick={() => router.back()}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver
+              </Button>
+            </div>
+            
+            {/* Título y descripción */}
+            <div className="mb-6">
+              <h1 className="text-xl sm:text-2xl font-bold">Asignación de Leads</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Asigna leads pendientes a empleados para su seguimiento
+              </p>
             </div>
             
             {/* Contenido principal */}
-            <Tabs defaultValue="manual" value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full max-w-[320px] mx-auto mb-4">
-                <TabsTrigger value="manual" className="flex-1">Manual</TabsTrigger>
-                <TabsTrigger value="automatica" className="flex-1">Automática</TabsTrigger>
-              </TabsList>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <div className="overflow-x-auto pb-1">
+                <TabsList className="w-auto inline-flex min-w-max">
+                  <TabsTrigger value="manual" className="text-xs sm:text-sm whitespace-nowrap">
+                    <UserCheck className="mr-2 h-4 w-4" />
+                    Asignación Manual
+                  </TabsTrigger>
+                  <TabsTrigger value="automatica" className="text-xs sm:text-sm whitespace-nowrap">
+                    <Shuffle className="mr-2 h-4 w-4" />
+                    Asignación Automática
+                  </TabsTrigger>
+                </TabsList>
+              </div>
               
-              {/* Asignación Manual */}
+              {/* Pestaña de asignación manual */}
               <TabsContent value="manual">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Asignación Manual</CardTitle>
+                  <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="text-lg sm:text-xl">Asignación Manual de Leads</CardTitle>
                     <CardDescription>
-                      Selecciona los leads y los empleados a los que quieres asignarlos
+                      Selecciona los leads y empleados para asignarlos manualmente
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="p-4 sm:p-6 pt-0">
                     {!hasPermission && (
                       <Alert variant="destructive" className="mb-4">
                         <ShieldAlert className="h-4 w-4" />
@@ -454,6 +468,14 @@ export default function AsignarLeadsPage() {
                           No tienes permiso para asignar leads. Esta acción requiere el permiso 'leads:update'.
                           Contacta al administrador para solicitar acceso.
                         </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    {error && (
+                      <Alert variant="destructive" className="mb-4">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
                       </Alert>
                     )}
                     
@@ -466,7 +488,7 @@ export default function AsignarLeadsPage() {
                       <div className="grid gap-6 md:grid-cols-2">
                         {/* Lista de Leads */}
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <h3 className="text-lg font-medium">Seleccionar Leads</h3>
                             <div className="text-sm text-muted-foreground">
                               {selectedLeads.length} seleccionados
@@ -483,7 +505,7 @@ export default function AsignarLeadsPage() {
                             />
                           </div>
                           
-                          <div className="border rounded-md">
+                          <div className="border rounded-md overflow-x-auto">
                             <Table>
                               <TableHeader>
                                 <TableRow>
@@ -491,17 +513,20 @@ export default function AsignarLeadsPage() {
                                     <Checkbox 
                                       checked={selectedLeads.length === filteredLeads.length && filteredLeads.length > 0} 
                                       onCheckedChange={toggleSelectAllLeads}
+                                      disabled={filteredLeads.length === 0}
                                     />
                                   </TableHead>
-                                  <TableHead>Lead</TableHead>
-                                  <TableHead>Estado</TableHead>
+                                  <TableHead>Nombre</TableHead>
+                                  <TableHead>Empresa</TableHead>
+                                  <TableHead className="hidden md:table-cell">Origen</TableHead>
+                                  <TableHead className="hidden md:table-cell">Fecha</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
                                 {filteredLeads.length === 0 ? (
                                   <TableRow>
-                                    <TableCell colSpan={3} className="h-24 text-center">
-                                      No se encontraron leads sin asignar. Todos los leads ya tienen asignación.
+                                    <TableCell colSpan={5} className="h-24 text-center">
+                                      No hay leads pendientes de asignación
                                     </TableCell>
                                   </TableRow>
                                 ) : (
@@ -509,22 +534,23 @@ export default function AsignarLeadsPage() {
                                     <TableRow key={lead._id} className={selectedLeads.includes(lead._id || "") ? "bg-primary/5" : ""}>
                                       <TableCell>
                                         <Checkbox 
-                                          checked={selectedLeads.includes(lead._id || "")} 
+                                          checked={selectedLeads.includes(lead._id || "")}
                                           onCheckedChange={() => toggleSelectLead(lead._id || "")}
                                         />
                                       </TableCell>
                                       <TableCell>
-                                        <div className="flex items-center gap-2">
-                                          <Avatar className="h-8 w-8">
-                                            <AvatarFallback>{lead.firstName[0]}{lead.lastName[0]}</AvatarFallback>
-                                          </Avatar>
-                                          <div>
-                                            <div className="font-medium">{lead.firstName} {lead.lastName}</div>
-                                            <div className="text-xs text-muted-foreground">{lead.email}</div>
-                                          </div>
+                                        <div className="font-medium truncate max-w-[150px] sm:max-w-none">
+                                          {lead.firstName} {lead.lastName}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-none">
+                                          {lead.email}
                                         </div>
                                       </TableCell>
-                                      <TableCell>{getStatusBadge(lead.status)}</TableCell>
+                                      <TableCell className="truncate max-w-[100px] sm:max-w-none">{lead.company || "-"}</TableCell>
+                                      <TableCell className="hidden md:table-cell">{lead.source || "-"}</TableCell>
+                                      <TableCell className="hidden md:table-cell">
+                                        {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "-"}
+                                      </TableCell>
                                     </TableRow>
                                   ))
                                 )}
@@ -535,7 +561,7 @@ export default function AsignarLeadsPage() {
                         
                         {/* Lista de Empleados */}
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <h3 className="text-lg font-medium">Seleccionar Empleados</h3>
                             <div className="text-sm text-muted-foreground">
                               {selectedEmployees.length} seleccionados
@@ -552,45 +578,59 @@ export default function AsignarLeadsPage() {
                             />
                           </div>
                           
-                          <div className="border rounded-md">
+                          <div className="border rounded-md overflow-x-auto">
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead className="w-[40px]"></TableHead>
-                                  <TableHead>Empleado</TableHead>
+                                  <TableHead className="w-[40px]">
+                                    <Checkbox 
+                                      checked={selectedEmployees.length === filteredEmployees.length && filteredEmployees.length > 0} 
+                                      onCheckedChange={toggleSelectAllEmployees}
+                                      disabled={filteredEmployees.length === 0}
+                                    />
+                                  </TableHead>
+                                  <TableHead>Nombre</TableHead>
+                                  <TableHead className="hidden md:table-cell">Rol</TableHead>
                                   <TableHead>Leads</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
                                 {filteredEmployees.length === 0 ? (
                                   <TableRow>
-                                    <TableCell colSpan={3} className="h-24 text-center">
-                                      No se encontraron empleados activos en el sistema.
+                                    <TableCell colSpan={4} className="h-24 text-center">
+                                      No hay empleados activos disponibles
                                     </TableCell>
                                   </TableRow>
                                 ) : (
                                   filteredEmployees.map((employee) => (
-                                    <TableRow 
-                                      key={employee._id} 
-                                      className={selectedEmployees.includes(employee._id || "") ? "bg-primary/5" : ""}
-                                      onClick={() => toggleSelectEmployee(employee._id || "")}
-                                    >
+                                    <TableRow key={employee._id} className={selectedEmployees.includes(employee._id || "") ? "bg-primary/5" : ""}>
                                       <TableCell>
                                         <Checkbox 
-                                          checked={selectedEmployees.includes(employee._id || "")} 
+                                          checked={selectedEmployees.includes(employee._id || "")}
                                           onCheckedChange={() => toggleSelectEmployee(employee._id || "")}
                                         />
                                       </TableCell>
                                       <TableCell>
-                                        <div className="flex items-center gap-2">
-                                          <Avatar className="h-8 w-8 bg-primary">
-                                            <AvatarFallback>{employee.firstName[0]}{employee.lastName[0]}</AvatarFallback>
+                                        <div className="flex items-center space-x-2">
+                                          <Avatar className="h-6 w-6">
+                                            <AvatarFallback className="text-xs">
+                                              {employee.firstName.charAt(0)}{employee.lastName.charAt(0)}
+                                            </AvatarFallback>
                                           </Avatar>
                                           <div>
-                                            <div className="font-medium">{employee.firstName} {employee.lastName}</div>
-                                            <div className="text-xs text-muted-foreground">{employee.position}</div>
+                                            <div className="font-medium truncate max-w-[150px] sm:max-w-none">
+                                              {employee.firstName} {employee.lastName}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-none">
+                                              {employee.email}
+                                            </div>
                                           </div>
                                         </div>
+                                      </TableCell>
+                                      <TableCell className="hidden md:table-cell">
+                                        {typeof employee.role === 'object' && employee.role !== null 
+                                          ? (employee.role as {name: string}).name || "Empleado"
+                                          : (employee.role || "Empleado")}
                                       </TableCell>
                                       <TableCell>
                                         <Badge variant="outline">
@@ -609,11 +649,12 @@ export default function AsignarLeadsPage() {
                       </div>
                     )}
                   </CardContent>
-                  <CardFooter className="flex justify-end gap-2 border-t pt-6">
-                    <Button variant="outline" onClick={() => router.back()}>Cancelar</Button>
+                  <CardFooter className="flex flex-col sm:flex-row justify-end gap-2 border-t p-4 sm:p-6">
+                    <Button variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">Cancelar</Button>
                     <Button 
                       disabled={selectedLeads.length === 0 || selectedEmployees.length === 0 || isAssigning || !hasPermission}
                       onClick={handleManualAssignment}
+                      className="w-full sm:w-auto"
                     >
                       {isAssigning ? (
                         <>

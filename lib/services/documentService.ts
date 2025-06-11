@@ -47,17 +47,32 @@ class DocumentService {
       // Añadir el archivo
       formData.append('file', documentData.file);
       
-      // Añadir los metadatos como JSON
-      const { file, ...metadata } = documentData;
-      formData.append('metadata', JSON.stringify(metadata));
+      // Añadir los metadatos
+      formData.append('name', documentData.name);
+      formData.append('type', documentData.type);
+      if (documentData.description) formData.append('description', documentData.description);
+      if (documentData.notes) formData.append('notes', documentData.notes);
+      if (documentData.tags) {
+        documentData.tags.forEach(tag => formData.append('tags[]', tag));
+      }
       
-      const response = await api.post<Document>('/documents', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      return response.data;
+      // Si es para un proyecto específico, usar la ruta de proyectos
+      if (documentData.projectId) {
+        const response = await api.post<Document>(`/projects/${documentData.projectId}/documents`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data;
+      } else {
+        // Ruta general de documentos
+        const response = await api.post<Document>('/documents', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data;
+      }
     } catch (error) {
       console.error('Error uploading document:', error);
       return null;

@@ -36,23 +36,26 @@ export interface ProjectDocument {
 
 export interface ProjectTask {
   _id?: string;
-  name: string;
+  title: string;
   description?: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'canceled';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   priority?: 'low' | 'medium' | 'high';
   startDate?: string | Date;
-  endDate?: string | Date;
-  dueDate?: Date;
+  dueDate?: string | Date;
   completedAt?: Date;
   assignedTo?: Employee | string;
   project?: Project | string;
-  progress?: number;
+  estimatedHours?: number;
+  actualHours?: number;
+  tags?: string[];
+  dependencies?: string[];
+  createdBy?: Employee | string;
+  isActive?: boolean;
+  budget?: number;
+  partialBudget?: number;
+  spent?: number;
   createdAt?: Date;
   updatedAt?: Date;
-  blocked?: boolean;
-  dependencies?: string[];
-  budget?: number;
-  spent?: number;
 }
 
 export interface ProjectTaskComment {

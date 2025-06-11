@@ -62,6 +62,8 @@ export default function LeadsPanel() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
   const [priorityFilter, setPriorityFilter] = useState<string | undefined>(undefined)
   const [refreshFlag, setRefreshFlag] = useState(0)
+  // Estado para control de visualización en móvil
+  const [showFilters, setShowFilters] = useState(false)
 
   // Cargar leads desde API
   useEffect(() => {
@@ -235,21 +237,21 @@ export default function LeadsPanel() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="w-full mx-auto max-w-full space-y-4 px-2 sm:px-4">
       {/* Encabezado */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Mis Leads</h1>
-          <p className="text-muted-foreground">Gestiona los leads asignados a ti</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Mis Leads</h1>
+          <p className="text-sm text-muted-foreground">Gestiona los leads asignados a ti</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button 
             variant="outline" 
             size="sm" 
-            className="h-9"
+            className="h-9 px-2 sm:px-3"
             onClick={() => router.push('/docs?section=leads')}
           >
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Documentación</span>
           </Button>
           
@@ -257,75 +259,75 @@ export default function LeadsPanel() {
             <Button 
               variant="outline" 
               size="sm" 
-              className="h-9"
+              className="h-9 px-2 sm:px-3"
               onClick={() => router.push('/leads/import')}
             >
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Importar</span>
             </Button>
           )}
           
           <Button 
             size="sm" 
-            className="h-9 bg-primary hover:bg-primary/90"
+            className="h-9 px-2 sm:px-3 bg-primary hover:bg-primary/90"
             onClick={() => router.push('/leads/nuevo')}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            <span>Nuevo Lead</span>
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden xs:inline">Nuevo Lead</span>
           </Button>
         </div>
       </div>
 
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Leads</p>
-                <h3 className="mt-1 text-2xl font-bold">{totalLeads}</h3>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Leads</p>
+                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalLeads}</h3>
               </div>
-              <div className="rounded-full bg-primary/10 p-2 text-primary">
-                <User className="h-5 w-5" />
+              <div className="rounded-full bg-primary/10 p-1 sm:p-2 text-primary">
+                <User className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Nuevos</p>
-                <h3 className="mt-1 text-2xl font-bold">{totalNewLeads}</h3>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Nuevos</p>
+                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalNewLeads}</h3>
               </div>
-              <div className="rounded-full bg-blue-500/10 p-2 text-blue-500">
-                <User className="h-5 w-5" />
+              <div className="rounded-full bg-blue-500/10 p-1 sm:p-2 text-blue-500">
+                <User className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">En Proceso</p>
-                <h3 className="mt-1 text-2xl font-bold">{totalInProcessLeads}</h3>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">En Proceso</p>
+                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalInProcessLeads}</h3>
               </div>
-              <div className="rounded-full bg-purple-500/10 p-2 text-purple-500">
-                <User className="h-5 w-5" />
+              <div className="rounded-full bg-purple-500/10 p-1 sm:p-2 text-purple-500">
+                <User className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Calificados</p>
-                <h3 className="mt-1 text-2xl font-bold">{totalQualifiedLeads}</h3>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Calificados</p>
+                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalQualifiedLeads}</h3>
               </div>
-              <div className="rounded-full bg-green-500/10 p-2 text-green-500">
-                <User className="h-5 w-5" />
+              <div className="rounded-full bg-green-500/10 p-1 sm:p-2 text-green-500">
+                <User className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </div>
           </CardContent>
@@ -334,47 +336,63 @@ export default function LeadsPanel() {
 
       {/* Filtros y Búsqueda */}
       <Card className="overflow-visible">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:w-auto sm:flex-1">
+              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Buscar leads..."
-                className="bg-background pl-9"
+                className="bg-background pl-8 w-full h-9 text-sm"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
-            <div>
-              <Select value={statusFilter || "all"} onValueChange={val => setStatusFilter(val === "all" ? undefined : val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="nuevo">Nuevo</SelectItem>
-                  <SelectItem value="aprobado">Aprobado</SelectItem>
-                  <SelectItem value="rechazado">Rechazado</SelectItem>
-                  <SelectItem value="asignado">Asignado</SelectItem>
-                  <SelectItem value="convertido">Convertido</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Select value={priorityFilter || "all"} onValueChange={val => setPriorityFilter(val === "all" ? undefined : val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Prioridad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las prioridades</SelectItem>
-                  <SelectItem value="baja">Baja</SelectItem>
-                  <SelectItem value="media">Media</SelectItem>
-                  <SelectItem value="alta">Alta</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="h-9 w-full sm:w-auto"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4 mr-1" />
+                <span>Filtros</span>
+              </Button>
             </div>
           </div>
+          
+          {showFilters && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <div>
+                <Select value={statusFilter || "all"} onValueChange={val => setStatusFilter(val === "all" ? undefined : val)}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    <SelectItem value="nuevo">Nuevo</SelectItem>
+                    <SelectItem value="aprobado">Aprobado</SelectItem>
+                    <SelectItem value="rechazado">Rechazado</SelectItem>
+                    <SelectItem value="asignado">Asignado</SelectItem>
+                    <SelectItem value="convertido">Convertido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Select value={priorityFilter || "all"} onValueChange={val => setPriorityFilter(val === "all" ? undefined : val)}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Prioridad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las prioridades</SelectItem>
+                    <SelectItem value="baja">Baja</SelectItem>
+                    <SelectItem value="media">Media</SelectItem>
+                    <SelectItem value="alta">Alta</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -392,17 +410,17 @@ export default function LeadsPanel() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40px]">
+                  <TableHead className="w-[30px] sm:w-[40px]">
                     <Checkbox
                       checked={leads.length > 0 && selectedLeads.length === leads.length}
                       onCheckedChange={toggleSelectAll}
                       aria-label="Seleccionar todos"
                     />
                   </TableHead>
-                  <TableHead className="w-[250px]">Nombre</TableHead>
-                  <TableHead>Etapa</TableHead>
-                  <TableHead>Prioridad</TableHead>
-                  <TableHead>Origen</TableHead>
+                  <TableHead className="w-[150px] sm:w-[250px]">Nombre</TableHead>
+                  <TableHead className="hidden sm:table-cell">Etapa</TableHead>
+                  <TableHead className="hidden md:table-cell">Prioridad</TableHead>
+                  <TableHead className="hidden lg:table-cell">Origen</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -411,18 +429,18 @@ export default function LeadsPanel() {
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
                       <div className="flex items-center justify-center">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                        <span className="ml-2">Cargando leads...</span>
+                        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-primary" />
+                        <span className="ml-2 text-sm sm:text-base">Cargando leads...</span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : leads.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                        <User className="h-10 w-10 text-muted-foreground" />
-                        <h3 className="mt-4 text-lg font-medium">No tienes leads asignados</h3>
-                        <p className="mt-2 text-sm text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-4 sm:p-8 text-center">
+                        <User className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
+                        <h3 className="mt-3 sm:mt-4 text-base sm:text-lg font-medium">No tienes leads asignados</h3>
+                        <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">
                           {employee ? 
                             "No tienes leads asignados actualmente. Contacta a un administrador para que te asigne leads." :
                             "Debes iniciar sesión para ver tus leads asignados."
@@ -431,10 +449,10 @@ export default function LeadsPanel() {
                         {employee && (
                           <Button 
                             size="sm" 
-                            className="mt-4 bg-primary hover:bg-primary/90"
+                            className="mt-3 sm:mt-4 bg-primary hover:bg-primary/90 text-xs sm:text-sm"
                             onClick={() => router.push('/leads/nuevo')}
                           >
-                            <Plus className="mr-2 h-4 w-4" />
+                            <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                             <span>Crear Nuevo Lead</span>
                           </Button>
                         )}
@@ -443,7 +461,7 @@ export default function LeadsPanel() {
                   </TableRow>
                 ) : (
                   leads.map((lead) => (
-                    <TableRow key={lead._id} className="h-[64px]">
+                    <TableRow key={lead._id} className="h-[60px]">
                       <TableCell>
                         <Checkbox
                           checked={selectedLeads.includes(lead._id || "")}
@@ -453,29 +471,29 @@ export default function LeadsPanel() {
                       </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex items-center space-x-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>
+                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
+                            <AvatarFallback className="text-xs sm:text-sm">
                               {`${lead.firstName.charAt(0)}${lead.lastName?.charAt(0) || ""}`.toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium">{`${lead.firstName} ${lead.lastName}`}</div>
-                            {lead.company && <div className="text-xs text-muted-foreground">{lead.company}</div>}
+                            <div className="font-medium text-sm sm:text-base truncate max-w-[100px] sm:max-w-full">{`${lead.firstName} ${lead.lastName}`}</div>
+                            {lead.company && <div className="text-xs text-muted-foreground truncate max-w-[100px] sm:max-w-full">{lead.company}</div>}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={getStatusColor(lead.status)}>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant="outline" className={`text-xs ${getStatusColor(lead.status)}`}>
                           {lead.currentStage || "No definida"}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={getPriorityColor(lead.priority || "media")}>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge variant="outline" className={`text-xs ${getPriorityColor(lead.priority || "media")}`}>
                           {lead.priority === "alta" ? "Alta" : lead.priority === "baja" ? "Baja" : "Media"}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
+                      <TableCell className="hidden lg:table-cell">
+                        <div className="text-xs sm:text-sm">
                           {lead.source === "sitio_web" ? "Sitio Web" : 
                            lead.source === "referido" ? "Referido" : 
                            lead.source === "redes_sociales" ? "Redes Sociales" : 
@@ -487,44 +505,48 @@ export default function LeadsPanel() {
                            lead.source || "No especificado"}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right pr-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
                               <MoreHorizontal className="h-4 w-4" />
                               <span className="sr-only">Abrir menú</span>
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-[200px]">
                             <DropdownMenuItem 
                               onClick={() => router.push(`/leads/${lead._id}`)}
+                              className="text-xs sm:text-sm"
                             >
-                              <Eye className="mr-2 h-4 w-4" />
+                              <Eye className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               <span>Ver Detalles</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => router.push(`/leads/${lead._id}/edit`)}
+                              className="text-xs sm:text-sm"
                             >
-                              <Edit className="mr-2 h-4 w-4" />
+                              <Edit className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               <span>Editar</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleConvertToPersonalClient(lead._id)}
+                              className="text-xs sm:text-sm"
                             >
-                              <User className="mr-2 h-4 w-4" />
+                              <User className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               <span>Convertir a Cliente Personal</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleConvertToBusinessClient(lead._id)}
+                              className="text-xs sm:text-sm"
                             >
-                              <Building2 className="mr-2 h-4 w-4" />
+                              <Building2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               <span>Convertir a Cliente Empresa</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDelete(lead._id || "")}
-                              className="text-red-600"
+                              className="text-red-600 text-xs sm:text-sm"
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
+                              <Trash2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               <span>Eliminar</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -541,15 +563,16 @@ export default function LeadsPanel() {
 
       {/* Paginación */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+          <div className="text-xs sm:text-sm text-muted-foreground">
             Mostrando <span className="font-medium">{leads.length}</span> de{" "}
             <span className="font-medium">{totalLeads}</span> leads
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <Button
               variant="outline"
               size="sm"
+              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
@@ -559,6 +582,7 @@ export default function LeadsPanel() {
             <Button
               variant="outline"
               size="sm"
+              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
             >

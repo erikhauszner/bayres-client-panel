@@ -52,36 +52,36 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border/10 bg-background/80 px-4 backdrop-blur-md sm:px-6 lg:px-8">
-      <div className="flex items-center gap-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+    <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center justify-between border-b border-border/10 bg-background/80 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
           B
         </div>
-        <h1 className="text-xl font-bold">Bayres Panel</h1>
+        <h1 className="text-base sm:text-xl font-bold">Bayres Panel</h1>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <NotificationsDropdown />
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 rounded-full">
-              <Avatar className={`h-8 w-8 cursor-pointer ${getRoleColor()} text-white`}>
-                <AvatarFallback>{getInitials()}</AvatarFallback>
+            <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-full">
+              <Avatar className={`h-7 w-7 sm:h-8 sm:w-8 cursor-pointer ${getRoleColor()} text-white`}>
+                <AvatarFallback className="text-xs sm:text-sm">{getInitials()}</AvatarFallback>
               </Avatar>
               <span className="sr-only">Abrir menú de perfil</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/configuracion")}>
-              <Settings className="mr-2 h-4 w-4" />
+          <DropdownMenuContent align="end" className="w-48 sm:w-56">
+            <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm" onClick={() => router.push("/configuracion")}>
+              <Settings className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Configuración</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              className="cursor-pointer text-red-500" 
+              className="cursor-pointer text-red-500 text-xs sm:text-sm" 
               onClick={handleLogout}
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Cerrar sesión</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

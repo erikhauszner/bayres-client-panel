@@ -14,12 +14,27 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 
 # Configurar variables de entorno para la construcción
+#ENV NEXT_PUBLIC_API_URL=https://api.bayreshub.com/api
+#ENV NEXT_PUBLIC_CLIENT_URL=https://panel.bayreshub.com
+#ENV NEXT_PUBLIC_WEBHOOK_URL=https://api.bayreshub.com/external/
+#ENV NEXT_PUBLIC_NOTIFICATIONS_URL=https://api.bayreshub.com/notifications
+#ENV NEXT_PUBLIC_HEALTH_CHECK_URL=https://api.bayreshub.com/health
+#ENV NEXT_PUBLIC_UPLOADS_URL=https://api.bayreshub.com/uploads
+# Production URLs - URLs de producción para Docker
 ENV NEXT_PUBLIC_API_URL=https://api.bayreshub.com/api
 ENV NEXT_PUBLIC_CLIENT_URL=https://panel.bayreshub.com
-ENV NEXT_PUBLIC_WEBHOOK_URL=https://api.bayreshub.com/external/leads/webhook
+ENV NEXT_PUBLIC_WEBHOOK_URL=https://api.bayreshub.com/external/
 ENV NEXT_PUBLIC_NOTIFICATIONS_URL=https://api.bayreshub.com/notifications
 ENV NEXT_PUBLIC_HEALTH_CHECK_URL=https://api.bayreshub.com/health
 ENV NEXT_PUBLIC_UPLOADS_URL=https://api.bayreshub.com/uploads
+
+# Development URLs - Comentadas para localhost (descomentar para desarrollo local)
+# ENV NEXT_PUBLIC_API_URL=http://localhost:3000/api
+# ENV NEXT_PUBLIC_CLIENT_URL=http://localhost:3001
+# ENV NEXT_PUBLIC_WEBHOOK_URL=http://localhost:3000/external/
+# ENV NEXT_PUBLIC_NOTIFICATIONS_URL=http://localhost:3000/notifications
+# ENV NEXT_PUBLIC_HEALTH_CHECK_URL=http://localhost:3000/health
+# ENV NEXT_PUBLIC_UPLOADS_URL=http://localhost:3000/uploads
 
 # Construir la aplicación
 RUN npm run build
@@ -33,12 +48,18 @@ ENV NODE_ENV=production
 ENV PORT=3001
 
 # Configurar variables de entorno para producción
-ENV NEXT_PUBLIC_API_URL=https://api.bayreshub.com/api
-ENV NEXT_PUBLIC_CLIENT_URL=https://panel.bayreshub.com
-ENV NEXT_PUBLIC_WEBHOOK_URL=https://api.bayreshub.com/external/leads/webhook
-ENV NEXT_PUBLIC_NOTIFICATIONS_URL=https://api.bayreshub.com/notifications
-ENV NEXT_PUBLIC_HEALTH_CHECK_URL=https://api.bayreshub.com/health
-ENV NEXT_PUBLIC_UPLOADS_URL=https://api.bayreshub.com/uploads
+#ENV NEXT_PUBLIC_API_URL=https://api.bayreshub.com/api
+#ENV NEXT_PUBLIC_CLIENT_URL=https://panel.bayreshub.com
+#ENV NEXT_PUBLIC_WEBHOOK_URL=https://api.bayreshub.com/external/
+#ENV NEXT_PUBLIC_NOTIFICATIONS_URL=https://api.bayreshub.com/notifications
+#ENV NEXT_PUBLIC_HEALTH_CHECK_URL=https://api.bayreshub.com/health
+#ENV NEXT_PUBLIC_UPLOADS_URL=https://api.bayreshub.com/uploads
+ENV NEXT_PUBLIC_API_URL=http://localhost:3000/api
+ENV NEXT_PUBLIC_CLIENT_URL=http://localhost:3001
+ENV NEXT_PUBLIC_WEBHOOK_URL=http://localhost:3000/external/
+ENV NEXT_PUBLIC_NOTIFICATIONS_URL=http://localhost:3000/notifications
+ENV NEXT_PUBLIC_HEALTH_CHECK_URL=http://localhost:3000/health
+ENV NEXT_PUBLIC_UPLOADS_URL=http://localhost:3000/uploads
 
 # Crear un usuario no-root para producción
 RUN addgroup --system --gid 1001 nodejs

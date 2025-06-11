@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useAuth } from "@/contexts/auth-context"
+import { StatusToggle } from "@/components/ui/status-toggle"
+import { BreakToggle } from "@/components/ui/break-toggle"
 
 // Mapeo de rutas a permisos
 const routePermissions: Record<string, string> = {
@@ -126,6 +128,15 @@ export default function Sidebar() {
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
         </div>
+
+        {/* Contenedor de botones de estado */}
+        <div className="px-3 py-2 border-b border-border/10">
+          <div className="flex flex-col gap-2">
+            <StatusToggle collapsed={collapsed} />
+            <BreakToggle collapsed={collapsed} />
+          </div>
+        </div>
+
         <div className="netflix-scrollbar flex-1 overflow-y-auto py-4">
           <div className="space-y-4 px-3 py-2">
             <div className="space-y-1">

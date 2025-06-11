@@ -51,9 +51,36 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para manejar errores de autenticación
+// Interceptor para manejar errores de autenticación y renovación automática de tokens
 api.interceptors.response.use(
   (response) => {
+    // RENOVACIÓN AUTOMÁTICA DE TOKENS: Verificar si el servidor envió un nuevo token
+    const newToken = response.headers['x-new-token'];
+    if (newToken && typeof window !== 'undefined') {
+      console.log('🔄 Token renovado automáticamente por el servidor');
+      
+      // Actualizar el token en localStorage y cookies
+      localStorage.setItem('token', newToken);
+      
+      // Actualizar cookie con nueva fecha de expiración
+      const expiryDays = 1;
+      Cookies.set('token', newToken, { 
+        expires: expiryDays,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      });
+      
+      // Actualizar timestamp de expiración para verificación local
+      const expiryTime = new Date();
+      expiryTime.setDate(expiryTime.getDate() + expiryDays);
+      localStorage.setItem('tokenExpiry', expiryTime.getTime().toString());
+      
+      // Mostrar notificación discreta de renovación (opcional)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Sesión renovada automáticamente');
+      }
+    }
+    
     // Específicamente para notificaciones, hacer un log detallado
     if (response.config.url?.includes('notifications')) {
       console.log('📩 API Response Notificaciones:', {

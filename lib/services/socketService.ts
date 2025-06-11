@@ -7,8 +7,10 @@ class SocketService {
   private isConnected: boolean = false;
   private employeeId: string | undefined = undefined;
   private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 5;
+  private maxReconnectAttempts: number = 10; // Aumentado para mejorar la estabilidad
   private apiUrl: string = API_URL;
+  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private lastHeartbeat: number = 0;
 
   // Inicializar la conexión de Socket.IO
   connect(employeeId: string | undefined) {
@@ -22,6 +24,7 @@ class SocketService {
 
     if (this.isConnected && this.socket) {
       console.log('Socket ya está conectado');
+      this.setupHeartbeat(); // Asegurar que el heartbeat esté funcionando
       return;
     }
 
@@ -63,10 +66,29 @@ class SocketService {
       
       // Manejar eventos de Socket.IO
       this.setupSocketEvents(employeeId);
+      
+      // Configurar heartbeat para mantener la conexión activa
+      this.setupHeartbeat();
     } catch (error) {
       console.error('Error conectando Socket.IO:', error);
       this.isConnected = false;
     }
+  }
+
+  // Configurar el heartbeat para mantener la conexión activa
+  private setupHeartbeat() {
+    // Limpiar cualquier intervalo existente
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+    }
+    
+    // Establecer un nuevo intervalo para enviar heartbeats
+    this.heartbeatInterval = setInterval(() => {
+      if (this.socket && this.isConnected) {
+        this.socket.emit('heartbeat', { employeeId: this.employeeId, timestamp: Date.now() });
+        this.lastHeartbeat = Date.now();
+      }
+    }, 30000); // Cada 30 segundos
   }
 
   // Configurar los eventos de Socket.IO
@@ -81,6 +103,10 @@ class SocketService {
       
       // Autenticar al usuario
       this.socket?.emit('authenticate', employeeId);
+      
+      // Enviar un heartbeat inmediatamente
+      this.socket?.emit('heartbeat', { employeeId, timestamp: Date.now() });
+      this.lastHeartbeat = Date.now();
     });
 
     // Cuando se desconecte el socket
@@ -112,75 +138,46 @@ class SocketService {
       console.log('Socket.IO autenticado:', data);
     });
 
-    // Cuando se reciba una nueva notificación
-    this.socket.on('new_notification', (data) => {
-      console.log('Nueva notificación recibida vía Socket.IO:', data);
-      
-      // Mostrar la notificación como toast
-      if (data.notification) {
-        const notificationData = data.notification;
-        
-        // Verificar si es una notificación externa o relacionada con leads
-        const isExternalNotification = notificationData.isExternalNotification === true;
-        const isLeadRelated = notificationData.isLeadRelated === true || 
-                              (notificationData.title && notificationData.title.includes('lead')) ||
-                              (notificationData.title && notificationData.title.includes('Lead')) ||
-                              (notificationData.title && notificationData.title.includes('Obteniendo')) ||
-                              (notificationData.message && notificationData.message.includes('lead'));
-        
-        // Considerar como externa si es externa o relacionada con leads
-        const shouldTreatAsExternal = isExternalNotification || isLeadRelated;
-                              
-        if (shouldTreatAsExternal) {
-          console.log('🔔 NOTIFICACIÓN EXTERNA o de LEADS RECIBIDA:', notificationData.title);
-        }
-        
-        // Crear objeto de notificación con todos los campos necesarios
-        const notification = {
-          _id: notificationData._id || `temp_${Date.now()}`,
-          userId: this.employeeId || 'unknown', // Usar el ID del empleado actual
-          title: notificationData.title,
-          message: notificationData.message,
-          type: notificationData.type || 'task_assigned', // Asignar un tipo por defecto
-          status: notificationData.status || 'unread',
-          createdAt: notificationData.createdAt || new Date(),
-          data: notificationData.data,
-          metadata: {
-            variant: notificationData.variant || 'default',
-            action: notificationData.action,
-            duration: notificationData.duration || 5000,
-            isExternalNotification: shouldTreatAsExternal,
-            isLeadRelated
-          }
-        };
-        
-        // SIEMPRE mostrar la notificación como toast independientemente de la bandera showAsToast
-        console.log('Mostrando notificación como toast:', notification.title);
-        
-        // Si es una notificación externa o de leads, damos mayor duración y otra variante para destacarla
-        if (shouldTreatAsExternal) {
-          // Mostrar con mayor importancia en el toast
-          notificationService.showExternalNotificationToast(notification);
-          
-          // Forzar actualización inmediata de las notificaciones en el menú
-          setTimeout(() => {
-            notificationService.getNotifications(5);
-          }, 500);
-        } else {
-          // Notificación normal
-          notificationService.showToast(notification);
-        }
-      }
+    // Respuesta a los heartbeats
+    this.socket.on('heartbeat_response', (data) => {
+      console.log('Heartbeat response:', data);
     });
 
-    // Manejar errores
-    this.socket.on('error', (error) => {
-      console.error('Error de Socket.IO:', error);
+    // Manejar notificaciones
+    this.socket.on('new_notification', (data) => {
+      console.log('Nueva notificación recibida:', data);
+      
+      // Mostrar la notificación si está marcada para mostrarse como toast
+      if (data.notification && data.notification.showAsToast) {
+        // Usar el objeto de notificación completo para mostrar el toast
+        notificationService.showToast(data.notification);
+        
+        // Refrescar el conteo de notificaciones no leídas
+        notificationService.getUnreadCount().then(count => {
+          console.log(`Notificaciones no leídas: ${count}`);
+        });
+        
+        // Actualizar la lista de notificaciones
+        setTimeout(() => {
+          notificationService.getNotifications(5, 0);
+        }, 500);
+      }
     });
+  }
+
+  // Obtener el estado de la conexión
+  isSocketConnected(): boolean {
+    return this.isConnected && this.socket !== null;
   }
 
   // Desconectar el socket
   disconnect() {
+    // Limpiar el intervalo de heartbeat
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+    
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
@@ -189,9 +186,24 @@ class SocketService {
     }
   }
 
-  // Verificar si el socket está conectado
-  isSocketConnected(): boolean {
-    return this.isConnected && this.socket?.connected === true;
+  // Enviar un evento personalizado
+  emit(event: string, data: any) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit(event, data);
+      return true;
+    }
+    console.warn(`No se puede emitir el evento '${event}' porque el socket no está conectado`);
+    return false;
+  }
+
+  // Registrar una función para escuchar un evento específico
+  on(event: string, callback: (data: any) => void) {
+    if (this.socket) {
+      this.socket.on(event, callback);
+      return true;
+    }
+    console.warn(`No se puede escuchar el evento '${event}' porque el socket no está inicializado`);
+    return false;
   }
 }
 

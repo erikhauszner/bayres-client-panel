@@ -874,1129 +874,742 @@ export default function ClientProfile({ id }: { id: string }) {
 
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <Header />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">
-            <div className="flex flex-col items-center justify-center h-full">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="mt-4 text-muted-foreground">Cargando información del cliente...</p>
-            </div>
-          </main>
-        </div>
+      <div className="flex flex-col items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Cargando información del cliente...</p>
       </div>
     )
   }
 
   if (isError || !clientData) {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <Header />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">
-            <div className="mx-auto max-w-2xl">
-              <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver
-              </Button>
-              
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {errorMessage || "No se pudo cargar la información del cliente. Por favor, intenta de nuevo más tarde."}
-                </AlertDescription>
-              </Alert>
-            </div>
-          </main>
-        </div>
+      <div className="mx-auto max-w-2xl">
+        <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver
+        </Button>
+        
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {errorMessage || "No se pudo cargar la información del cliente. Por favor, intenta de nuevo más tarde."}
+          </AlertDescription>
+        </Alert>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="netflix-scrollbar flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => router.back()}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <h1 className="text-2xl font-bold">{clientData.name}</h1>
+    <div className="mx-auto max-w-7xl space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl sm:text-2xl font-bold">{clientData.name}</h1>
+        </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" disabled={isConverting} size="sm" className="w-full sm:w-auto">
+              Convertir a Lead
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Convertir a Lead?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción convertirá este cliente en un lead. El cliente será eliminado y toda su información se transferirá al nuevo lead.
+                Esta acción no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConvertToLead}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Confirmar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="netflix-card lg:col-span-2">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col items-start gap-4 sm:flex-row sm:gap-6">
+              <Avatar className="h-16 w-16 sm:h-24 sm:w-24">
+                <AvatarFallback className="text-lg sm:text-2xl">{getClientInitials(clientData.name)}</AvatarFallback>
+              </Avatar>
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <h2 className="text-xl sm:text-2xl font-bold">{clientData.name}</h2>
+                  <p className="text-muted-foreground">{clientData.industry || clientData.company || 'Sin empresa'}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge className={getStatusColor(clientData.status)}>
+                    {clientData.status.charAt(0).toUpperCase() + clientData.status.slice(1)}
+                  </Badge>
+                  <Badge variant="outline" className="bg-card/50">
+                    {clientData.projects?.length || 0} Proyectos
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a href={`mailto:${clientData.email}`} className="hover:underline">
+                      {clientData.email}
+                    </a>
+                  </div>
+                  {clientData.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <a href={`tel:${clientData.phone}`} className="hover:underline">
+                        {clientData.phone}
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={isConverting}>
-                    Convertir a Lead
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>¿Convertir a Lead?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción convertirá este cliente en un lead. El cliente será eliminado y toda su información se transferirá al nuevo lead.
-                      Esta acción no se puede deshacer.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleConvertToLead}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Confirmar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <div className="mt-4 sm:mt-0 sm:ml-auto flex flex-col gap-2 sm:flex-row w-full sm:w-auto">
+                <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto" onClick={handleEditClient}>
+                  <Edit className="h-4 w-4" />
+                  <span>Editar</span>
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="gap-2 w-full sm:w-auto" 
+                  onClick={handleDeleteClient}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Eliminando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      <span>Eliminar</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="netflix-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Información Clave</CardTitle>
+            <CardDescription>Datos importantes del cliente</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Contacto principal</span>
+                <span className="font-medium">{clientData.contact}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">ID Fiscal</span>
+                <span className="font-medium">{clientData.taxId || "No definido"}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Fecha de creación</span>
+                <span className="font-medium">{formatDate(clientData.createdAt)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Última actualización</span>
+                <span className="font-medium">{formatDate(clientData.updatedAt)}</span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <Card className="netflix-card lg:col-span-2">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-start gap-6 sm:flex-row">
-                    <Avatar className="h-24 w-24">
-                      <AvatarFallback className="text-2xl">{getClientInitials(clientData.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-2">
-                      <div className="space-y-1">
-                        <h2 className="text-2xl font-bold">{clientData.name}</h2>
-                        <p className="text-muted-foreground">{clientData.industry || clientData.company || 'Sin empresa'}</p>
+            <Separator className="bg-border/10" />
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Proyectos activos</span>
+                <Badge variant="outline" className="bg-card/50">
+                  {clientData.projects?.filter((p: any) => p.status === "in_progress").length || 0}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Facturas pendientes</span>
+                <Badge variant="outline" className="bg-card/50">
+                  {clientData.invoices?.filter((f: any) => f.status === "pending").length || 0}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="info" className="space-y-4">
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="w-auto inline-flex min-w-max">
+            <TabsTrigger value="info" className="text-xs sm:text-sm whitespace-nowrap">Información</TabsTrigger>
+            <TabsTrigger value="projects" className="text-xs sm:text-sm whitespace-nowrap">Proyectos</TabsTrigger>
+            <TabsTrigger value="contacts" className="text-xs sm:text-sm whitespace-nowrap">Contactos</TabsTrigger>
+            <TabsTrigger value="activities" className="text-xs sm:text-sm whitespace-nowrap">Actividades</TabsTrigger>
+            <TabsTrigger value="invoices" className="text-xs sm:text-sm whitespace-nowrap">Facturas</TabsTrigger>
+            <TabsTrigger value="documents" className="text-xs sm:text-sm whitespace-nowrap">Documentos</TabsTrigger>
+            <TabsTrigger value="notes" className="text-xs sm:text-sm whitespace-nowrap">Notas</TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="info" className="space-y-4">
+          <Card className="netflix-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">Información de Contacto</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Información de la Empresa</h3>
+                    <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Building className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Nombre:</span>
+                        <span>{clientData.name}</span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge className={getStatusColor(clientData.status)}>
-                          {clientData.status.charAt(0).toUpperCase() + clientData.status.slice(1)}
-                        </Badge>
-                        <Badge variant="outline" className="bg-card/50">
-                          {clientData.projects?.length || 0} Proyectos
-                        </Badge>
+                      <div className="flex items-center gap-2 text-sm">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Contacto principal:</span>
+                        <span>{clientData.contact}</span>
                       </div>
-                      <div className="flex flex-wrap gap-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Email:</span>
+                        <span>{clientData.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Teléfono:</span>
+                        <span>{clientData.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Industria:</span>
+                        <span>{clientData.industry}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Redes Sociales</h3>
+                    <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
+                      {clientData.whatsapp && (
                         <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <a href={`mailto:${clientData.email}`} className="hover:underline">
-                            {clientData.email}
-                          </a>
+                          <span className="font-medium">WhatsApp:</span>
+                          <span>{clientData.whatsapp}</span>
                         </div>
-                        {clientData.phone && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            <a href={`tel:${clientData.phone}`} className="hover:underline">
-                              {clientData.phone}
+                      )}
+                      {clientData.instagram && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-medium">Instagram:</span>
+                          <span>{clientData.instagram}</span>
+                        </div>
+                      )}
+                      {clientData.twitter && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-medium">Twitter:</span>
+                          <span>{clientData.twitter}</span>
+                        </div>
+                      )}
+                      {clientData.linkedin && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-medium">LinkedIn:</span>
+                          <span>{clientData.linkedin}</span>
+                        </div>
+                      )}
+                      {clientData.facebook && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-medium">Facebook:</span>
+                          <span>{clientData.facebook}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Ubicación</h3>
+                    <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
+                      <div className="flex items-start gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <span className="font-medium">Dirección:</span>
+                          <p>{clientData.address}</p>
+                          <p>
+                            {clientData.city}, {clientData.country} {clientData.postalCode}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Sitio Web</h3>
+                    <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <a
+                          href={clientData.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {clientData.website}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Notas</h3>
+                    <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
+                      <p className="text-sm">{clientData.notes}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="projects" className="space-y-4">
+          <Card className="netflix-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-lg font-medium">Proyectos</CardTitle>
+                <CardDescription>Proyectos asociados al cliente</CardDescription>
+              </div>
+              <Button 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  resetProjectForm();
+                  setIsProjectModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Nuevo Proyecto</span>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {clientData.projects && clientData.projects.length > 0 ? (
+                  clientData.projects.map((proyecto: Proyecto) => (
+                    <div key={proyecto._id} className="space-y-3 rounded-md border border-border/10 bg-card/30 p-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-medium">{proyecto.name}</h3>
+                        <Badge className={getStatusColor(proyecto.status)}>
+                          {proyecto.status.replace("_", " ").charAt(0).toUpperCase() +
+                            proyecto.status.replace("_", " ").slice(1)}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Progreso</span>
+                          <span className="font-medium">{proyecto.progress}%</span>
+                        </div>
+                        <Progress
+                          value={proyecto.progress}
+                          className="h-2"
+                          indicatorClassName={
+                            proyecto.progress === 100
+                              ? "bg-green-500"
+                              : proyecto.progress > 50
+                                ? "bg-blue-500"
+                                : "bg-amber-500"
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>Inicio: {formatDate(proyecto.startDate)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>Fin: {formatDate(proyecto.endDate)}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditProject(proyecto)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive"
+                          onClick={() => handleDeleteProject(proyecto._id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Eliminar
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No hay proyectos asociados a este cliente.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="contacts" className="space-y-4">
+          <Card className="netflix-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-lg font-medium">Contactos</CardTitle>
+                <CardDescription>Representantes de la empresa</CardDescription>
+              </div>
+              <Button 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  resetContactForm();
+                  setIsContactModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Añadir Contacto</span>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {clientData.representatives && clientData.representatives.length > 0 ? (
+                  clientData.representatives.map((representante: Representante) => (
+                    <div
+                      key={representante._id}
+                      className="flex flex-col gap-4 rounded-md border border-border/10 bg-card/30 p-4 sm:flex-row sm:items-center"
+                    >
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback>{representante.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-1">
+                        <h3 className="font-medium">{representante.name}</h3>
+                        <p className="text-sm text-muted-foreground">{representante.position}</p>
+                        <div className="flex flex-wrap gap-4 pt-1">
+                          <div className="flex items-center gap-2 text-xs">
+                            <Mail className="h-3 w-3 text-muted-foreground" />
+                            <a href={`mailto:${representante.email}`} className="hover:underline">
+                              {representante.email}
                             </a>
                           </div>
-                        )}
+                          <div className="flex items-center gap-2 text-xs">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            <a href={`tel:${representante.phone}`} className="hover:underline">
+                              {representante.phone}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditContact(representante)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive"
+                          onClick={() => handleDeleteContact(representante._id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Eliminar
+                        </Button>
                       </div>
                     </div>
-                    <div className="ml-auto flex flex-col gap-2 sm:flex-row">
-                      <Button variant="outline" size="sm" className="gap-2" onClick={handleEditClient}>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No hay contactos registrados para este cliente.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="activities" className="space-y-4">
+          <Card className="netflix-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-lg font-medium">Actividades</CardTitle>
+                <CardDescription>Actividades asociadas al cliente</CardDescription>
+              </div>
+              <Button 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  resetActivityForm();
+                  setIsActivityModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Nueva Actividad</span>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {clientData.activities && clientData.activities.length > 0 ? (
+                  clientData.activities.map((actividad: Actividad) => (
+                    <div key={actividad._id} className="space-y-3 rounded-md border border-border/10 bg-card/30 p-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-medium">{actividad.title}</h3>
+                        <Badge className={getStatusColor(actividad.type)}>
+                          {actividad.type.charAt(0).toUpperCase() + actividad.type.slice(1)}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Descripción</span>
+                          <span className="font-medium">{actividad.description}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Fecha</span>
+                          <span className="font-medium">{formatDate(actividad.date)}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditActivity(actividad)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive"
+                          onClick={() => handleDeleteActivity(actividad._id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Eliminar
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No hay actividades registradas para este cliente.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="invoices" className="space-y-4">
+          <Card className="netflix-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-lg font-medium">Facturas</CardTitle>
+                <CardDescription>Facturas asociadas al cliente</CardDescription>
+              </div>
+              <Button 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  resetInvoiceForm();
+                  setIsInvoiceModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Nueva Factura</span>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {clientData.invoices && clientData.invoices.length > 0 ? (
+                  clientData.invoices.map((factura: Factura) => (
+                    <div key={factura._id} className="space-y-3 rounded-md border border-border/10 bg-card/30 p-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-medium">{factura.number}</h3>
+                        <Badge className={getStatusColor(factura.status)}>
+                          {factura.status.charAt(0).toUpperCase() + factura.status.slice(1)}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Monto</span>
+                          <span className="font-medium">{factura.amount}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Fecha</span>
+                          <span className="font-medium">{formatDate(factura.date)}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditInvoice(factura)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive"
+                          onClick={() => handleDeleteInvoice(factura._id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Eliminar
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No hay facturas registradas para este cliente.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="documents" className="space-y-4">
+          <Card className="netflix-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-lg font-medium">Documentos</CardTitle>
+                <CardDescription>Documentos asociados al cliente</CardDescription>
+              </div>
+              <Button 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  resetDocumentForm();
+                  setIsDocumentModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Nuevo Documento</span>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {clientData.documents && clientData.documents.length > 0 ? (
+                  clientData.documents.map((documento: Documento) => (
+                    <div key={documento._id} className="space-y-3 rounded-md border border-border/10 bg-card/30 p-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-medium">{documento.name}</h3>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Fecha</span>
+                          <span className="font-medium">{formatDate(documento.date)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Tamaño</span>
+                          <span className="font-medium">{documento.size}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteDocument(documento._id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Eliminar
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No hay documentos registrados para este cliente.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notes" className="space-y-4">
+          <Card className="netflix-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-lg font-medium">Notas</CardTitle>
+                <CardDescription>Notas asociadas al cliente</CardDescription>
+              </div>
+              <Button 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  resetNoteForm();
+                  setIsNoteModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Nueva Nota</span>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {clientData.notes ? (
+                <div className="rounded-md border border-border/10 bg-card/30 p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium">Nota principal</h3>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full"
+                        onClick={handleEditNote}
+                      >
                         <Edit className="h-4 w-4" />
-                        <span>Editar</span>
+                        <span className="sr-only">Editar</span>
                       </Button>
                       <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        className="gap-2" 
-                        onClick={handleDeleteClient}
-                        disabled={isDeleting}
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full text-destructive hover:text-destructive"
+                        onClick={handleDeleteNote}
                       >
-                        {isDeleting ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Eliminando...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Trash2 className="h-4 w-4" />
-                            <span>Eliminar</span>
-                          </>
-                        )}
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Eliminar</span>
                       </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="netflix-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium">Información Clave</CardTitle>
-                  <CardDescription>Datos importantes del cliente</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Contacto principal</span>
-                      <span className="font-medium">{clientData.contact}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">ID Fiscal</span>
-                      <span className="font-medium">{clientData.taxId || "No definido"}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Fecha de creación</span>
-                      <span className="font-medium">{formatDate(clientData.createdAt)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Última actualización</span>
-                      <span className="font-medium">{formatDate(clientData.updatedAt)}</span>
-                    </div>
-                  </div>
-
-                  <Separator className="bg-border/10" />
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Proyectos activos</span>
-                      <Badge variant="outline" className="bg-card/50">
-                        {clientData.projects?.filter((p: any) => p.status === "in_progress").length || 0}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Facturas pendientes</span>
-                      <Badge variant="outline" className="bg-card/50">
-                        {clientData.invoices?.filter((f: any) => f.status === "pending").length || 0}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Tabs defaultValue="info" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-7">
-                <TabsTrigger value="info">Información</TabsTrigger>
-                <TabsTrigger value="projects">Proyectos</TabsTrigger>
-                <TabsTrigger value="contacts">Contactos</TabsTrigger>
-                <TabsTrigger value="activities">Actividades</TabsTrigger>
-                <TabsTrigger value="invoices">Facturas</TabsTrigger>
-                <TabsTrigger value="documents">Documentos</TabsTrigger>
-                <TabsTrigger value="notes">Notas</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="info" className="space-y-4">
-                <Card className="netflix-card">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-medium">Información de Contacto</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <h3 className="text-sm font-medium">Información de la Empresa</h3>
-                          <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Building className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">Nombre:</span>
-                              <span>{clientData.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">Contacto principal:</span>
-                              <span>{clientData.contact}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">Email:</span>
-                              <span>{clientData.email}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Phone className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">Teléfono:</span>
-                              <span>{clientData.phone}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Briefcase className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">Industria:</span>
-                              <span>{clientData.industry}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <h3 className="text-sm font-medium">Redes Sociales</h3>
-                          <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
-                            {clientData.whatsapp && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <span className="font-medium">WhatsApp:</span>
-                                <span>{clientData.whatsapp}</span>
-                              </div>
-                            )}
-                            {clientData.instagram && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <span className="font-medium">Instagram:</span>
-                                <span>{clientData.instagram}</span>
-                              </div>
-                            )}
-                            {clientData.twitter && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <span className="font-medium">Twitter:</span>
-                                <span>{clientData.twitter}</span>
-                              </div>
-                            )}
-                            {clientData.linkedin && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <span className="font-medium">LinkedIn:</span>
-                                <span>{clientData.linkedin}</span>
-                              </div>
-                            )}
-                            {clientData.facebook && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <span className="font-medium">Facebook:</span>
-                                <span>{clientData.facebook}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <h3 className="text-sm font-medium">Ubicación</h3>
-                          <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
-                            <div className="flex items-start gap-2 text-sm">
-                              <MapPin className="h-4 w-4 text-muted-foreground" />
-                              <div>
-                                <span className="font-medium">Dirección:</span>
-                                <p>{clientData.address}</p>
-                                <p>
-                                  {clientData.city}, {clientData.country} {clientData.postalCode}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <h3 className="text-sm font-medium">Sitio Web</h3>
-                          <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Globe className="h-4 w-4 text-muted-foreground" />
-                              <a
-                                href={clientData.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline"
-                              >
-                                {clientData.website}
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <h3 className="text-sm font-medium">Notas</h3>
-                          <div className="space-y-2 rounded-md border border-border/10 bg-card/30 p-3">
-                            <p className="text-sm">{clientData.notes}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="projects" className="space-y-4">
-                <Card className="netflix-card">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <div>
-                      <CardTitle className="text-lg font-medium">Proyectos</CardTitle>
-                      <CardDescription>Proyectos asociados al cliente</CardDescription>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => {
-                        resetProjectForm();
-                        setIsProjectModalOpen(true);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Nuevo Proyecto</span>
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {clientData.projects && clientData.projects.length > 0 ? (
-                        clientData.projects.map((proyecto: Proyecto) => (
-                          <div key={proyecto._id} className="space-y-3 rounded-md border border-border/10 bg-card/30 p-4">
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-medium">{proyecto.name}</h3>
-                              <Badge className={getStatusColor(proyecto.status)}>
-                                {proyecto.status.replace("_", " ").charAt(0).toUpperCase() +
-                                  proyecto.status.replace("_", " ").slice(1)}
-                              </Badge>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">Progreso</span>
-                                <span className="font-medium">{proyecto.progress}%</span>
-                              </div>
-                              <Progress
-                                value={proyecto.progress}
-                                className="h-2"
-                                indicatorClassName={
-                                  proyecto.progress === 100
-                                    ? "bg-green-500"
-                                    : proyecto.progress > 50
-                                      ? "bg-blue-500"
-                                      : "bg-amber-500"
-                                }
-                              />
-                            </div>
-                            <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                <span>Inicio: {formatDate(proyecto.startDate)}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                <span>Fin: {formatDate(proyecto.endDate)}</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleEditProject(proyecto)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Editar
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-destructive"
-                                onClick={() => handleDeleteProject(proyecto._id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Eliminar
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-4 text-muted-foreground">
-                          No hay proyectos asociados a este cliente.
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="contacts" className="space-y-4">
-                <Card className="netflix-card">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <div>
-                      <CardTitle className="text-lg font-medium">Contactos</CardTitle>
-                      <CardDescription>Representantes de la empresa</CardDescription>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => {
-                        resetContactForm();
-                        setIsContactModalOpen(true);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Añadir Contacto</span>
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {clientData.representatives && clientData.representatives.length > 0 ? (
-                        clientData.representatives.map((representante: Representante) => (
-                          <div
-                            key={representante._id}
-                            className="flex flex-col gap-4 rounded-md border border-border/10 bg-card/30 p-4 sm:flex-row sm:items-center"
-                          >
-                            <Avatar className="h-12 w-12">
-                              <AvatarFallback>{representante.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 space-y-1">
-                              <h3 className="font-medium">{representante.name}</h3>
-                              <p className="text-sm text-muted-foreground">{representante.position}</p>
-                              <div className="flex flex-wrap gap-4 pt-1">
-                                <div className="flex items-center gap-2 text-xs">
-                                  <Mail className="h-3 w-3 text-muted-foreground" />
-                                  <a href={`mailto:${representante.email}`} className="hover:underline">
-                                    {representante.email}
-                                  </a>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs">
-                                  <Phone className="h-3 w-3 text-muted-foreground" />
-                                  <a href={`tel:${representante.phone}`} className="hover:underline">
-                                    {representante.phone}
-                                  </a>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleEditContact(representante)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Editar
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-destructive"
-                                onClick={() => handleDeleteContact(representante._id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Eliminar
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-4 text-muted-foreground">
-                          No hay contactos registrados para este cliente.
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="activities" className="space-y-4">
-                <Card className="netflix-card">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <div>
-                      <CardTitle className="text-lg font-medium">Actividades</CardTitle>
-                      <CardDescription>Historial de interacciones con el cliente</CardDescription>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => {
-                        resetActivityForm();
-                        setIsActivityModalOpen(true);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Nueva Actividad</span>
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {clientData.activities && clientData.activities.length > 0 ? (
-                        clientData.activities.map((actividad: Actividad) => (
-                          <div
-                            key={actividad._id}
-                            className="flex gap-4 rounded-md border border-border/10 bg-card/30 p-4"
-                          >
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                              {getActivityIcon(actividad.type)}
-                            </div>
-                            <div className="flex-1 space-y-1">
-                              <div className="flex items-center justify-between">
-                                <h3 className="font-medium">{actividad.title}</h3>
-                                <span className="text-xs text-muted-foreground">{formatDate(actividad.date)}</span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{actividad.description}</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-8 w-8 p-0"
-                                onClick={() => handleEditActivity(actividad)}
-                              >
-                                <Edit className="h-4 w-4" />
-                                <span className="sr-only">Editar</span>
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                onClick={() => actividad._id && handleDeleteActivity(actividad._id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Eliminar</span>
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-4 text-muted-foreground">
-                          No hay actividades registradas para este cliente.
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="invoices" className="space-y-4">
-                <Card className="netflix-card">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <div>
-                      <CardTitle className="text-lg font-medium">Facturas</CardTitle>
-                      <CardDescription>Historial de facturación</CardDescription>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => {
-                        resetInvoiceForm();
-                        setIsInvoiceModalOpen(true);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Nueva Factura</span>
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {clientData.invoices && clientData.invoices.length > 0 ? (
-                        clientData.invoices.map((factura: Factura) => (
-                          <div
-                            key={factura._id}
-                            className="flex items-center justify-between rounded-md border border-border/10 bg-card/30 p-4"
-                          >
-                            <div className="space-y-1">
-                              <h3 className="font-medium">{factura.number}</h3>
-                              <p className="text-xs text-muted-foreground">Fecha: {formatDate(factura.date)}</p>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-medium">{factura.amount}</div>
-                              <Badge className={getStatusColor(factura.status)}>
-                                {factura.status.charAt(0).toUpperCase() + factura.status.slice(1)}
-                              </Badge>
-                            </div>
-                            <div className="flex gap-2 ml-4">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-8 w-8 p-0"
-                                onClick={() => handleEditInvoice(factura)}
-                              >
-                                <Edit className="h-4 w-4" />
-                                <span className="sr-only">Editar</span>
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                onClick={() => handleDeleteInvoice(factura._id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Eliminar</span>
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-4 text-muted-foreground">
-                          No hay facturas registradas para este cliente.
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="documents" className="space-y-4">
-                <Card className="netflix-card">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <div>
-                      <CardTitle className="text-lg font-medium">Documentos</CardTitle>
-                      <CardDescription>Archivos relacionados con el cliente</CardDescription>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => {
-                        resetDocumentForm();
-                        setIsDocumentModalOpen(true);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Subir Documento</span>
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {clientData.documents && clientData.documents.length > 0 ? (
-                        clientData.documents.map((documento: Documento) => (
-                          <div
-                            key={documento._id}
-                            className="flex items-center gap-4 rounded-md border border-border/10 bg-card/30 p-4"
-                          >
-                            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-                              <FileText className="h-5 w-5" />
-                            </div>
-                            <div className="flex-1 space-y-1">
-                              <div className="flex items-center justify-between">
-                                <h3 className="font-medium">{documento.name}</h3>
-                                <div className="flex gap-2">
-                                  <Button variant="ghost" size="sm">
-                                    Descargar
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 rounded-full text-destructive"
-                                    onClick={() => documento._id && handleDeleteDocument(documento._id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">Eliminar</span>
-                                  </Button>
-                                </div>
-                              </div>
-                              <div className="flex items-center text-xs text-muted-foreground">
-                                <span>Subido el {formatDate(documento.date)}</span>
-                                <span className="mx-2">•</span>
-                                <span>{documento.size}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-4 text-muted-foreground">
-                          No hay documentos asociados a este cliente.
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="notes" className="space-y-4">
-                <Card className="netflix-card">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <div>
-                      <CardTitle className="text-lg font-medium">Notas</CardTitle>
-                      <CardDescription>Notas y comentarios sobre el cliente</CardDescription>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => {
-                        resetNoteForm();
-                        setIsNoteModalOpen(true);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Añadir Nota</span>
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    {clientData?.notes ? (
-                      <div className="rounded-md border border-border/10 bg-card/30 p-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium">Nota principal</h3>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 rounded-full"
-                              onClick={handleEditNote}
-                            >
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Editar</span>
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 rounded-full text-destructive hover:text-destructive"
-                              onClick={handleDeleteNote}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Eliminar</span>
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="mt-2 text-sm text-muted-foreground">{clientData.notes}</div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4 text-muted-foreground">
-                        No hay notas registradas para este cliente.
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </main>
-      </div>
-      
-      {/* Modal de Actividad */}
-      <Dialog open={isActivityModalOpen} onOpenChange={setIsActivityModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{editingItemId ? "Editar Actividad" : "Nueva Actividad"}</DialogTitle>
-            <DialogDescription>
-              {editingItemId ? "Modifica los detalles de la actividad" : "Registra una nueva interacción con el cliente"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddActivity}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="activity-type">Tipo de actividad</Label>
-                <Select
-                  value={activityForm.type}
-                  onValueChange={(value) => handleActivitySelectChange('type', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="meeting">Reunión</SelectItem>
-                    <SelectItem value="call">Llamada</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="note">Nota</SelectItem>
-                    <SelectItem value="other">Otro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="activity-title">Título *</Label>
-                <Input
-                  id="activity-title"
-                  name="title"
-                  value={activityForm.title}
-                  onChange={handleActivityChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="activity-date">Fecha *</Label>
-                <Input
-                  id="activity-date"
-                  name="date"
-                  type="datetime-local"
-                  value={activityForm.date}
-                  onChange={handleActivityChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="activity-description">Descripción *</Label>
-                <Textarea
-                  id="activity-description"
-                  name="description"
-                  value={activityForm.description}
-                  onChange={handleActivityChange}
-                  required
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setIsActivityModalOpen(false)}>Cancelar</Button>
-              <Button type="submit">{editingItemId ? "Actualizar" : "Guardar"}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Modal de Documento */}
-      <Dialog open={isDocumentModalOpen} onOpenChange={setIsDocumentModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Subir Documento</DialogTitle>
-            <DialogDescription>
-              Adjunta un documento relacionado con este cliente.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddDocument}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="document-name">Nombre del documento *</Label>
-                <Input
-                  id="document-name"
-                  name="name"
-                  value={documentForm.name}
-                  onChange={handleDocumentChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="document-file">Archivo *</Label>
-                <Input
-                  id="document-file"
-                  name="file"
-                  type="file"
-                  onChange={handleFileChange}
-                  required={!editingItemId}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Formatos admitidos: PDF, DOCX, XLSX, imágenes (máx. 5MB)
-                </p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setIsDocumentModalOpen(false)}>Cancelar</Button>
-              <Button type="submit">Subir</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Modal de Proyecto */}
-      <Dialog open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{editingItemId ? "Editar Proyecto" : "Nuevo Proyecto"}</DialogTitle>
-            <DialogDescription>
-              {editingItemId ? "Modifica los detalles del proyecto" : "Crea un nuevo proyecto para este cliente"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddProject}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="project-name">Nombre del proyecto *</Label>
-                <Input
-                  id="project-name"
-                  name="name"
-                  value={projectForm.name}
-                  onChange={handleProjectChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="project-description">Descripción</Label>
-                <Textarea
-                  id="project-description"
-                  name="description"
-                  value={projectForm.description}
-                  onChange={handleProjectChange}
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="project-start-date">Fecha de inicio *</Label>
-                <Input
-                  id="project-start-date"
-                  name="startDate"
-                  type="date"
-                  value={projectForm.startDate}
-                  onChange={handleProjectChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="project-end-date">Fecha de finalización</Label>
-                <Input
-                  id="project-end-date"
-                  name="endDate"
-                  type="date"
-                  value={projectForm.endDate}
-                  onChange={handleProjectChange}
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="project-status">Estado</Label>
-                <Select
-                  value={projectForm.status}
-                  onValueChange={(value) => handleProjectSelectChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pendiente</SelectItem>
-                    <SelectItem value="in_progress">En progreso</SelectItem>
-                    <SelectItem value="completed">Completado</SelectItem>
-                    <SelectItem value="cancelled">Cancelado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setIsProjectModalOpen(false)}>Cancelar</Button>
-              <Button type="submit">{editingItemId ? "Actualizar" : "Crear"}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Modal de Contacto */}
-      <Dialog open={isContactModalOpen} onOpenChange={setIsContactModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{editingItemId ? "Editar Contacto" : "Nuevo Contacto"}</DialogTitle>
-            <DialogDescription>
-              {editingItemId ? "Modifica los detalles del contacto" : "Añade un nuevo contacto para este cliente"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddContact}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="contact-name">Nombre *</Label>
-                <Input
-                  id="contact-name"
-                  name="name"
-                  value={contactForm.name}
-                  onChange={handleContactChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="contact-position">Cargo</Label>
-                <Input
-                  id="contact-position"
-                  name="position"
-                  value={contactForm.position}
-                  onChange={handleContactChange}
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="contact-email">Email *</Label>
-                <Input
-                  id="contact-email"
-                  name="email"
-                  type="email"
-                  value={contactForm.email}
-                  onChange={handleContactChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="contact-phone">Teléfono</Label>
-                <Input
-                  id="contact-phone"
-                  name="phone"
-                  value={contactForm.phone}
-                  onChange={handleContactChange}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setIsContactModalOpen(false)}>Cancelar</Button>
-              <Button type="submit">{editingItemId ? "Actualizar" : "Guardar"}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Modal de Factura */}
-      <Dialog open={isInvoiceModalOpen} onOpenChange={setIsInvoiceModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{editingItemId ? "Editar Factura" : "Nueva Factura"}</DialogTitle>
-            <DialogDescription>
-              {editingItemId ? "Modifica los detalles de la factura" : "Crea una nueva factura para este cliente"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddInvoice}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="invoice-number">Número de factura *</Label>
-                <Input
-                  id="invoice-number"
-                  name="number"
-                  value={invoiceForm.number}
-                  onChange={handleInvoiceChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="invoice-amount">Monto *</Label>
-                <Input
-                  id="invoice-amount"
-                  name="amount"
-                  value={invoiceForm.amount}
-                  onChange={handleInvoiceChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="invoice-date">Fecha *</Label>
-                <Input
-                  id="invoice-date"
-                  name="date"
-                  type="date"
-                  value={invoiceForm.date}
-                  onChange={handleInvoiceChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="invoice-status">Estado</Label>
-                <Select
-                  value={invoiceForm.status}
-                  onValueChange={(value) => handleInvoiceSelectChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pendiente</SelectItem>
-                    <SelectItem value="paid">Pagada</SelectItem>
-                    <SelectItem value="cancelled">Cancelada</SelectItem>
-                    <SelectItem value="overdue">Vencida</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setIsInvoiceModalOpen(false)}>Cancelar</Button>
-              <Button type="submit">{editingItemId ? "Actualizar" : "Crear"}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Modal de Nota */}
-      <Dialog open={isNoteModalOpen} onOpenChange={setIsNoteModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{clientData?.notes ? "Editar Nota" : "Nueva Nota"}</DialogTitle>
-            <DialogDescription>
-              {clientData?.notes ? "Modifica la nota existente" : "Añade una nueva nota para este cliente"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSaveNote}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="note-content">Contenido *</Label>
-                <Textarea
-                  id="note-content"
-                  name="content"
-                  value={noteForm.content}
-                  onChange={handleNoteChange}
-                  placeholder="Escribe aquí tus notas sobre el cliente..."
-                  rows={6}
-                  required
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setIsNoteModalOpen(false)}>Cancelar</Button>
-              <Button type="submit">Guardar</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+                  <div className="mt-2 text-sm text-muted-foreground">{clientData.notes}</div>
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  No hay notas registradas para este cliente.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

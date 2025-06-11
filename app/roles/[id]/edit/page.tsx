@@ -12,14 +12,14 @@ export const metadata: Metadata = {
 }
 
 interface EditRolePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function EditRolePage(props: EditRolePageProps) {
   // Esperamos a que los parámetros estén disponibles
-  const params = await Promise.resolve(props.params);
+  const params = await props.params;
   const roleId = params.id;
   
   return (

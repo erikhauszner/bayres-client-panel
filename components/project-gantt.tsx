@@ -12,6 +12,12 @@ import {
   ZoomOut,
   AlertTriangle,
   Edit,
+  Save,
+  X,
+  Plus,
+  Users,
+  Clock,
+  CheckCircle2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,9 +40,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { projectService } from "@/lib/services/projectService"
-import { addDays, addWeeks, addMonths } from "date-fns"
-
-import { formatDate } from "./projects-dashboard"
+import { addDays, addWeeks, addMonths, format, isAfter, isBefore, differenceInDays } from "date-fns"
+import { es } from 'date-fns/locale'
 
 interface Task {
   id: number
@@ -52,7 +57,6 @@ interface Task {
   } | null
   presupuesto: number
   presupuestoGastado: number
-  bloqueada?: boolean
   dependencias?: number[]
 }
 
@@ -68,12 +72,21 @@ interface ProjectGanttProps {
   project: Project
 }
 
-// Función para obtener el color de la barra basado en el estado y progreso
-const getBarColor = (estado: string, progreso: number) => {
-  if (estado === "completado") return "bg-green-500/70"
-  if (estado === "en_progreso") return "bg-blue-500/70"
-  if (estado === "pendiente") return "bg-amber-500/70"
-  return "bg-slate-500/70"
+// Función para obtener el color de la barra basado en el estado
+const getBarColor = (estado: string, isOverdue: boolean = false) => {
+  if (isOverdue) return "bg-red-500"
+  if (estado === "completed" || estado === "completado") return "bg-green-500"
+  if (estado === "in_progress" || estado === "en_progreso") return "bg-blue-500"
+  if (estado === "pending" || estado === "pendiente") return "bg-amber-500"
+  if (estado === "cancelled" || estado === "cancelado") return "bg-gray-500"
+  return "bg-slate-500"
+}
+
+// Función para calcular si una tarea está retrasada
+const isTaskOverdue = (task: Task): boolean => {
+  const today = new Date()
+  const taskEnd = new Date(task.fechaFin)
+  return isAfter(today, taskEnd) && task.estado !== "completed" && task.estado !== "completado"
 }
 
 // Función para calcular la posición y ancho de la barra en el cronograma
@@ -82,448 +95,395 @@ const calculateBarPosition = (
   taskEnd: Date,
   projectStart: Date,
   projectEnd: Date,
-  zoomLevel: number = 1
+  containerWidth: number = 100
 ) => {
-  const projectDuration = projectEnd.getTime() - projectStart.getTime()
-  const taskStartOffset = taskStart.getTime() - projectStart.getTime()
-  const taskDuration = taskEnd.getTime() - taskStart.getTime()
+  const projectDuration = differenceInDays(projectEnd, projectStart)
+  const taskStartOffset = differenceInDays(taskStart, projectStart)
+  const taskDuration = differenceInDays(taskEnd, taskStart)
   
-  // Aplicar el nivel de zoom al cálculo
-  const startPercent = (taskStartOffset / projectDuration) * 100 * zoomLevel
-  const widthPercent = (taskDuration / projectDuration) * 100 * zoomLevel
+  if (projectDuration <= 0) return { left: 0, width: 100 }
+  
+  const startPercent = Math.max(0, (taskStartOffset / projectDuration) * 100)
+  const widthPercent = Math.min(100 - startPercent, (taskDuration / projectDuration) * 100)
   
   return {
     left: `${startPercent}%`,
-    width: `${widthPercent}%`,
+    width: `${Math.max(1, widthPercent)}%`,
   }
 }
 
-// Función para calcular la posición de la barra de progreso
-const calculateProgressBar = (width: string, progreso: number) => {
-  const numericWidth = parseFloat(width)
-  return `${(numericWidth * progreso) / 100}%`
-}
-
-// Función para generar las fechas de las columnas
-const generateTimelineDates = (startDate: Date, endDate: Date, interval: string) => {
+// Función para generar las fechas de las columnas del timeline
+const generateTimelineDates = (startDate: Date, endDate: Date, scale: string) => {
   const dates = []
-  const currentDate = new Date(startDate)
+  const current = new Date(startDate)
   
-  while (currentDate <= endDate) {
-    dates.push(new Date(currentDate))
+  while (current <= endDate) {
+    dates.push(new Date(current))
     
-    if (interval === "dias") {
-      currentDate.setDate(currentDate.getDate() + 1)
-    } else if (interval === "semanas") {
-      currentDate.setDate(currentDate.getDate() + 7)
-    } else if (interval === "meses") {
-      currentDate.setMonth(currentDate.getMonth() + 1)
+    if (scale === "days") {
+      current.setDate(current.getDate() + 1)
+    } else if (scale === "weeks") {
+      current.setDate(current.getDate() + 7)
+    } else if (scale === "months") {
+      current.setMonth(current.getMonth() + 1)
     }
   }
   
   return dates
 }
 
-// Función para formatear la fecha según el intervalo
-const formatTimelineDate = (date: Date, interval: string) => {
-  if (interval === "dias") {
-    return date.getDate().toString()
-  } else if (interval === "semanas") {
-    return `S${Math.ceil((date.getDate() + date.getDay()) / 7)}`
-  } else if (interval === "meses") {
-    return date.toLocaleDateString("es-ES", { month: "short" })
+// Función para formatear la fecha según la escala
+const formatTimelineDate = (date: Date, scale: string) => {
+  if (scale === "days") {
+    return format(date, 'dd/MM', { locale: es })
+  } else if (scale === "weeks") {
+    const weekNumber = Math.ceil(date.getDate() / 7)
+    return `S${weekNumber}`
+  } else if (scale === "months") {
+    return format(date, 'MMM', { locale: es })
   }
   return ""
 }
 
-// Función para convertir una fecha de string a formato YYYY-MM-DD para inputs
-const formatDateForInput = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toISOString().split('T')[0]
-}
-
 export default function ProjectGantt({ project }: ProjectGanttProps) {
-  // Log para verificar que los datos del proyecto son correctos
-  console.log("Datos del proyecto para el diagrama Gantt:", project);
-  const [timelineScale, setTimelineScale] = useState<"dias" | "semanas" | "meses">("semanas")
-  // Estados para arrastre - deshabilitados pero mantenidos para compatibilidad
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragType, setDragType] = useState<"move" | "start" | "end" | null>(null)
-  const [activeTaskId, setActiveTaskId] = useState<number | null>(null)
-  const [initialPosition, setInitialPosition] = useState({ x: 0, clientX: 0 })
+  const [timelineScale, setTimelineScale] = useState<"days" | "weeks" | "months">("weeks")
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
-  const ganttContainerRef = useRef<HTMLDivElement>(null)
-  const [projectData, setProjectData] = useState<Project>(project)
   const [savingChanges, setSavingChanges] = useState(false)
-  // Agregar estado para el nivel de zoom
-  const [zoomLevel, setZoomLevel] = useState(1)
-  // Añadir estados para duración personalizada
-  const [useDuration, setUseDuration] = useState(false)
-  const [durationType, setDurationType] = useState<'days' | 'weeks' | 'months'>('weeks')
-  const [durationValue, setDurationValue] = useState(1)
+  const [filteredStatus, setFilteredStatus] = useState<string>("all")
+  const [filteredAssignee, setFilteredAssignee] = useState<string>("all")
+  
+  // Calcular fechas del proyecto
+  const projectStartDate = new Date(project.fechaInicio)
+  const projectEndDate = new Date(project.fechaFin)
+  
+  // Filtrar tareas según criterios
+  const filteredTasks = project.tareas.filter(task => {
+    const statusMatch = filteredStatus === "all" || task.estado === filteredStatus
+    const assigneeMatch = filteredAssignee === "all" || task.responsable?.id.toString() === filteredAssignee
+    return statusMatch && assigneeMatch
+  })
   
   // Ordenar tareas por fecha de inicio
-  const sortedTasks = [...projectData.tareas].sort((a, b) => 
+  const sortedTasks = [...filteredTasks].sort((a, b) => 
     new Date(a.fechaInicio).getTime() - new Date(b.fechaInicio).getTime()
   )
   
-  // Calcular el rango de fechas del proyecto
-  const projectStartDate = new Date(projectData.fechaInicio)
-  const projectEndDate = new Date(projectData.fechaFin)
-  
-  // Generar las fechas para las columnas
+  // Generar timeline
   const timelineDates = generateTimelineDates(projectStartDate, projectEndDate, timelineScale)
   
-  // Encontrar tareas con desviación
-  const tasksWithDelay = sortedTasks.filter(task => 
-    task.estado === "en_progreso" && new Date(task.fechaFin) < new Date()
-  )
+  // Calcular estadísticas del proyecto
+  const projectStats = {
+    totalTasks: project.tareas.length,
+    completedTasks: project.tareas.filter(t => t.estado === "completed" || t.estado === "completado").length,
+    inProgressTasks: project.tareas.filter(t => t.estado === "in_progress" || t.estado === "en_progreso").length,
+    overdueTasks: project.tareas.filter(isTaskOverdue).length,
+    totalBudget: project.tareas.reduce((sum, t) => sum + t.presupuesto, 0),
+    spentBudget: project.tareas.reduce((sum, t) => sum + t.presupuestoGastado, 0)
+  }
+  
+  const completionPercentage = projectStats.totalTasks > 0 
+    ? Math.round((projectStats.completedTasks / projectStats.totalTasks) * 100) 
+    : 0
 
-  // Función para calcular la fecha de fin basada en la fecha de inicio y duración
-  const calculateEndDate = (startDate: string, durationType: 'days' | 'weeks' | 'months', durationValue: number): string => {
-    if (!startDate) return '';
-    
-    const start = new Date(startDate);
-    let end;
-    
-    switch (durationType) {
-      case 'days':
-        end = addDays(start, durationValue);
-        break;
-      case 'weeks':
-        end = addWeeks(start, durationValue);
-        break;
-      case 'months':
-        end = addMonths(start, durationValue);
-        break;
-      default:
-        end = addWeeks(start, durationValue);
-    }
-    
-    return formatDateForInput(end.toISOString());
-  };
-
-  // Efecto para actualizar la fecha de fin cuando cambia la duración
-  useEffect(() => {
-    if (useDuration && startDate) {
-      const newEndDate = calculateEndDate(startDate, durationType, durationValue);
-      setEndDate(newEndDate);
-    }
-  }, [useDuration, startDate, durationType, durationValue]);
-
-  // NOTA: Las funciones de edición están deshabilitadas según la solicitud del usuario
-  
-  // Función para manejar el inicio del arrastre - DESHABILITADA
-  const handleMouseDown = (
-    e: React.MouseEvent, 
-    taskId: number, 
-    type: "move" | "start" | "end"
-  ) => {
-    // Función deshabilitada - solo prevenir el comportamiento predeterminado
-    e.preventDefault();
-    // No activamos el arrastre
-  }
-  
-  // Función para manejar el movimiento durante el arrastre - DESHABILITADA
-  const handleMouseMove = (e: MouseEvent) => {
-    // Función deshabilitada - no hace nada
-    return;
-  }
-  
-  // Función para manejar el fin del arrastre - DESHABILITADA
-  const handleMouseUp = async () => {
-    // Función deshabilitada - no hace nada
-    return;
-  }
-  
-  // Función para guardar los cambios en la tarea - DESHABILITADA
-  const saveTaskChanges = async (taskId: number) => {
-    // Función deshabilitada - no hace nada
-    return;
-  }
-  
-  // Función para abrir el modal de edición - DESHABILITADA
+  // Abrir modal de edición
   const openEditModal = (task: Task) => {
-    // Función deshabilitada - no hace nada
-    return;
-  }
-  
-  // Función para guardar los cambios del modal - DESHABILITADA
-  const handleSaveModalChanges = async () => {
-    // Función deshabilitada - no hace nada
-    return;
+    setEditingTask(task)
+    setStartDate(task.fechaInicio.split('T')[0])
+    setEndDate(task.fechaFin.split('T')[0])
+    setEditModalOpen(true)
   }
 
-  // Función para incrementar el zoom
-  const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.25, 3)) // Limitar el zoom máximo a 3x
+  // Guardar cambios en las fechas de la tarea
+  const handleSaveModalChanges = async () => {
+    if (!editingTask || !startDate || !endDate) return
+    
+    try {
+      setSavingChanges(true)
+      
+      // Llamar al servicio para actualizar las fechas de la tarea
+      await projectService.updateProjectTaskDates(
+        project.id.toString(),
+        editingTask.id.toString(),
+        startDate,
+        endDate
+      )
+      
+      // Actualizar el estado local
+      const updatedProject = {
+        ...project,
+        tareas: project.tareas.map(task => 
+          task.id === editingTask.id 
+            ? { ...task, fechaInicio: startDate, fechaFin: endDate }
+            : task
+        )
+      }
+      
+      toast.success("Fechas de tarea actualizadas correctamente")
+      setEditModalOpen(false)
+      setEditingTask(null)
+      
+      // Recargar la página para reflejar los cambios
+      window.location.reload()
+    } catch (error) {
+      console.error("Error al actualizar fechas:", error)
+      toast.error("Error al actualizar las fechas de la tarea")
+    } finally {
+      setSavingChanges(false)
+    }
   }
-  
-  // Función para reducir el zoom
-  const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.25, 0.5)) // Limitar el zoom mínimo a 0.5x
+
+  // Exportar cronograma
+  const exportGantt = () => {
+    toast.info("Funcionalidad de exportación en desarrollo")
   }
 
   return (
-    <div className="space-y-4">
-      {/* Encabezado */}
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight">Cronograma del Proyecto</h2>
-          <p className="text-muted-foreground">Visualización temporal de tareas y dependencias</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="h-9">
-            <Printer className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Imprimir</span>
-          </Button>
-          <Button variant="outline" size="sm" className="h-9">
-            <Download className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Exportar</span>
-          </Button>
-          <Button variant="outline" size="sm" className="h-9">
-            <Maximize2 className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Pantalla completa</span>
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* Header con estadísticas del proyecto */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl">{project.nombre}</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {format(projectStartDate, 'dd MMM yyyy', { locale: es })} - {format(projectEndDate, 'dd MMM yyyy', { locale: es })}
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{completionPercentage}%</div>
+                <div className="text-xs text-muted-foreground">Completado</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">{projectStats.totalTasks}</div>
+                <div className="text-xs text-muted-foreground">Tareas</div>
+              </div>
+              {projectStats.overdueTasks > 0 && (
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">{projectStats.overdueTasks}</div>
+                  <div className="text-xs text-muted-foreground">Retrasadas</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
-      {/* Resumen de estadísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col">
-              <span className="text-muted-foreground text-sm">Total de tareas</span>
-              <span className="text-2xl font-bold">{sortedTasks.length}</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col">
-              <span className="text-muted-foreground text-sm">Tareas completadas</span>
-              <span className="text-2xl font-bold">
-                {sortedTasks.filter(t => t.estado === "completado").length}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col">
-              <span className="text-muted-foreground text-sm">En progreso</span>
-              <span className="text-2xl font-bold">
-                {sortedTasks.filter(t => t.estado === "en_progreso").length}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col">
-              <span className="text-muted-foreground text-sm">Pendientes</span>
-              <span className="text-2xl font-bold">
-                {sortedTasks.filter(t => t.estado === "pendiente").length}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Controles del cronograma */}
-      <Card className="netflix-card overflow-hidden">
+      {/* Controles y filtros */}
+      <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center space-x-2">
-              <Select
-                defaultValue={timelineScale}
-                onValueChange={(value) => setTimelineScale(value as "dias" | "semanas" | "meses")}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Escala de tiempo" />
+              <Label>Escala:</Label>
+              <Select value={timelineScale} onValueChange={(value: "days" | "weeks" | "months") => setTimelineScale(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dias">Días</SelectItem>
-                  <SelectItem value="semanas">Semanas</SelectItem>
-                  <SelectItem value="meses">Meses</SelectItem>
+                  <SelectItem value="days">Días</SelectItem>
+                  <SelectItem value="weeks">Semanas</SelectItem>
+                  <SelectItem value="months">Meses</SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-9 w-9"
-                onClick={handleZoomIn}
-                title={`Acercar (Nivel actual: x${zoomLevel.toFixed(2)})`}
-              >
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-9 w-9"
-                onClick={handleZoomOut}
-                title={`Alejar (Nivel actual: x${zoomLevel.toFixed(2)})`}
-              >
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <span className="text-xs text-muted-foreground">
-                Zoom: x{zoomLevel.toFixed(2)}
-              </span>
             </div>
-            <Button variant="outline" size="sm" className="h-9">
-              <Filter className="mr-2 h-4 w-4" />
-              <span>Filtros</span>
+            
+            <div className="flex items-center space-x-2">
+              <Label>Estado:</Label>
+              <Select value={filteredStatus} onValueChange={setFilteredStatus}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pending">Pendiente</SelectItem>
+                  <SelectItem value="in_progress">En Progreso</SelectItem>
+                  <SelectItem value="completed">Completado</SelectItem>
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex-1" />
+            
+            <Button variant="outline" size="sm" onClick={exportGantt}>
+              <Download className="mr-2 h-4 w-4" />
+              Exportar
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Cronograma Gantt */}
-      <Card className="netflix-card overflow-hidden">
+      {/* Cronograma principal */}
+      <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <div 
-              className="min-w-[800px]" 
-              ref={ganttContainerRef}
-              style={{ width: zoomLevel > 1 ? `${Math.ceil(zoomLevel * 100)}%` : 'auto' }}
-            >
-              {/* Cabecera del cronograma */}
-              <div className="flex border-b border-border/10">
-                <div className="w-1/4 min-w-[200px] border-r border-border/10 p-4">
-                  <span className="font-medium">Tareas</span>
-                </div>
-                <div className="w-3/4 p-2">
-                  <div className="flex">
-                    {timelineDates.map((date, index) => (
-                      <div key={index} className="flex-1 text-center">
-                        <span className="text-xs font-medium">
-                          {formatTimelineDate(date, timelineScale)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+          <div className="min-h-[600px]">
+            {/* Header del cronograma */}
+            <div className="grid grid-cols-12 border-b">
+              <div className="col-span-4 p-4 bg-muted/20 border-r">
+                <h3 className="font-medium">Tareas</h3>
               </div>
-
-              {/* Filas de tareas */}
-              {sortedTasks.map((task) => {
-                const taskStartDate = new Date(task.fechaInicio)
-                const taskEndDate = new Date(task.fechaFin)
-                
-                // Calcular la posición de la barra basada en las fechas
-                const { left, width } = calculateBarPosition(
-                  taskStartDate,
-                  taskEndDate,
-                  projectStartDate,
-                  projectEndDate,
-                  zoomLevel
-                )
-                
-                // Determinar el color de la barra basado en el estado y progreso
-                const barColor = getBarColor(task.estado, task.progreso)
-                
-                // Calcular la barra de progreso
-                const progressStyle = calculateProgressBar(width, task.progreso)
-                
-                return (
-                  <div key={task.id} className="flex border-b border-border/10 hover:bg-muted/20">
-                    {/* Información de la tarea */}
-                    <div className="w-1/4 min-w-[200px] border-r border-border/10 p-4 flex items-center">
-                      <div>
-                        <h3 className="font-medium text-sm">
-                          <span className="cursor-default">{task.nombre}</span>
-                        </h3>
-                        <div className="flex items-center mt-1 space-x-2">
-                          <Badge 
-                            variant={task.estado === "completado" ? "secondary" : task.estado === "en_progreso" ? "default" : "secondary"}
-                          >
-                            {task.estado === "completado" 
-                              ? "Completada" 
-                              : task.estado === "en_progreso" 
-                                ? "En progreso" 
-                                : "Pendiente"}
-                          </Badge>
-                          {task.responsable && (
-                            <div 
-                              className="flex -space-x-1 cursor-default"
-                              title={task.responsable.nombre}
-                            >
-                              <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground ring-2 ring-background">
-                                {task.responsable.iniciales}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Barra de la tarea */}
-                    <div className="w-3/4 p-4 relative">
-                      <div
-                        className="absolute h-8 rounded-md bg-primary/20 border border-primary cursor-default"
-                        style={{
-                          left: left,
-                          width: width,
-                          backgroundColor: `${barColor}30`, // Color con opacidad
-                          borderColor: barColor
-                        }}
-                      >
-                        {/* Barra de progreso */}
-                        <div 
-                          className="h-full rounded-md bg-primary"
-                          style={{
-                            width: progressStyle,
-                            backgroundColor: barColor,
-                          }}
-                        ></div>
-                        
-                        {/* Información sobre la tarea */}
-                        <div className="absolute top-0 left-0 h-full w-full flex items-center justify-between px-2 text-xs font-medium">
-                          <div className="flex items-center space-x-1 whitespace-nowrap overflow-hidden">
-                            <span className="overflow-hidden text-ellipsis">{task.nombre}</span>
-                          </div>
-                          <div className="whitespace-nowrap">
-                            {task.progreso}%
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Alertas para tareas con retraso */}
-      {tasksWithDelay.length > 0 && (
-        <Card className="bg-warning/10 border-warning">
-          <CardContent className="p-4">
-            <div className="flex items-start">
-              <AlertTriangle className="h-5 w-5 text-warning mr-2 mt-0.5" />
-              <div>
-                <h3 className="font-medium">Tareas con desviación</h3>
-                <p className="text-sm text-muted-foreground">
-                  {tasksWithDelay.length} {tasksWithDelay.length === 1 ? "tarea ha" : "tareas han"} superado su fecha estimada de finalización.
-                </p>
-                <div className="mt-2 space-y-1">
-                  {tasksWithDelay.map(task => (
-                    <div key={task.id} className="text-sm flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-warning mr-2"></div>
-                      <span>{task.nombre}</span>
+              <div className="col-span-8 p-2 bg-muted/20">
+                <div className="grid grid-flow-col auto-cols-fr gap-1 text-xs text-center">
+                  {timelineDates.map((date, index) => (
+                    <div key={index} className="p-1 border-r border-border/40">
+                      {formatTimelineDate(date, timelineScale)}
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+
+            {/* Contenido del cronograma */}
+            <div className="max-h-[500px] overflow-y-auto">
+              {sortedTasks.length > 0 ? (
+                sortedTasks.map((task) => {
+                  const taskStart = new Date(task.fechaInicio)
+                  const taskEnd = new Date(task.fechaFin)
+                  const isOverdue = isTaskOverdue(task)
+                  const barPosition = calculateBarPosition(taskStart, taskEnd, projectStartDate, projectEndDate)
+                  
+                  return (
+                    <div key={task.id} className="grid grid-cols-12 border-b hover:bg-muted/10">
+                      {/* Información de la tarea */}
+                      <div className="col-span-4 p-4 border-r">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm">{task.nombre}</h4>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditModal(task)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Badge 
+                              className={`${getBarColor(task.estado, isOverdue)} text-white text-xs`}
+                            >
+                              {task.estado === "completed" || task.estado === "completado" ? "Completado" :
+                               task.estado === "in_progress" || task.estado === "en_progreso" ? "En Progreso" :
+                               task.estado === "pending" || task.estado === "pendiente" ? "Pendiente" : "Cancelado"}
+                            </Badge>
+                            {isOverdue && (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertTriangle className="mr-1 h-3 w-3" />
+                                Retrasada
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          {task.responsable && (
+                            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                              <Users className="h-3 w-3" />
+                              <span>{task.responsable.nombre}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {format(taskStart, 'dd/MM', { locale: es })} - {format(taskEnd, 'dd/MM', { locale: es })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Barra del cronograma */}
+                      <div className="col-span-8 p-4 relative">
+                        <div className="relative h-8 bg-gray-100 rounded">
+                          <div 
+                            className={`absolute top-0 h-full rounded ${getBarColor(task.estado, isOverdue)} transition-all duration-200`}
+                            style={{
+                              left: barPosition.left,
+                              width: barPosition.width,
+                            }}
+                          >
+                            <div className="h-full flex items-center justify-center text-white text-xs font-medium">
+                              {task.progreso}%
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="p-8 text-center text-muted-foreground">
+                  <Calendar className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                  <p>No hay tareas para mostrar con los filtros seleccionados</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Modal de edición de fechas */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Fechas de Tarea</DialogTitle>
+          </DialogHeader>
+          
+          {editingTask && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium">{editingTask.nombre}</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Modifica las fechas de inicio y fin de esta tarea
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="start-date">Fecha de Inicio</Label>
+                  <Input
+                    id="start-date"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="end-date">Fecha de Fin</Label>
+                  <Input
+                    id="end-date"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveModalChanges} disabled={savingChanges}>
+              {savingChanges ? (
+                <>
+                  <Save className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar Cambios
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 

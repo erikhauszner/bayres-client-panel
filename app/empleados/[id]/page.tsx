@@ -25,6 +25,9 @@ import {
   Edit,
   Trash2,
   Shield,
+  ArrowLeft,
+  XCircle,
+  CheckCircle2,
 } from "lucide-react"
 import {
   AlertDialog,
@@ -276,28 +279,13 @@ export default function EmployeePage({ params }: EmployeePageProps) {
     // Agrupar permisos por módulo
     const groupedPermissions: Record<string, any[]> = {}
     
-    if (rolePermissions?.permissions) {
+    if (rolePermissions && rolePermissions.permissions) {
       rolePermissions.permissions.forEach((permission: any) => {
-        // Asegurarnos de que el permiso tiene un módulo válido
-        const module = permission.module || (
-          typeof permission === 'string' && permission.includes(':') 
-            ? permission.split(':')[0] 
-            : 'general'
-        )
-        
+        const [module, action] = permission.name.split(':')
         if (!groupedPermissions[module]) {
           groupedPermissions[module] = []
         }
-        
-        // Asegurarse de que no añadimos duplicados
-        const permExists = groupedPermissions[module].some(p => 
-          (p.id && p.id === permission.id) || 
-          (p.action && p.action === permission.action)
-        )
-        
-        if (!permExists) {
-          groupedPermissions[module].push(permission)
-        }
+        groupedPermissions[module].push(permission)
       })
     }
     
@@ -336,49 +324,73 @@ export default function EmployeePage({ params }: EmployeePageProps) {
     }
 
     return (
-      <div className="mx-auto max-w-4xl space-y-6">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">Detalle del Empleado</h1>
-            <p className="text-muted-foreground">
-              Información detallada del empleado
-            </p>
+      <div className="mx-auto max-w-7xl space-y-6">
+        {/* Encabezado con acciones */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-9"
+              onClick={() => router.push("/empleados")}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              <span>Volver</span>
+            </Button>
           </div>
+          
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-9"
               onClick={() => router.push(`/empleados/${employee._id}/edit`)}
             >
               <Edit className="mr-2 h-4 w-4" />
-              Editar
+              <span>Editar</span>
             </Button>
-            <Button
-              variant={employee.isActive ? "destructive" : "default"}
+            
+            <Button 
+              variant={employee?.isActive ? "outline" : "default"} 
+              size="sm" 
+              className="h-9"
               onClick={handleToggleStatus}
             >
-              <AlertCircle className="mr-2 h-4 w-4" />
-              {employee.isActive ? "Desactivar" : "Activar"}
+              {employee?.isActive ? (
+                <>
+                  <XCircle className="mr-2 h-4 w-4" />
+                  <span>Desactivar</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  <span>Activar</span>
+                </>
+              )}
             </Button>
+            
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="h-9"
+                >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Eliminar
+                  <span>Eliminar</span>
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta acción no se puede deshacer. Se eliminará permanentemente el empleado
-                    y todos sus datos asociados.
+                    Esta acción no se puede deshacer. Se eliminará permanentemente al empleado
+                    {employee?.firstName} {employee?.lastName} y todos sus datos asociados.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
+                <AlertDialogFooter className="mt-4">
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>
-                    Eliminar
-                  </AlertDialogAction>
+                  <AlertDialogAction onClick={handleDelete}>Eliminar</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -388,15 +400,15 @@ export default function EmployeePage({ params }: EmployeePageProps) {
         <div className="grid gap-6 md:grid-cols-[1fr_2fr]">
           {/* Información básica */}
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <div className="flex flex-col items-center space-y-4">
-                <Avatar className="h-24 w-24 bg-primary/10">
-                  <AvatarFallback className="text-2xl">
+                <Avatar className="h-20 w-20 sm:h-24 sm:w-24 bg-primary/10">
+                  <AvatarFallback className="text-xl sm:text-2xl">
                     {`${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-center">
-                  <h2 className="text-xl font-semibold">
+                  <h2 className="text-lg sm:text-xl font-semibold">
                     {`${employee.firstName} ${employee.lastName}`}
                   </h2>
                   <p className="text-sm text-muted-foreground">{employee.position}</p>
@@ -414,11 +426,11 @@ export default function EmployeePage({ params }: EmployeePageProps) {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{employee.email}</span>
+                  <span className="text-sm truncate">{employee.email}</span>
                 </div>
                 {employee.phone && (
                   <div className="flex items-center gap-2">
@@ -454,21 +466,23 @@ export default function EmployeePage({ params }: EmployeePageProps) {
 
           {/* Pestañas con información detallada */}
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="info">Información</TabsTrigger>
-              <TabsTrigger value="permissions">Permisos</TabsTrigger>
-              <TabsTrigger value="activity">Actividad</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto pb-1">
+              <TabsList className="w-auto inline-flex min-w-max">
+                <TabsTrigger value="info" className="text-xs sm:text-sm whitespace-nowrap">Información</TabsTrigger>
+                <TabsTrigger value="permissions" className="text-xs sm:text-sm whitespace-nowrap">Permisos</TabsTrigger>
+                <TabsTrigger value="activity" className="text-xs sm:text-sm whitespace-nowrap">Actividad</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="info" className="space-y-4 pt-4">
               <Card>
-                <CardHeader>
-                  <CardTitle>Información del Empleado</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl">Información del Empleado</CardTitle>
                   <CardDescription>
                     Datos personales y profesionales
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 p-4 sm:p-6 pt-0">
                   <div className="grid gap-2">
                     <p className="text-sm font-medium">Nombre completo</p>
                     <p className="text-sm text-muted-foreground">
@@ -487,229 +501,64 @@ export default function EmployeePage({ params }: EmployeePageProps) {
                     <p className="text-sm font-medium">Posición</p>
                     <p className="text-sm text-muted-foreground">{employee.position}</p>
                   </div>
-                  {employee.phone && (
-                    <div className="grid gap-2">
-                      <p className="text-sm font-medium">Teléfono</p>
-                      <p className="text-sm text-muted-foreground">{employee.phone}</p>
-                    </div>
-                  )}
-                  
-                  {/* Información personal */}
-                  {(employee.birthDate || employee.gender || employee.documentId || employee.documentType) && (
-                    <>
-                      <div className="mt-6 mb-2">
-                        <h3 className="font-medium text-sm">Información Personal</h3>
-                        <div className="h-px bg-border mt-2"></div>
-                      </div>
-                      
-                      {employee.birthDate && (
-                        <div className="grid gap-2">
-                          <p className="text-sm font-medium">Fecha de nacimiento</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(employee.birthDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                      )}
-                      
-                      {employee.gender && (
-                        <div className="grid gap-2">
-                          <p className="text-sm font-medium">Género</p>
-                          <p className="text-sm text-muted-foreground">
-                            {employee.gender === 'masculino' ? 'Masculino' : 
-                             employee.gender === 'femenino' ? 'Femenino' : 
-                             employee.gender === 'otro' ? 'Otro' : 
-                             employee.gender === 'prefiero_no_decir' ? 'Prefiero no decir' : 
-                             employee.gender}
-                          </p>
-                        </div>
-                      )}
-                      
-                      {(employee.documentType || employee.documentId) && (
-                        <div className="grid gap-2">
-                          <p className="text-sm font-medium">Documento</p>
-                          <p className="text-sm text-muted-foreground">
-                            {employee.documentType && (
-                              <span className="capitalize">
-                                {employee.documentType === 'dni' ? 'DNI' : 
-                                 employee.documentType === 'pasaporte' ? 'Pasaporte' : 
-                                 employee.documentType === 'cuit' ? 'CUIT' : 
-                                 employee.documentType === 'cuil' ? 'CUIL' : 
-                                 employee.documentType}
-                              </span>
-                            )}
-                            {employee.documentType && employee.documentId ? ': ' : ''}
-                            {employee.documentId}
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  
-                  {/* Información geográfica */}
-                  {(employee.address || employee.city || employee.state || employee.country || employee.postalCode) && (
-                    <>
-                      <div className="mt-6 mb-2">
-                        <h3 className="font-medium text-sm">Ubicación</h3>
-                        <div className="h-px bg-border mt-2"></div>
-                      </div>
-                      
-                      {employee.address && (
-                        <div className="grid gap-2">
-                          <p className="text-sm font-medium">Dirección</p>
-                          <p className="text-sm text-muted-foreground">{employee.address}</p>
-                        </div>
-                      )}
-                      
-                      {(employee.city || employee.state) && (
-                        <div className="grid gap-2">
-                          <p className="text-sm font-medium">Ciudad/Provincia</p>
-                          <p className="text-sm text-muted-foreground">
-                            {[employee.city, employee.state].filter(Boolean).join(', ')}
-                          </p>
-                        </div>
-                      )}
-                      
-                      {(employee.country || employee.postalCode) && (
-                        <div className="grid gap-2">
-                          <p className="text-sm font-medium">País/Código Postal</p>
-                          <p className="text-sm text-muted-foreground">
-                            {employee.country}
-                            {employee.country && employee.postalCode ? ', ' : ''}
-                            {employee.postalCode && `CP: ${employee.postalCode}`}
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  
-                  {/* Redes sociales */}
-                  {(employee.linkedin || employee.twitter || employee.facebook || employee.instagram || employee.website) && (
-                    <>
-                      <div className="mt-6 mb-2">
-                        <h3 className="font-medium text-sm">Redes Sociales</h3>
-                        <div className="h-px bg-border mt-2"></div>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-3 mt-3">
-                        {employee.linkedin && (
-                          <a href={employee.linkedin} target="_blank" rel="noopener noreferrer" 
-                             className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full bg-[#0077b5]/10 text-[#0077b5] hover:bg-[#0077b5]/20 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-linkedin"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
-                            LinkedIn
-                          </a>
-                        )}
-                        
-                        {employee.twitter && (
-                          <a href={employee.twitter} target="_blank" rel="noopener noreferrer"
-                             className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2]/20 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-twitter"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
-                            Twitter
-                          </a>
-                        )}
-                        
-                        {employee.facebook && (
-                          <a href={employee.facebook} target="_blank" rel="noopener noreferrer"
-                             className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2]/20 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-facebook"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-                            Facebook
-                          </a>
-                        )}
-                        
-                        {employee.instagram && (
-                          <a href={employee.instagram} target="_blank" rel="noopener noreferrer"
-                             className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full bg-[#E4405F]/10 text-[#E4405F] hover:bg-[#E4405F]/20 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-                            Instagram
-                          </a>
-                        )}
-                        
-                        {employee.website && (
-                          <a href={employee.website} target="_blank" rel="noopener noreferrer"
-                             className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full bg-gray-500/10 text-gray-500 hover:bg-gray-500/20 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-globe"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                            Sitio Web
-                          </a>
-                        )}
-                      </div>
-                    </>
-                  )}
+                  <div className="grid gap-2">
+                    <p className="text-sm font-medium">Fecha de creación</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(employee.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="permissions" className="space-y-4 pt-4">
               <Card>
-                <CardHeader>
-                  <CardTitle>Permisos del Sistema</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl">Permisos del Empleado</CardTitle>
                   <CardDescription>
-                    Accesos y privilegios asignados
+                    Permisos asignados a través del rol
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-4 sm:p-6 pt-0">
                   {loadingPermissions ? (
-                    <div className="flex items-center justify-center p-4">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                        <p className="text-sm text-muted-foreground">Cargando permisos...</p>
-                      </div>
+                    <div className="flex justify-center p-6">
+                      <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
                     </div>
                   ) : rolePermissions ? (
                     <div className="space-y-6">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-muted-foreground" />
-                          <h3 className="text-sm font-medium">Rol asignado</h3>
+                      <div className="rounded-lg border border-border/40 p-4">
+                        <div className="mb-4 flex items-center gap-2">
+                          <Shield className="h-5 w-5 text-primary" />
+                          <h3 className="text-base font-medium">
+                            Rol: {rolePermissions.role.name}
+                          </h3>
                         </div>
-                        <div className="rounded-md border p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">{rolePermissions.role?.name || employee.roleName || getRoleName(employee.role)}</p>
-                              <p className="text-sm text-muted-foreground">{rolePermissions.role?.description || getDefaultRoleDescription(employee.role)}</p>
-                            </div>
-                            <Badge variant="outline" className={getRoleColor(employee.role)}>
-                              {employee.roleName || getRoleName(employee.role)}
-                            </Badge>
-                          </div>
-                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {rolePermissions.role.description}
+                        </p>
                       </div>
-
-                      <div className="space-y-2">
-                        <h3 className="text-sm font-medium">Lista de permisos</h3>
-                        <div className="rounded-md border">
-                          {Object.keys(groupedPermissions).length > 0 ? (
-                            <div className="divide-y">
-                              {Object.entries(groupedPermissions).map(([module, permissions]) => (
-                                <div key={module} className="p-4">
-                                  <h4 className="mb-2 font-medium capitalize">{getModuleName(module)}</h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {permissions.map((permission, index) => {
-                                      // Determinar qué mostrar basado en la estructura del permiso
-                                      const actionText = permission.action 
-                                        ? getActionName(permission.action)
-                                        : (typeof permission === 'string' && permission.includes(':') 
-                                            ? getActionName(permission.split(':')[1]) 
-                                            : 'Acceso');
-                                      
-                                      return (
-                                        <Badge 
-                                          key={permission.id || permission._id || `${module}-${index}`} 
-                                          variant="outline" 
-                                          className="bg-sky-950/30 text-sky-400 border border-sky-800/30"
-                                        >
-                                          {actionText}
-                                        </Badge>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              ))}
+                      
+                      <div className="space-y-4">
+                        {Object.keys(groupedPermissions).length > 0 ? (
+                          Object.entries(groupedPermissions).map(([module, permissions]) => (
+                            <div key={module} className="space-y-2">
+                              <h4 className="font-medium">
+                                {getModuleName(module)}
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {permissions.map((permission: any) => (
+                                  <Badge key={permission.name} variant="outline" className="bg-primary/5">
+                                    {getActionName(permission.name.split(':')[1])}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
-                          ) : (
-                            <div className="p-4 text-center text-sm text-muted-foreground">
-                              No hay permisos asociados a este rol.
-                            </div>
-                          )}
-                        </div>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            No hay permisos asociados a este rol.
+                          </div>
+                        )}
                       </div>
 
                       <Button
@@ -732,13 +581,13 @@ export default function EmployeePage({ params }: EmployeePageProps) {
 
             <TabsContent value="activity" className="space-y-4 pt-4">
               <Card>
-                <CardHeader>
-                  <CardTitle>Registro de Actividad</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl">Registro de Actividad</CardTitle>
                   <CardDescription>
                     Últimas acciones y eventos
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6 pt-0">
                   <p className="text-sm text-muted-foreground">
                     No hay actividades registradas.
                   </p>
@@ -756,7 +605,7 @@ export default function EmployeePage({ params }: EmployeePageProps) {
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
           {renderContent()}
         </main>
       </div>

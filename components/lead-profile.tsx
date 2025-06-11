@@ -107,6 +107,9 @@ export default function LeadProfile({ id }: { id: string }) {
   const canEditNote = useHasPermission("leads:edit_note")
   const canDeleteNote = useHasPermission("leads:delete_note")
   
+  // Permiso para agendar seguimiento
+  const canScheduleFollowUp = useHasPermission("leads:follow_up")
+  
   // Estado para controlar la pestaña activa
   const [activeTab, setActiveTab] = useState<string>("info")
   
@@ -119,8 +122,15 @@ export default function LeadProfile({ id }: { id: string }) {
     else if (canViewNotesTab) setActiveTab("notes")
   }, [canViewInfoTab, canViewActivitiesTab, canViewTasksTab, canViewDocumentsTab, canViewNotesTab])
   
-  // Estados para el modal de interacción
+  // Estados para controlar los modales y formularios
   const [isInteractionModalOpen, setIsInteractionModalOpen] = useState(false)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false)
+  const [isStageModalOpen, setIsStageModalOpen] = useState(false)
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
+  const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false)
+  
+  // Estados para el modal de interacción
   const [interactionLoading, setInteractionLoading] = useState(false)
   const [interactionError, setInteractionError] = useState<string | null>(null)
   const [currentInteraction, setCurrentInteraction] = useState<LeadInteraction | null>(null)
@@ -132,7 +142,6 @@ export default function LeadProfile({ id }: { id: string }) {
   })
 
   // Estados para el modal de tareas
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [taskLoading, setTaskLoading] = useState(false)
   const [taskError, setTaskError] = useState<string | null>(null)
   const [currentTask, setCurrentTask] = useState<LeadTask | null>(null)
@@ -145,7 +154,6 @@ export default function LeadProfile({ id }: { id: string }) {
   })
 
   // Estados para el modal de documentos
-  const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false)
   const [documentLoading, setDocumentLoading] = useState(false)
   const [documentError, setDocumentError] = useState<string | null>(null)
   const [currentDocument, setCurrentDocument] = useState<LeadDocument | null>(null)
@@ -160,16 +168,23 @@ export default function LeadProfile({ id }: { id: string }) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   // Estados para el modal de notas
-  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
   const [noteLoading, setNoteLoading] = useState(false)
   const [noteError, setNoteError] = useState<string | null>(null)
   const [noteContent, setNoteContent] = useState("")
   const [isEditingNote, setIsEditingNote] = useState(false)
 
   const [leadStageCategories, setLeadStageCategories] = useState<LeadStageCategory[]>([])
-  const [isStageModalOpen, setIsStageModalOpen] = useState(false)
   const [selectedStage, setSelectedStage] = useState<string>("")
   const [stageLoading, setStageLoading] = useState(false)
+  
+  // Estados para el modal de seguimiento
+  const [followUpLoading, setFollowUpLoading] = useState(false)
+  const [followUpError, setFollowUpError] = useState<string | null>(null)
+  const [followUpForm, setFollowUpForm] = useState({
+    date: "",
+    time: "",
+    note: ""
+  })
   
   useEffect(() => {
     const fetchLeadData = async () => {
@@ -886,6 +901,86 @@ export default function LeadProfile({ id }: { id: string }) {
     }
   };
 
+  // Funciones para manejar el modal de seguimiento
+  const handleFollowUpChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFollowUpForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const resetFollowUpForm = () => {
+    setFollowUpForm({
+      date: "",
+      time: "",
+      note: ""
+    })
+    setFollowUpError(null)
+  }
+
+  const handleScheduleFollowUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!followUpForm.date || !followUpForm.time || !followUpForm.note.trim()) {
+      setFollowUpError("Por favor completa todos los campos")
+      return
+    }
+    
+    setFollowUpLoading(true)
+    setFollowUpError(null)
+    
+    try {
+      // Combinar fecha y hora
+      const followUpDateTime = new Date(`${followUpForm.date}T${followUpForm.time}`)
+      
+      // Crear una nueva interacción de seguimiento
+      await leadService.addInteraction(id, {
+        type: "other",
+        title: "Seguimiento programado",
+        description: `Seguimiento programado para ${followUpDateTime.toLocaleString()}: ${followUpForm.note}`,
+        date: followUpDateTime,
+        user: ""  // Se completará en el backend con el usuario actual
+      })
+      
+      // Cambiar la etapa del lead a "Pendiente Seguimiento"
+      await leadService.updateLeadStage(id, "Pendiente Seguimiento")
+      
+      // Programar notificación automática de recordatorio
+      try {
+        await api.post('/scheduled-notifications/schedule', {
+          title: `🔔 Recordatorio: Seguimiento de Lead`,
+          message: `Tienes un seguimiento programado para ${lead?.firstName} ${lead?.lastName} de ${lead?.company || 'empresa no especificada'}. Nota: ${followUpForm.note}`,
+          employeeId: typeof lead?.assignedTo === 'object' ? lead?.assignedTo?._id : lead?.assignedTo,
+          scheduledFor: followUpDateTime,
+          type: 'lead',
+          priority: 'high',
+          metadata: {
+            leadId: id,
+            leadName: `${lead?.firstName} ${lead?.lastName}`,
+            company: lead?.company,
+            followUpNote: followUpForm.note,
+            isLeadFollowUp: true
+          }
+        })
+        console.log('✅ Notificación de seguimiento programada exitosamente')
+      } catch (notificationError) {
+        console.warn('⚠️ Error al programar notificación de seguimiento (pero el seguimiento se guardó):', notificationError)
+      }
+      
+      toast({
+        title: "Seguimiento programado",
+        description: "El seguimiento ha sido programado exitosamente y recibirás una notificación recordatoria"
+      })
+      
+      resetFollowUpForm()
+      setIsFollowUpModalOpen(false)
+      await refreshLeadData()
+    } catch (error: any) {
+      console.error("Error al programar seguimiento:", error)
+      setFollowUpError(error.response?.data?.message || "No se pudo programar el seguimiento")
+    } finally {
+      setFollowUpLoading(false)
+    }
+  }
+
   // Mostrar un estado de carga
   if (loading) {
     return (
@@ -1060,7 +1155,6 @@ export default function LeadProfile({ id }: { id: string }) {
           <Card className="netflix-card h-full">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-medium">Acciones</CardTitle>
-              <CardDescription>Operaciones disponibles para este lead</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {canEditLead && (
@@ -1077,6 +1171,14 @@ export default function LeadProfile({ id }: { id: string }) {
                 }}>
                   <span>Modificar Etapa</span>
                   <BarChart3 className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {/* Botón Agendar Seguimiento - Visible si tiene permiso y el lead está en Contactado */}
+              {canScheduleFollowUp && (lead?.currentStage === "Contactado" || lead?.currentStage === "contactado") && (
+                <Button variant="outline" size="sm" className="gap-2 w-full justify-between" onClick={() => setIsFollowUpModalOpen(true)}>
+                  <span>Agendar Seguimiento</span>
+                  <Calendar className="h-4 w-4" />
                 </Button>
               )}
               
@@ -1297,23 +1399,25 @@ export default function LeadProfile({ id }: { id: string }) {
       {/* Pestañas de información - Solo mostrar si al menos hay una pestaña visible */}
       {(canViewInfoTab || canViewActivitiesTab || canViewTasksTab || canViewDocumentsTab || canViewNotesTab) && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-            {canViewInfoTab && (
-              <TabsTrigger value="info">Información</TabsTrigger>
-            )}
-            {canViewActivitiesTab && (
-              <TabsTrigger value="activities">Actividades</TabsTrigger>
-            )}
-            {canViewTasksTab && (
-              <TabsTrigger value="tasks">Tareas</TabsTrigger>
-            )}
-            {canViewDocumentsTab && (
-              <TabsTrigger value="documents">Documentos</TabsTrigger>
-            )}
-            {canViewNotesTab && (
-              <TabsTrigger value="notes">Notas</TabsTrigger>
-            )}
-          </TabsList>
+          <div className="overflow-x-auto pb-1">
+            <TabsList className="w-auto inline-flex min-w-max">
+              {canViewInfoTab && (
+                <TabsTrigger value="info" className="text-xs sm:text-sm whitespace-nowrap">Información</TabsTrigger>
+              )}
+              {canViewActivitiesTab && (
+                <TabsTrigger value="activities" className="text-xs sm:text-sm whitespace-nowrap">Actividades</TabsTrigger>
+              )}
+              {canViewTasksTab && (
+                <TabsTrigger value="tasks" className="text-xs sm:text-sm whitespace-nowrap">Tareas</TabsTrigger>
+              )}
+              {canViewDocumentsTab && (
+                <TabsTrigger value="documents" className="text-xs sm:text-sm whitespace-nowrap">Documentos</TabsTrigger>
+              )}
+              {canViewNotesTab && (
+                <TabsTrigger value="notes" className="text-xs sm:text-sm whitespace-nowrap">Notas</TabsTrigger>
+              )}
+            </TabsList>
+          </div>
 
           {/* Pestaña de Información */}
           {canViewInfoTab && (
@@ -2283,6 +2387,82 @@ export default function LeadProfile({ id }: { id: string }) {
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...</>
                 ) : (
                   <><Save className="mr-2 h-4 w-4" /> Guardar</>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para agendar seguimiento */}
+      <Dialog open={isFollowUpModalOpen} onOpenChange={(open) => {
+        setIsFollowUpModalOpen(open)
+        if (!open) resetFollowUpForm()
+      }}>
+        <DialogContent className="max-w-md">
+          <div className="flex items-center justify-between">
+            <DialogTitle>Agendar Seguimiento</DialogTitle>
+            <DialogClose asChild>
+            </DialogClose>
+          </div>
+
+          {followUpError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{followUpError}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleScheduleFollowUp} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="follow-up-date">Fecha del seguimiento *</Label>
+              <Input
+                id="follow-up-date"
+                name="date"
+                type="date"
+                value={followUpForm.date}
+                onChange={handleFollowUpChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="follow-up-time">Hora del seguimiento *</Label>
+              <Input
+                id="follow-up-time"
+                name="time"
+                type="time"
+                value={followUpForm.time}
+                onChange={handleFollowUpChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="follow-up-note">Nota del seguimiento *</Label>
+              <Textarea
+                id="follow-up-note"
+                name="note"
+                value={followUpForm.note}
+                onChange={handleFollowUpChange}
+                placeholder="Describe el motivo o detalles del seguimiento..."
+                rows={4}
+                required
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancelar</Button>
+              </DialogClose>
+              <Button 
+                type="submit" 
+                disabled={followUpLoading}
+              >
+                {followUpLoading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Programando...</>
+                ) : (
+                  <><Calendar className="mr-2 h-4 w-4" /> Programar Seguimiento</>
                 )}
               </Button>
             </div>

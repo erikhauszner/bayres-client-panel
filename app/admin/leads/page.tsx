@@ -638,49 +638,52 @@ export default function AdminLeadsPage() {
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl space-y-6">
-            {/* Encabezado */}
-            <div className="mb-4 flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <main className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
+          <div className="mx-auto max-w-full space-y-4 sm:space-y-6">
+            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-bold tracking-tight">Administración de Leads</h1>
-                </div>
-                <p className="text-muted-foreground">
-                  Gestiona, asigna y da seguimiento a tus leads
-                </p>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Administración de Leads</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">Gestiona los leads, asignaciones y aprobaciones</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => router.push("/admin/leads/aprobar")}
+                  className="h-8 sm:h-9 text-xs sm:text-sm"
+                  onClick={handleRefresh}
                 >
-                  <ShieldCheck className="mr-2 h-4 w-4" />
-                  Aprobar Leads
+                  <RefreshCcw className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Actualizar</span>
                 </Button>
+                {canAssignLeads && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 sm:h-9 text-xs sm:text-sm"
+                    onClick={() => router.push('/admin/leads/asignar')}
+                  >
+                    <UserCheck className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">Asignación</span>
+                  </Button>
+                )}
+                {canApproveLeads && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 sm:h-9 text-xs sm:text-sm"
+                    onClick={() => router.push('/admin/leads/aprobar')}
+                  >
+                    <ShieldCheck className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">Aprobación</span>
+                  </Button>
+                )}
                 <Button
-                  variant="outline"
                   size="sm"
-                  onClick={() => router.push("/admin/leads/asignar")}
+                  className="h-8 sm:h-9 text-xs sm:text-sm"
+                  onClick={() => router.push('/leads/import')}
                 >
-                  <UserCheck className="mr-2 h-4 w-4" />
-                  Asignar Leads
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push("/leads/import")}
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Importar
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => router.push("/leads/nuevo")}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nuevo Lead
+                  <Upload className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Importar Leads</span>
                 </Button>
               </div>
             </div>
@@ -756,24 +759,26 @@ export default function AdminLeadsPage() {
             
             {/* Pestañas principales */}
             <Tabs defaultValue="all-leads" onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="all-leads" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>Todos los Leads</span>
-                </TabsTrigger>
-                <TabsTrigger value="unassigned" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>Sin Asignar (Aprobados)</span>
-                </TabsTrigger>
-                <TabsTrigger value="disapproved" className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4" />
-                  <span>Desaprobados</span>
-                </TabsTrigger>
-                <TabsTrigger value="employees" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>Empleados</span>
-                </TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto pb-1">
+                <TabsList className="w-auto inline-flex min-w-max">
+                  <TabsTrigger value="all-leads" className="text-xs sm:text-sm whitespace-nowrap">
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>Todos los Leads</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="unassigned" className="text-xs sm:text-sm whitespace-nowrap">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Sin Asignar (Aprobados)</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="disapproved" className="text-xs sm:text-sm whitespace-nowrap">
+                    <XCircle className="mr-2 h-4 w-4" />
+                    <span>Desaprobados</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="employees" className="text-xs sm:text-sm whitespace-nowrap">
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>Empleados</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
               
               {/* Filtros y Búsqueda */}
               {(activeTab === "all-leads" || activeTab === "unassigned") && (

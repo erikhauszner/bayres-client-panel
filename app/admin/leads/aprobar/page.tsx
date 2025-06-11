@@ -255,7 +255,7 @@ export default function AprobarLeadsPage() {
       let rejectedCount = 0;
       
       for (const leadId of selectedLeads) {
-        await leadService.rejectLead(leadId, "Rechazado automáticamente");
+        await leadService.rejectLead(leadId, "Rechazado en lote");
         rejectedCount++;
       }
       
@@ -281,7 +281,7 @@ export default function AprobarLeadsPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.response?.data?.message || "No se pudieron rechazar los leads"
+        description: error.response?.data?.message || "No se pudieron rechazar los leads seleccionados"
       });
     } finally {
       setIsProcessing(false);
@@ -327,39 +327,36 @@ export default function AprobarLeadsPage() {
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl space-y-6">
-            {/* Encabezado */}
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-9"
-                  onClick={() => router.back()}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  <span>Volver</span>
-                </Button>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-center gap-2">
-                  <ShieldCheck className="h-6 w-6 text-primary" />
-                  <h1 className="text-2xl font-bold tracking-tight">Aprobación de Leads</h1>
-                </div>
-              </div>
-              <div className="flex-1"></div>
+        <main className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
+          <div className="mx-auto max-w-7xl">
+            {/* Navegación de regreso */}
+            <div className="mb-4">
+              <Button 
+                variant="ghost" 
+                className="pl-0 h-9" 
+                onClick={() => router.back()}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver
+              </Button>
             </div>
             
-            {/* Contenido principal */}
+            {/* Título y descripción */}
+            <div className="mb-6">
+              <h1 className="text-xl sm:text-2xl font-bold">Aprobación de Leads</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Aprueba o rechaza leads antes de que puedan ser asignados a los empleados
+              </p>
+            </div>
+            
             <Card>
-              <CardHeader>
-                <CardTitle>Leads Pendientes de Aprobación</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Leads Pendientes de Aprobación</CardTitle>
                 <CardDescription>
                   Aprueba o rechaza los leads antes de que puedan ser asignados
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 p-4 sm:p-6 pt-0">
                 {!hasPermission && (
                   <Alert variant="destructive" className="mb-4">
                     <AlertCircle className="h-4 w-4" />
@@ -382,23 +379,24 @@ export default function AprobarLeadsPage() {
                 )}
                 
                 {/* Barra de búsqueda y acciones */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="relative w-full sm:w-72">
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                  <div className="relative w-full sm:w-64">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Buscar leads..."
-                      className="pl-9"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-9"
                     />
                   </div>
                   
-                  <div className="flex items-center gap-2 ml-auto">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
                       onClick={handleRejectSelected}
                       disabled={selectedLeads.length === 0 || isProcessing || !hasPermission}
+                      className="w-full sm:w-auto"
                     >
                       {isProcessing ? (
                         <>
@@ -412,11 +410,13 @@ export default function AprobarLeadsPage() {
                         </>
                       )}
                     </Button>
+                    
                     <Button
                       variant="default"
                       size="sm"
                       onClick={handleApproveSelected}
                       disabled={selectedLeads.length === 0 || isProcessing || !hasPermission}
+                      className="w-full sm:w-auto"
                     >
                       {isProcessing ? (
                         <>
@@ -440,7 +440,7 @@ export default function AprobarLeadsPage() {
                     <p className="text-muted-foreground">Cargando leads pendientes de aprobación...</p>
                   </div>
                 ) : (
-                  <div className="border rounded-md">
+                  <div className="border rounded-md overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -452,9 +452,9 @@ export default function AprobarLeadsPage() {
                             />
                           </TableHead>
                           <TableHead>Lead</TableHead>
-                          <TableHead>Empresa</TableHead>
-                          <TableHead className="w-[180px]">Origen</TableHead>
-                          <TableHead>Fecha de creación</TableHead>
+                          <TableHead className="hidden sm:table-cell">Empresa</TableHead>
+                          <TableHead className="hidden md:table-cell">Origen</TableHead>
+                          <TableHead className="hidden md:table-cell">Fecha de creación</TableHead>
                           <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -475,23 +475,12 @@ export default function AprobarLeadsPage() {
                                 />
                               </TableCell>
                               <TableCell>
-                                <div className="font-medium">{lead.firstName} {lead.lastName}</div>
-                                <div className="text-sm text-muted-foreground">{lead.email}</div>
+                                <div className="font-medium truncate max-w-[150px] sm:max-w-none">{lead.firstName} {lead.lastName}</div>
+                                <div className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-none">{lead.email}</div>
                               </TableCell>
-                              <TableCell>{lead.company || "-"}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="px-2 py-1 w-full text-center justify-center">
-                                  {lead.source === "sitio_web" ? "Sitio Web" : 
-                                   lead.source === "referido" ? "Referido" : 
-                                   lead.source === "redes_sociales" ? "Redes Sociales" : 
-                                   lead.source === "evento" ? "Evento" : 
-                                   lead.source === "anuncio" ? "Anuncio" : 
-                                   lead.source === "otro" ? "Otro" :
-                                   lead.source === "manual" ? "Manual" :
-                                   lead.source || "Desconocido"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
+                              <TableCell className="hidden sm:table-cell">{lead.company || "-"}</TableCell>
+                              <TableCell className="hidden md:table-cell">{lead.source || "-"}</TableCell>
+                              <TableCell className="hidden md:table-cell">
                                 {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "-"}
                               </TableCell>
                               <TableCell className="text-right">
@@ -536,7 +525,7 @@ export default function AprobarLeadsPage() {
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-between">
+              <CardFooter className="flex justify-between p-4 sm:p-6 border-t">
                 <div className="text-sm text-muted-foreground">
                   {filteredLeads.length} leads pendientes de aprobación
                 </div>

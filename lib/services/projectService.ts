@@ -125,188 +125,33 @@ class ProjectService {
     }
   }
 
-  async updateProjectTaskDates(projectId: string, taskId: string, startDate: Date | string, endDate: Date | string): Promise<ProjectTask> {
+  async updateProjectTaskDates(projectId: string, taskId: string, startDate: Date | string, dueDate: Date | string): Promise<ProjectTask> {
     try {
       // Formatear las fechas si son objetos Date
       const formattedStartDate = startDate instanceof Date ? startDate.toISOString() : startDate;
-      const formattedEndDate = endDate instanceof Date ? endDate.toISOString() : endDate;
+      const formattedDueDate = dueDate instanceof Date ? dueDate.toISOString() : dueDate;
       
       console.log(`Actualizando fechas de tarea ${taskId} en proyecto ${projectId}:`, { 
         startDate: formattedStartDate, 
-        endDate: formattedEndDate 
+        dueDate: formattedDueDate 
       });
       
-      let response;
+      // Usar el endpoint PATCH específico para fechas
+      const response = await api.patch<{task: ProjectTask, message: string, fechas?: {startDate: string, dueDate: string}}>(
+        `/projects/${projectId}/tasks/${taskId}/dates`, 
+        { startDate: formattedStartDate, endDate: formattedDueDate },
+        { timeout: 15000 }
+      );
       
-      // Usar try/catch para intentar primero PATCH, luego PUT como fallback
-      try {
-        // Intento 1: Usar el endpoint PATCH específico para fechas
-        response = await api.patch<{task: ProjectTask, message: string, fechas?: {startDate: string, endDate: string}}>(
-          `/projects/${projectId}/tasks/${taskId}/dates`, 
-          { startDate: formattedStartDate, endDate: formattedEndDate },
-          { timeout: 15000 } // 15s timeout para esta operación específica
-        );
-        
-        console.log('Éxito con PATCH. Respuesta completa:', response.data);
-        
-        // Verificar explícitamente que la tarea está en la respuesta
-        if (!response.data.task) {
-          console.error('Error: La respuesta no contiene la tarea actualizada', response.data);
-          throw new Error('La respuesta no contiene la tarea actualizada');
-        }
-        
-        // Obtener la tarea actualizada
-        let updatedTask = response.data.task;
-        
-        // Guardar el ID completo de MongoDB para verificación posterior
-        const fullProjectId = updatedTask.project || projectId;
-        const fullTaskId = updatedTask._id || taskId;
-        
-        console.log('IDs completos para verificación:', {
-          projectId: fullProjectId,
-          taskId: fullTaskId
-        });
-        
-        // Si el servidor incluye fechas explícitas en la respuesta, usarlas para actualizar la tarea
-        if (response.data.fechas) {
-          console.log('Servidor devolvió fechas explícitas:', response.data.fechas);
-          // Asegurarnos de que las fechas de la tarea coincidan con las fechas explícitas
-          updatedTask = {
-            ...updatedTask,
-            startDate: response.data.fechas.startDate,
-            endDate: response.data.fechas.endDate
-          };
-        }
-        
-        // Asegurarse de que las fechas existen antes de convertirlas
-        if (updatedTask.startDate && updatedTask.endDate) {
-          const receivedStartDate = new Date(updatedTask.startDate).toISOString();
-          const receivedEndDate = new Date(updatedTask.endDate).toISOString();
-          
-          console.log('Fechas recibidas en la respuesta:', {
-            startDate: receivedStartDate,
-            endDate: receivedEndDate
-          });
-          
-          // Comprobar si las fechas coinciden con lo que enviamos
-          if (receivedStartDate !== formattedStartDate || receivedEndDate !== formattedEndDate) {
-            console.warn('Advertencia: Las fechas recibidas no coinciden exactamente con las enviadas:', {
-              enviadas: { startDate: formattedStartDate, endDate: formattedEndDate },
-              recibidas: { startDate: receivedStartDate, endDate: receivedEndDate }
-            });
-            
-            // Forzar las fechas correctas en la tarea devuelta
-            updatedTask.startDate = formattedStartDate;
-            updatedTask.endDate = formattedEndDate;
-            
-            console.log('Tarea con fechas forzadas:', updatedTask);
-          }
-        } else {
-          console.error('Error: La tarea actualizada no contiene fechas válidas', updatedTask);
-          
-          // Forzar las fechas que enviamos en la tarea devuelta
-          updatedTask.startDate = formattedStartDate;
-          updatedTask.endDate = formattedEndDate;
-        }
-        
-        // Verificar la tarea actual después de la actualización
-        // IMPORTANTE: Saltamos la verificación si no tenemos un ID completo de MongoDB
-        // para evitar errores 400 Bad Request
-        if (fullProjectId && typeof fullProjectId === 'string' && fullProjectId.length > 12) {
-          try {
-            console.log(`Obteniendo tarea actualizada para verificar con ID completo: ${fullProjectId}`);
-            const verifyTask = await this.getProjectTasks(fullProjectId).then(
-              tasks => tasks.find(t => t._id === fullTaskId)
-            );
-            
-            if (verifyTask) {
-              console.log('Verificación de tarea después de actualizar:', {
-                id: verifyTask._id,
-                startDate: verifyTask.startDate,
-                endDate: verifyTask.endDate
-              });
-              
-              // Si la verificación muestra fechas diferentes, devolver la tarea verificada
-              if (verifyTask.startDate !== formattedStartDate || verifyTask.endDate !== formattedEndDate) {
-                console.warn('Las fechas verificadas no coinciden con las enviadas. Actualizando la UI con los datos verificados.');
-                return verifyTask;
-              }
-            }
-          } catch (verifyError) {
-            console.error('Error al verificar la tarea actualizada:', verifyError);
-            console.log('Continuando sin verificación adicional...');
-          }
-        } else {
-          console.log('Saltando verificación porque no tenemos un ID de proyecto válido de MongoDB:', fullProjectId);
-        }
-        
-        return updatedTask;
-      } catch (patchError: any) {
-        console.warn('Error con PATCH, intentando actualizar con PUT:', patchError.message);
-        
-        // Si obtenemos un error CORS, podría ser que el servidor no soporte PATCH
-        if (patchError.message.includes('CORS') || !patchError.response) {
-          // Intento 2: Usar PUT como alternativa si PATCH falla
-          try {
-            console.log('Intentando con PUT como alternativa');
-            const putResponse = await api.put<ProjectTask>(
-              `/projects/${projectId}/tasks/${taskId}`,
-              { startDate: formattedStartDate, endDate: formattedEndDate },
-              { timeout: 15000 }
-            );
-            
-            console.log('Éxito con PUT:', putResponse.data);
-            return putResponse.data;
-          } catch (putError: any) {
-            console.error('Error también con PUT:', putError.message);
-            
-            // Si también falla PUT, intentamos otra estrategia
-            // Intento 3: Buscar la tarea, actualizarla y devolverla localmente
-            const tasks = await this.getProjectTasks(projectId);
-            const task = tasks.find(t => t._id === taskId);
-            
-            if (task) {
-              task.startDate = formattedStartDate;
-              task.endDate = formattedEndDate;
-              
-              // Intentar actualizar en segundo plano pero no esperamos respuesta
-              api.put(`/projects/${projectId}/tasks/${taskId}`, task)
-                .then(() => console.log('Actualización en segundo plano exitosa'))
-                .catch(e => console.error('Error en actualización en segundo plano:', e));
-              
-              console.log('Retornando tarea actualizada localmente:', task);
-              return task;
-            }
-            
-            throw putError; // Si no podemos hacer nada, lanzamos el error original
-          }
-        } else {
-          // Si no es un error CORS, puede ser un error de validación o similar
-          // Pasamos el error para manejarlo más arriba
-          console.error('Error específico del servidor:', patchError.response?.data);
-          throw patchError;
-        }
+      console.log('Respuesta del servidor:', response.data);
+      
+      if (!response.data.task) {
+        throw new Error('La respuesta no contiene la tarea actualizada');
       }
+      
+      return response.data.task;
     } catch (error: any) {
       console.error(`Error updating dates for task ${taskId} of project ${projectId}:`, error);
-      
-      // Información de depuración más detallada
-      if (error.response) {
-        console.error('Detalles del error de respuesta:', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data
-        });
-      } else if (error.request) {
-        console.error('Error de solicitud (no se recibió respuesta):', {
-          method: error.config?.method,
-          url: error.config?.url,
-          timeout: error.config?.timeout
-        });
-      } else {
-        console.error('Error de configuración:', error.message);
-      }
-      
       throw error;
     }
   }
@@ -395,6 +240,52 @@ class ProjectService {
       await api.delete(`/projects/${projectId}/tasks/${taskId}/comments/${commentId}`);
     } catch (error) {
       console.error(`Error deleting comment ${commentId} for task ${taskId} in project ${projectId}:`, error);
+      throw error;
+    }
+  }
+
+  // Métodos para finanzas del proyecto
+  async getProjectFinances(projectId: string): Promise<any> {
+    try {
+      const response = await api.get(`/projects/${projectId}/finances`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching finances for project ${projectId}:`, error);
+      throw error;
+    }
+  }
+
+  async addProjectExpense(projectId: string, expenseData: any): Promise<any> {
+    try {
+      const response = await api.post(`/projects/${projectId}/expenses`, expenseData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error adding expense to project ${projectId}:`, error);
+      throw error;
+    }
+  }
+
+  // Métodos para notificaciones del proyecto
+  async createProjectNotification(notificationData: {
+    projectId: string;
+    type: string;
+    daysBeforeDeadline?: number;
+  }): Promise<any> {
+    try {
+      const response = await api.post('/notifications/project', notificationData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating project notification:', error);
+      throw error;
+    }
+  }
+
+  async getProjectNotifications(projectId: string): Promise<any[]> {
+    try {
+      const response = await api.get(`/notifications/project/${projectId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching notifications for project ${projectId}:`, error);
       throw error;
     }
   }

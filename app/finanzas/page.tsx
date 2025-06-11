@@ -59,22 +59,22 @@ export default function FinanzasPage() {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-auto">
-          <div className="flex flex-col space-y-6 p-8">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold tracking-tight">Finanzas</h1>
-              <div className="flex items-center gap-4">
-                <Button variant="outline" asChild>
+          <div className="flex flex-col space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Finanzas</h1>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <Button variant="outline" size="sm" className="h-9 w-full sm:w-auto" asChild>
                   <Link href="/finanzas/exportar">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Exportar Reportes
+                    <Calendar className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Exportar Reportes</span>
                   </Link>
                 </Button>
                 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Nueva Transacción
+                    <Button size="sm" className="h-9 w-full sm:w-auto">
+                      <Plus className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden xs:inline">Nueva Transacción</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
@@ -122,7 +122,7 @@ export default function FinanzasPage() {
                   </TabsTrigger>
                   <TabsTrigger value="accounts" className="flex items-center">
                     <Wallet className="mr-2 h-4 w-4" />
-                    <span>Tesorería y Cuentas</span>
+                    <span>Tesorería</span>
                   </TabsTrigger>
                   <TabsTrigger value="income" className="flex items-center">
                     <TrendingUp className="mr-2 h-4 w-4" />
@@ -151,35 +151,35 @@ export default function FinanzasPage() {
                 </TabsList>
               </div>
               
-              <TabsContent value="dashboard" className="space-y-6">
+              <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
                 <FinanceDashboard />
               </TabsContent>
               
-              <TabsContent value="accounts" className="space-y-6">
+              <TabsContent value="accounts" className="space-y-4 sm:space-y-6">
                 <FinancialAccounts />
               </TabsContent>
               
-              <TabsContent value="income" className="space-y-6">
+              <TabsContent value="income" className="space-y-4 sm:space-y-6">
                 <IncomeManagement />
               </TabsContent>
               
-              <TabsContent value="expenses" className="space-y-6">
+              <TabsContent value="expenses" className="space-y-4 sm:space-y-6">
                 <ExpensesManagement />
               </TabsContent>
               
-              <TabsContent value="payroll" className="space-y-6">
+              <TabsContent value="payroll" className="space-y-4 sm:space-y-6">
                 <PayrollManagement />
               </TabsContent>
               
-              <TabsContent value="dividends" className="space-y-6">
+              <TabsContent value="dividends" className="space-y-4 sm:space-y-6">
                 <DividendsManagement />
               </TabsContent>
               
-              <TabsContent value="budgets" className="space-y-6">
+              <TabsContent value="budgets" className="space-y-4 sm:space-y-6">
                 <BudgetsManagement />
               </TabsContent>
               
-              <TabsContent value="reports" className="space-y-6">
+              <TabsContent value="reports" className="space-y-4 sm:space-y-6">
                 <FinancialReports />
               </TabsContent>
             </Tabs>

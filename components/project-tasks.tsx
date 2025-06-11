@@ -118,17 +118,17 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
   const [durationType, setDurationType] = useState<'days' | 'weeks' | 'months'>('weeks')
   const [durationValue, setDurationValue] = useState(1)
   const [newTask, setNewTask] = useState<Partial<ProjectTask>>({
-    name: "",
+    title: "",
     description: "",
     status: "pending",
     priority: "medium",
     startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    progress: 0,
-    budget: 0,
-    spent: 0,
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     assignedTo: "",
-    dependencies: []
+    dependencies: [],
+    budget: 0,
+    partialBudget: 0,
+    spent: 0
   })
 
   // Cargar usuarios disponibles
@@ -221,7 +221,7 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
   // Filtrar tareas por búsqueda y estado
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = 
-      (task.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      (task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       (task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       (typeof task.assignedTo === 'object' && task.assignedTo 
         ? `${task.assignedTo.firstName || ''} ${task.assignedTo.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
@@ -264,7 +264,7 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
         durationType,
         durationValue
       );
-      setNewTask({...newTask, endDate});
+      setNewTask({...newTask, dueDate: endDate});
     }
   }, [useDuration, newTask.startDate, durationType, durationValue]);
 
@@ -281,17 +281,17 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
     // Asignar los valores de la tarea a editar
     setNewTask({
       _id: task._id,
-      name: task.name,
+      title: task.title,
       description: task.description || '',
       status: task.status,
       priority: task.priority || 'medium',
       startDate: typeof task.startDate === 'string' ? task.startDate : task.startDate?.toString() || '',
-      endDate: typeof task.endDate === 'string' ? task.endDate : task.endDate?.toString() || '',
-      progress: task.progress || 0,
-      budget: task.budget || 0,
-      spent: task.spent || 0,
+      dueDate: typeof task.dueDate === 'string' ? task.dueDate : task.dueDate?.toString() || '',
       assignedTo: typeof task.assignedTo === 'string' ? task.assignedTo : task.assignedTo?._id || '',
-      dependencies: task.dependencies || []
+      dependencies: task.dependencies || [],
+      budget: task.budget || 0,
+      partialBudget: task.partialBudget || 0,
+      spent: task.spent || 0
     });
     
     // Abrir el formulario
@@ -332,17 +332,17 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
       
       // Resetear formulario
       setNewTask({
-        name: "",
+        title: "",
         description: "",
         status: "pending",
         priority: "medium",
         startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        progress: 0,
-        budget: 0,
-        spent: 0,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         assignedTo: "",
-        dependencies: []
+        dependencies: [],
+        budget: 0,
+        partialBudget: 0,
+        spent: 0
       });
       
       // Resetear estados de duración
@@ -360,46 +360,41 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
 
   // Manejar actualización de estado de tarea
   const handleUpdateTaskStatus = async (taskId: string, newStatus: string) => {
-    if (!project || !project._id) return
+    if (!project || !project._id) return;
     
     try {
-      setLoading(true)
+      setLoading(true);
       
-      // Actualizar el estado localmente primero (optimistic update)
-      const updatedTasks = tasks.map(task => {
-        if (task._id === taskId) {
-          return { 
+      // Actualizar estado local primero para feedback inmediato
+      setTasks(tasks.map(task => 
+        task._id === taskId 
+          ? { 
             ...task, 
-            status: newStatus as "pending" | "in-progress" | "completed" | "canceled", 
-            progress: newStatus === "completed" ? 100 : task.progress 
+            status: newStatus as "pending" | "in_progress" | "completed" | "cancelled"
           }
-        }
-        return task
-      })
-      setTasks(updatedTasks)
+          : task
+      ));
       
-      // Enviar actualización a la API
+      // Llamar al API para actualizar en el servidor
       await projectService.updateProjectTask(
         project._id.toString(),
         taskId,
         { 
-          status: newStatus as "pending" | "in-progress" | "completed" | "canceled",
-          progress: newStatus === "completed" ? 100 : undefined
+          status: newStatus as "pending" | "in_progress" | "completed" | "cancelled"
         }
-      )
+      );
       
-      toast.success(`Tarea marcada como ${getTaskStatusText(newStatus).toLowerCase()}`)
+      toast.success("Estado de tarea actualizado");
     } catch (err) {
-      console.error("Error actualizando estado de tarea:", err)
-      toast.error("Error al actualizar el estado de la tarea")
+      console.error("Error actualizando estado de tarea:", err);
       
-      // Revertir cambios en caso de error
-      const originalTasks = await projectService.getProjectTasks(project._id.toString())
-      setTasks(originalTasks)
+      // Revertir el cambio local si falla
+      setTasks(tasks.map(task => task._id === taskId ? task : task));
+      toast.error("Error al actualizar el estado");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Manejar eliminación de tarea
   const handleDeleteTask = async (taskId: string) => {
@@ -520,9 +515,9 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                 <SelectContent>
                   <SelectItem value="all">Todos los estados</SelectItem>
                   <SelectItem value="pending">Pendiente</SelectItem>
-                  <SelectItem value="in-progress">En Progreso</SelectItem>
-                  <SelectItem value="completed">Completada</SelectItem>
-                  <SelectItem value="canceled">Cancelada</SelectItem>
+                  <SelectItem value="in_progress">En progreso</SelectItem>
+                  <SelectItem value="completed">Completado</SelectItem>
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -537,9 +532,8 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
             <TableRow className="border-b border-border/10 hover:bg-transparent">
               <TableHead className="w-10">Estado</TableHead>
               <TableHead>Tarea</TableHead>
-              <TableHead>Progreso</TableHead>
-              <TableHead>Responsable</TableHead>
               <TableHead>Fechas</TableHead>
+              <TableHead>Responsable</TableHead>
               <TableHead className="w-10">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -551,16 +545,12 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                 onClick={() => setSelectedTask(task)}
               >
                 <TableCell>
-                  {getTaskStatusIcon(task.status, task.blocked)}
+                  {getTaskStatusIcon(task.status)}
                 </TableCell>
                 <TableCell>
                   <div className="space-y-1">
-                    <div className="font-medium">{task.name}</div>
-                    {task.blocked && (
-                      <Badge variant="outline" className="border-amber-500 text-amber-500">
-                        Bloqueada
-                      </Badge>
-                    )}
+                    <div className="font-medium">{task.title}</div>
+
                     {task.dependencies && task.dependencies.length > 0 && (
                       <Badge variant="outline" className="border-blue-500 text-blue-500">
                         {task.dependencies.length} dependencias
@@ -572,19 +562,9 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex w-24 items-center gap-2">
-                    <Progress
-                      value={task.progress || 0}
-                      className="h-2"
-                      indicatorClassName={
-                        (task.progress || 0) === 100
-                          ? "bg-green-500"
-                          : (task.progress || 0) > 50
-                            ? "bg-blue-500"
-                            : "bg-amber-500"
-                      }
-                    />
-                    <span className="text-xs font-medium">{task.progress || 0}%</span>
+                  <div className="space-y-1 text-sm">
+                    <div>Inicio: {formatDate(task.startDate || task.createdAt || '')}</div>
+                    <div>Fin: {formatDate(task.dueDate || '')}</div>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -604,12 +584,6 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                   ) : (
                     <span className="text-muted-foreground">Sin asignar</span>
                   )}
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1 text-sm">
-                    <div>Inicio: {formatDate(task.startDate || task.createdAt || '')}</div>
-                    <div>Fin: {formatDate(task.endDate || task.dueDate || '')}</div>
-                  </div>
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -651,12 +625,12 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                         </DropdownMenuItem>
                       )}
                       
-                      {task.status !== "in-progress" && task.status !== "completed" && (
+                      {task.status !== "in_progress" && task.status !== "completed" && (
                         <DropdownMenuItem 
                           className="cursor-pointer text-blue-500"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleUpdateTaskStatus(task._id!, "in-progress")
+                            handleUpdateTaskStatus(task._id!, "in_progress")
                           }}
                         >
                           <Clock className="mr-2 h-4 w-4" />
@@ -719,7 +693,7 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle>{selectedTask.name}</CardTitle>
+                  <CardTitle>{selectedTask.title}</CardTitle>
                   <CardDescription>{selectedTask.description || "Sin descripción"}</CardDescription>
                 </div>
                 <Button 
@@ -745,10 +719,6 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                         </Badge>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Progreso</p>
-                        <p className="text-sm font-medium">{selectedTask.progress || 0}%</p>
-                      </div>
-                      <div>
                         <p className="text-xs text-muted-foreground">Fecha inicio</p>
                         <p className="text-sm font-medium">
                           {formatDate(selectedTask.startDate || selectedTask.createdAt || '')}
@@ -757,7 +727,7 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                       <div>
                         <p className="text-xs text-muted-foreground">Fecha fin</p>
                         <p className="text-sm font-medium">
-                          {formatDate(selectedTask.endDate || selectedTask.dueDate || '')}
+                          {formatDate(selectedTask.dueDate || '')}
                         </p>
                       </div>
                     </div>
@@ -809,14 +779,7 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                         <p className="text-sm text-muted-foreground">Sin dependencias</p>
                       )}
                     </div>
-                    {selectedTask.blocked && (
-                      <div className="mt-2 rounded-md bg-amber-950/20 p-2 text-amber-400">
-                        <div className="flex items-center space-x-2">
-                          <AlertTriangle className="h-4 w-4" />
-                          <p className="text-sm">Tarea bloqueada por dependencias</p>
-                        </div>
-                      </div>
-                    )}
+
                   </div>
                 </div>
               </div>
@@ -847,7 +810,7 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                     variant="outline" 
                     size="sm"
                     className="text-blue-600"
-                    onClick={() => handleUpdateTaskStatus(selectedTask._id!, "in-progress")}
+                    onClick={() => handleUpdateTaskStatus(selectedTask._id!, "in_progress")}
                   >
                     <Clock className="mr-2 h-4 w-4" />
                     Iniciar tarea
@@ -919,14 +882,14 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
           
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <label htmlFor="task-name" className="text-sm font-medium">
+              <label htmlFor="task-title" className="text-sm font-medium">
                 Nombre de la tarea *
               </label>
               <Input
-                id="task-name"
+                id="task-title"
                 placeholder="Ej. Diseño de interfaz"
-                value={newTask.name}
-                onChange={(e) => setNewTask({...newTask, name: e.target.value})}
+                value={newTask.title}
+                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
               />
             </div>
             
@@ -947,17 +910,15 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                 <label htmlFor="task-status" className="text-sm font-medium">
                   Estado *
                 </label>
-                <Select
-                  value={newTask.status}
-                  onValueChange={(value) => setNewTask({...newTask, status: value as "pending" | "in-progress" | "completed" | "canceled"})}
-                >
+                <Select value={newTask.status} onValueChange={(value) => setNewTask({...newTask, status: value as "pending" | "in_progress" | "completed" | "cancelled"})}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar estado" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pending">Pendiente</SelectItem>
-                    <SelectItem value="in-progress">En Progreso</SelectItem>
-                    <SelectItem value="completed">Completada</SelectItem>
+                    <SelectItem value="in_progress">En progreso</SelectItem>
+                    <SelectItem value="completed">Completado</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -998,7 +959,7 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                     // Si estamos usando duración, actualizar la fecha de fin
                     if (useDuration) {
                       const endDate = calculateEndDate(startDate, durationType, durationValue);
-                      newTaskData.endDate = endDate;
+                      newTaskData.dueDate = endDate;
                     }
                     
                     setNewTask(newTaskData);
@@ -1051,8 +1012,8 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                     <Input
                       id="task-end-date"
                       type="date"
-                      value={typeof newTask.endDate === 'string' ? newTask.endDate : ''}
-                      onChange={(e) => setNewTask({...newTask, endDate: e.target.value})}
+                      value={typeof newTask.dueDate === 'string' ? newTask.dueDate : ''}
+                      onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
                     />
                   </div>
                 )}
@@ -1081,6 +1042,21 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
               </Select>
             </div>
             
+            {/* Campo de presupuesto */}
+            <div className="space-y-2">
+              <label htmlFor="task-partial-budget" className="text-sm font-medium">
+                Presupuesto Parcial ($)
+              </label>
+              <Input
+                id="task-partial-budget"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={newTask.partialBudget || ''}
+                onChange={(e) => setNewTask({...newTask, partialBudget: parseFloat(e.target.value) || 0})}
+              />
+            </div>
+            
             {/* Campo para seleccionar dependencias */}
             <div className="space-y-2">
               <label className="text-sm font-medium">
@@ -1104,15 +1080,15 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                   <SelectContent>
                     {tasks.length > 0 ? (
                       tasks
-                        .filter(t => t._id && t._id !== selectedTask?._id)
+                        .filter(t => t._id && t._id !== newTask._id)
                         .map(task => (
                           <SelectItem key={task._id} value={task._id || ''}>
-                            {task.name}
+                            {task.title}
                           </SelectItem>
                         ))
                     ) : (
                       <div className="p-2 text-center text-muted-foreground text-sm">
-                        No hay tareas disponibles
+                        {loading ? "Cargando tareas..." : "No hay tareas disponibles"}
                       </div>
                     )}
                   </SelectContent>
@@ -1126,7 +1102,7 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                     const depTask = tasks.find(t => t._id === depId);
                     return (
                       <Badge key={depId} variant="outline" className="flex items-center gap-1">
-                        {depTask ? depTask.name : `Tarea #${depId}`}
+                        {depTask ? depTask.title : `Tarea #${depId}`}
                         <X
                           className="h-3 w-3 cursor-pointer"
                           onClick={() => {
@@ -1142,42 +1118,6 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
                 </div>
               )}
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="task-budget" className="text-sm font-medium">
-                  Presupuesto
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-                  <Input
-                    id="task-budget"
-                    className="pl-8"
-                    type="number"
-                    placeholder="0.00"
-                    value={newTask.budget || ''}
-                    onChange={(e) => setNewTask({...newTask, budget: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="task-spent" className="text-sm font-medium">
-                  Gastado
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-                  <Input
-                    id="task-spent"
-                    className="pl-8"
-                    type="number"
-                    placeholder="0.00"
-                    value={newTask.spent || ''}
-                    onChange={(e) => setNewTask({...newTask, spent: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-              </div>
-            </div>
           </div>
           
           <DialogFooter>
@@ -1186,7 +1126,7 @@ export default function ProjectTasks({ project }: ProjectTasksProps) {
             </Button>
             <Button 
               onClick={handleCreateTask} 
-              disabled={!newTask.name || loading}
+              disabled={!newTask.title || loading}
             >
               {loading ? (
                 <>

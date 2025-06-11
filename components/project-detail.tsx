@@ -16,7 +16,7 @@ import {
   Users,
   BarChart4,
   ListTodo,
-  GanttChart,
+
   Loader2,
   Save,
   Archive,
@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import ProjectTasks from "./project-tasks"
-import ProjectGantt from "./project-gantt"
+
 import ProjectFinances from "./project-finances"
 import { projectService } from "@/lib/services/projectService"
 import EmployeeService from "@/lib/services/employeeService"
@@ -305,11 +305,11 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
         </Button>
         <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{project.name}</h1>
               <Badge className={getStatusColor(project.status)}>{getStatusText(project.status)}</Badge>
             </div>
-            <p className="text-muted-foreground">{project.description}</p>
+            <p className="text-sm sm:text-base text-muted-foreground">{project.description}</p>
           </div>
           <div className="flex space-x-2">
             <Button 
@@ -364,13 +364,13 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
       </div>
 
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="netflix-card">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Progreso</p>
-                <h3 className="mt-1 text-2xl font-bold">{project.progress || 0}%</h3>
+                <h3 className="mt-1 text-xl sm:text-2xl font-bold">{project.progress || 0}%</h3>
                 <div className="mt-2 w-full">
                   <Progress
                     value={project.progress || 0}
@@ -392,12 +392,12 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
           </CardContent>
         </Card>
         <Card className="netflix-card">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Presupuesto</p>
-                <h3 className="mt-1 text-2xl font-bold">${project.budget || 0}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <h3 className="mt-1 text-xl sm:text-2xl font-bold">${project.budget || 0}</h3>
+                <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                   Gastado: ${project.spent || 0} ({budgetPercentage}%)
                 </p>
               </div>
@@ -408,14 +408,14 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
           </CardContent>
         </Card>
         <Card className="netflix-card">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Tiempo</p>
-                <h3 className="mt-1 text-2xl font-bold">
+                <h3 className="mt-1 text-xl sm:text-2xl font-bold">
                   {project.workedHours || 0}/{project.totalHours || 0}h
                 </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                   {formatDate(project.startDate)} - {formatDate(project.endDate)}
                 </p>
               </div>
@@ -429,38 +429,37 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
 
       {/* Tabs de contenido */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">
-          <TabsTrigger value="general">
-            <Briefcase className="mr-2 h-4 w-4" />
-            General
-          </TabsTrigger>
-          <TabsTrigger value="tareas">
-            <ListTodo className="mr-2 h-4 w-4" />
-            Tareas
-          </TabsTrigger>
-          <TabsTrigger value="cronograma">
-            <GanttChart className="mr-2 h-4 w-4" />
-            Cronograma
-          </TabsTrigger>
-          <TabsTrigger value="finanzas">
-            <BarChart4 className="mr-2 h-4 w-4" />
-            Finanzas
-          </TabsTrigger>
-          <TabsTrigger value="documentos">
-            <FileText className="mr-2 h-4 w-4" />
-            Documentos
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="w-auto inline-flex min-w-max">
+            <TabsTrigger value="general" className="text-xs sm:text-sm whitespace-nowrap">
+              <Briefcase className="mr-2 h-4 w-4" />
+              General
+            </TabsTrigger>
+            <TabsTrigger value="tareas" className="text-xs sm:text-sm whitespace-nowrap">
+              <ListTodo className="mr-2 h-4 w-4" />
+              Tareas
+            </TabsTrigger>
+
+            <TabsTrigger value="finanzas" className="text-xs sm:text-sm whitespace-nowrap">
+              <BarChart4 className="mr-2 h-4 w-4" />
+              Finanzas
+            </TabsTrigger>
+            <TabsTrigger value="documentos" className="text-xs sm:text-sm whitespace-nowrap">
+              <FileText className="mr-2 h-4 w-4" />
+              Documentos
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="general" className="mt-6 space-y-4">
           {/* Contenido de la pestaña General */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Información general */}
             <Card className="netflix-card">
-              <CardHeader>
-                <CardTitle>Información General</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg">Información General</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Cliente</p>
@@ -514,8 +513,8 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
 
             {/* Equipo */}
             <Card className="netflix-card">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Equipo</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-6">
+                <CardTitle className="text-lg">Equipo</CardTitle>
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -529,19 +528,19 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
                   Asignar
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
                 {Array.isArray(project.assignedTo) && project.assignedTo.length > 0 ? (
                   <div className="space-y-4">
                     {project.assignedTo.map((member: any, index: number) => (
                       <div key={index} className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                          <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
                             {typeof member === 'string' 
                               ? member.substring(0, 2).toUpperCase()
                               : `${member.firstName.charAt(0)}${member.lastName.charAt(0)}`}
                           </div>
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-sm sm:text-base">
                               {typeof member === 'string' 
                                 ? member
                                 : `${member.firstName} ${member.lastName}`}
@@ -571,46 +570,24 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
           <ProjectTasks project={project} />
         </TabsContent>
 
-        <TabsContent value="cronograma" className="mt-6">
-          <ProjectGantt project={{
-            id: parseInt(project._id || '0'),
-            nombre: project.name,
-            fechaInicio: typeof project.startDate === 'string' ? project.startDate : project.startDate.toISOString(),
-            fechaFin: typeof project.endDate === 'string' ? project.endDate : project.endDate.toISOString(),
-            tareas: (project.tasks || []).map(task => ({
-              id: parseInt(task._id || '0'),
-              nombre: task.name,
-              estado: task.status || 'pendiente',
-              progreso: task.progress || 0,
-              fechaInicio: typeof task.startDate === 'string' ? task.startDate : task.startDate?.toISOString() || '',
-              fechaFin: typeof task.endDate === 'string' ? task.endDate : task.endDate?.toISOString() || '',
-              responsable: typeof task.assignedTo === 'string' 
-                ? { id: 0, nombre: task.assignedTo, iniciales: task.assignedTo.substring(0, 2) } 
-                : task.assignedTo 
-                  ? { id: 0, nombre: `${task.assignedTo.firstName} ${task.assignedTo.lastName}`, iniciales: `${task.assignedTo.firstName.charAt(0)}${task.assignedTo.lastName.charAt(0)}` }
-                  : null,
-              presupuesto: 0,
-              presupuestoGastado: 0
-            }))
-          }} />
-        </TabsContent>
+
 
         <TabsContent value="finanzas" className="mt-6">
           <ProjectFinances project={{
-            id: parseInt(project._id || '0'),
+            _id: project._id || '0',
             nombre: project.name,
             presupuestoTotal: project.budget || 0,
             presupuestoGastado: project.spent || 0,
             tareas: (project.tasks || []).map(task => ({
               _id: task._id,
-              name: task.name,
+              title: task.title,
               description: task.description,
               status: task.status || 'pending',
-              progress: task.progress || 0,
               budget: task.budget || 0,
+              partialBudget: task.partialBudget || 0,
               spent: task.spent || 0,
               startDate: task.startDate,
-              endDate: task.endDate,
+              dueDate: task.dueDate,
               assignedTo: task.assignedTo
             }))
           }} />
@@ -623,18 +600,20 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
 
       {/* Diálogo de confirmación para archivar */}
       {archiveConfirmation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="mx-4 max-w-md netflix-card">
-            <CardHeader>
-              <CardTitle>Confirmar archivo</CardTitle>
-              <CardDescription>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-md netflix-card">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Confirmar archivo</CardTitle>
+              <CardDescription className="text-sm">
                 ¿Estás seguro de que deseas archivar este proyecto? El proyecto cambiará su estado a "Cancelado" y ya no estará visible en la lista principal.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex justify-end gap-2">
+            <CardContent className="flex justify-end gap-2 p-4 sm:p-6">
               <Button 
                 variant="outline" 
                 onClick={() => setArchiveConfirmation(false)}
+                size="sm"
+                className="h-9"
               >
                 Cancelar
               </Button>
@@ -642,6 +621,8 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
                 variant="destructive"
                 onClick={handleArchiveProject}
                 disabled={loading}
+                size="sm"
+                className="h-9"
               >
                 {loading ? (
                   <>
@@ -662,33 +643,33 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
       
       {/* Modal para asignar miembros al equipo */}
       {showAssignTeamModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="mx-4 max-w-lg netflix-card">
-            <CardHeader>
-              <CardTitle>Asignar equipo al proyecto</CardTitle>
-              <CardDescription>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-lg netflix-card">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Asignar equipo al proyecto</CardTitle>
+              <CardDescription className="text-sm">
                 Selecciona los miembros que formarán parte del equipo del proyecto.
               </CardDescription>
             </CardHeader>
-            <CardContent className="max-h-[60vh] overflow-y-auto">
+            <CardContent className="max-h-[50vh] sm:max-h-[60vh] overflow-y-auto px-4 sm:px-6">
               {loadingUsers ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" />
                   <p className="text-muted-foreground">Cargando usuarios disponibles...</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {availableUsers.map(user => (
                     <div 
                       key={user._id} 
                       className="flex items-center justify-between rounded-lg border border-border/40 p-3 hover:bg-muted/20"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                        <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
                           {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-medium">{user.firstName} {user.lastName}</p>
+                          <p className="font-medium text-sm sm:text-base">{user.firstName} {user.lastName}</p>
                           <p className="text-xs text-muted-foreground">{user.position}</p>
                         </div>
                       </div>
@@ -716,16 +697,20 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex justify-end gap-2 border-t p-4">
+            <CardFooter className="flex justify-end gap-2 border-t p-4 sm:p-6">
               <Button 
                 variant="outline" 
                 onClick={() => setShowAssignTeamModal(false)}
+                size="sm"
+                className="h-9"
               >
                 Cancelar
               </Button>
               <Button 
                 onClick={handleAssignTeam}
                 disabled={loading}
+                size="sm"
+                className="h-9"
               >
                 {loading ? (
                   <>

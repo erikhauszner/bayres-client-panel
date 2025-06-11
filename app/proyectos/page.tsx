@@ -8,7 +8,7 @@ export default function ProjectsPage() {
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
           <ProjectsDashboard />
         </main>
       </div>

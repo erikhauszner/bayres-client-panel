@@ -202,34 +202,40 @@ function DocContent({
 
         {/* Navegación en formato horizontal para escritorio */}
         <div className="hidden md:block">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-            {filteredSections.map(section => (
-              <Button
-                key={section.id}
-                variant={activeSection === section.id ? "secondary" : "outline"}
-                className="flex flex-col h-auto py-3 px-2 items-center justify-center text-center"
-                onClick={() => scrollToSection(section.id)}
-              >
-                <span className="mb-2">{section.icon}</span>
-                <span className="text-xs">{section.label}</span>
-              </Button>
-            ))}
+          <div className="overflow-x-auto pb-1">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              {filteredSections.map(section => (
+                <Button
+                  key={section.id}
+                  variant={activeSection === section.id ? "secondary" : "outline"}
+                  className="flex flex-col h-auto py-3 px-2 items-center justify-center text-center"
+                  onClick={() => scrollToSection(section.id)}
+                >
+                  <span className="mb-2">{section.icon}</span>
+                  <span className="text-xs">{section.label}</span>
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Barra de navegación móvil */}
         <div className="md:hidden">
-          <select 
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            value={activeSection}
-            onChange={(e) => scrollToSection(e.target.value)}
-          >
-            {sections.map(section => (
-              <option key={section.id} value={section.id}>
-                {section.label}
-              </option>
-            ))}
-          </select>
+          <div className="overflow-x-auto pb-1">
+            <div className="flex space-x-2 min-w-max">
+              {filteredSections.map(section => (
+                <Button
+                  key={section.id}
+                  variant={activeSection === section.id ? "secondary" : "outline"}
+                  className="flex flex-col h-auto py-2 px-3 items-center justify-center text-center whitespace-nowrap"
+                  onClick={() => scrollToSection(section.id)}
+                >
+                  <span className="mb-1">{section.icon}</span>
+                  <span className="text-xs">{section.label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Sección de Introducción */}

@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MoreVertical, Filter, Clock, Users, UserPlus, List, Grid, Edit, Trash2, CheckCircle2, XCircle, Phone, Building, Shield, Eye, User, Plus, Key, FileText } from "lucide-react"
+import { Search, MoreVertical, Filter, Clock, Users, UserPlus, List, Grid, Edit, Trash2, CheckCircle2, XCircle, Phone, Building, Shield, Eye, User, Plus, Key, FileText, Loader2, Briefcase } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -82,9 +82,14 @@ export default function EmployeesPanel() {
     return isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
   }
 
-  const getRoleColor = (role: string | undefined | null) => {
-    // Asegurar que tengamos un string minúscula para buscar en el diccionario
-    const normalizedRole = typeof role === 'string' ? role.toLowerCase() : '';
+  const getRoleColor = (role: string | undefined | null | {_id: string, name: string}) => {
+    let normalizedRole = '';
+    
+    if (role && typeof role === 'object' && 'name' in role) {
+      normalizedRole = role.name.toLowerCase();
+    } else {
+      normalizedRole = typeof role === 'string' ? role.toLowerCase() : '';
+    }
     
     const colors: { [key: string]: string } = {
       admin: "bg-purple-100 text-purple-800",
@@ -97,9 +102,11 @@ export default function EmployeesPanel() {
     return colors[normalizedRole] || "bg-gray-100 text-gray-800"
   }
 
-  // Función para obtener el nombre del rol en lugar de su ID
-  const getRoleName = (role: string | undefined | null) => {
-    // Asegurar que tengamos un string minúscula para buscar en el diccionario
+  const getRoleName = (role: string | undefined | null | {_id: string, name: string}) => {
+    if (role && typeof role === 'object' && 'name' in role) {
+      return role.name;
+    }
+
     const normalizedRole = typeof role === 'string' ? role.toLowerCase() : '';
     
     const roleNames: { [key: string]: string } = {
@@ -118,8 +125,8 @@ export default function EmployeesPanel() {
       {/* Encabezado */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Empleados</h1>
-          <p className="text-muted-foreground">Gestiona el equipo y sus roles en el sistema</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Empleados</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Gestiona el equipo y sus roles en el sistema</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button 
@@ -143,24 +150,24 @@ export default function EmployeesPanel() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="netflix-card">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Empleados</p>
-                <p className="text-2xl font-bold">{totalEmployees}</p>
+                <p className="text-xl sm:text-2xl font-bold">{totalEmployees}</p>
               </div>
               <Users className="w-8 h-8 text-gray-400" />
             </div>
           </CardContent>
         </Card>
         <Card className="netflix-card">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Empleados Activos</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xl sm:text-2xl font-bold">
                   {(employees || []).filter(e => e?.isActive).length}
                 </p>
               </div>
@@ -169,11 +176,11 @@ export default function EmployeesPanel() {
           </CardContent>
         </Card>
         <Card className="netflix-card">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Empleados Inactivos</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xl sm:text-2xl font-bold">
                   {(employees || []).filter(e => !e?.isActive).length}
                 </p>
               </div>
@@ -229,7 +236,12 @@ export default function EmployeesPanel() {
 
       {/* Lista de empleados */}
       {loading ? (
-        <div className="text-center py-8">Cargando...</div>
+        <div className="text-center py-8">
+          <div className="flex flex-col items-center justify-center py-10">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Cargando empleados...</p>
+          </div>
+        </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {(employees || []).map((employee) => (
@@ -237,12 +249,12 @@ export default function EmployeesPanel() {
               <CardContent className="p-0">
                 <div className="flex items-center justify-between border-b border-border/10 p-4">
                   <div className="flex items-center gap-3">
-                    <Avatar className={`h-10 w-10 ${getRoleColor(employee.role)} text-white`}>
-                      <AvatarFallback>{employee.firstName.charAt(0) + employee.lastName.charAt(0)}</AvatarFallback>
+                    <Avatar className={`h-9 w-9 sm:h-10 sm:w-10 ${getRoleColor(employee.role)} text-white`}>
+                      <AvatarFallback className="text-xs sm:text-sm">{employee.firstName.charAt(0) + employee.lastName.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-medium">{employee.firstName} {employee.lastName}</h3>
-                      <p className="text-xs text-muted-foreground">{employee.email}</p>
+                      <h3 className="font-medium text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{employee.firstName} {employee.lastName}</h3>
+                      <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-none">{employee.email}</p>
                     </div>
                   </div>
                   <DropdownMenu>
@@ -272,22 +284,28 @@ export default function EmployeesPanel() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <div className="space-y-3 p-4">
+                <div className="p-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium">Rol</div>
-                    <Badge className={getRoleColor(employee.role)}>
-                      {employee.roleName || getRoleName(employee.role)}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium">Estado</div>
-                    <Badge className={getStatusColor(employee.isActive)}>
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs sm:text-sm">{employee.department || "Sin departamento"}</span>
+                    </div>
+                    <Badge className={`text-xs ${getStatusColor(employee.isActive)}`}>
                       {employee.isActive ? "Activo" : "Inactivo"}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>Último acceso: {employee.lastAccess}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs sm:text-sm">{employee.position || "Sin posición"}</span>
+                    </div>
+                    <Badge className={`text-xs ${getRoleColor(employee.role)}`}>
+                      {getRoleName(employee.role)}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs sm:text-sm">{employee.phone || "Sin teléfono"}</span>
                   </div>
                 </div>
               </CardContent>
@@ -295,100 +313,100 @@ export default function EmployeesPanel() {
           ))}
         </div>
       ) : (
-        <Card className="netflix-card">
-          <div className="netflix-scrollbar overflow-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border/20">
-                  <th className="px-4 py-3 text-left text-sm font-medium">Empleado</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Rol</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Departamento</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Puesto</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Estado</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Acciones</th>
+        <div className="border rounded-md overflow-x-auto">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-card/50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Empleado</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Departamento</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Posición</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Rol</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Estado</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {(employees || []).map((employee) => (
+                <tr key={employee._id} className="border-b border-border/10 transition-colors hover:bg-muted/5">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar className={`h-8 w-8 sm:h-10 sm:w-10 ${getRoleColor(employee.role)} text-white`}>
+                        <AvatarFallback className="text-xs sm:text-sm">{employee.firstName.charAt(0)}{employee.lastName.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium text-sm sm:text-base">{employee.firstName} {employee.lastName}</div>
+                        <div className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-none">{employee.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <span className="text-sm">{employee.department || "—"}</span>
+                  </td>
+                  <td className="px-4 py-3 hidden sm:table-cell">
+                    <span className="text-sm">{employee.position || "—"}</span>
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell">
+                    <Badge className={`${getRoleColor(employee.role)}`}>
+                      {getRoleName(employee.role)}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge className={`${getStatusColor(employee.isActive)}`}>
+                      {employee.isActive ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0">
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">Abrir menú</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => router.push(`/empleados/${employee._id}`)}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Ver perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => router.push(`/empleados/${employee._id}/password`)}>
+                          <Key className="w-4 h-4 mr-2" />
+                          Contraseña
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => router.push(`/empleados/${employee._id}/edit`)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => handleToggleStatus(employee._id, employee.isActive)}
+                        >
+                          {employee.isActive ? (
+                            <>
+                              <XCircle className="w-4 h-4 mr-2 text-red-500" />
+                              Desactivar
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
+                              Activar
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer text-destructive"
+                          onClick={() => handleDelete(employee._id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {(employees || []).map((employee) => (
-                  <tr key={employee._id} className="border-b border-border/10 transition-colors hover:bg-muted/5">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar className={`h-8 w-8 ${getRoleColor(employee.role)} text-white`}>
-                          <AvatarFallback>{employee.firstName.charAt(0) + employee.lastName.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">{employee.firstName} {employee.lastName}</div>
-                          <div className="text-xs text-muted-foreground">{employee.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge className={getRoleColor(employee.role)}>
-                        {employee.roleName || getRoleName(employee.role)}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">
-                        {employee.department || "-"}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">
-                        {employee.position || "-"}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge className={getStatusColor(employee.isActive)}>
-                        {employee.isActive ? "Activo" : "Inactivo"}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0">
-                            <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">Abrir menú</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => router.push(`/empleados/${employee._id}`)}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            Ver perfil
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => router.push(`/empleados/${employee._id}/password`)}>
-                            <Key className="w-4 h-4 mr-2" />
-                            Contraseña
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => router.push(`/empleados/${employee._id}/edit`)}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => handleToggleStatus(employee._id, employee.isActive)}>
-                            {employee.isActive ? (
-                              <>
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Desactivar
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Activar
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer text-destructive" onClick={() => handleDelete(employee._id)}>
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )

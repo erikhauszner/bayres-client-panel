@@ -428,13 +428,15 @@ export default function CategoriesSettings() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="gastos">Categorías de Egresos</TabsTrigger>
-          <TabsTrigger value="ingresos">Categorías de Ingresos</TabsTrigger>
-          <TabsTrigger value="origenLeads">Origen Leads</TabsTrigger>
-          <TabsTrigger value="etapaLeads">Etapa Leads</TabsTrigger>
-          <TabsTrigger value="departamentos">Departamentos</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="w-auto inline-flex min-w-max">
+            <TabsTrigger value="gastos" className="text-xs sm:text-sm whitespace-nowrap">Categorías de Egresos</TabsTrigger>
+            <TabsTrigger value="ingresos" className="text-xs sm:text-sm whitespace-nowrap">Categorías de Ingresos</TabsTrigger>
+            <TabsTrigger value="origenLeads" className="text-xs sm:text-sm whitespace-nowrap">Origen Leads</TabsTrigger>
+            <TabsTrigger value="etapaLeads" className="text-xs sm:text-sm whitespace-nowrap">Etapa Leads</TabsTrigger>
+            <TabsTrigger value="departamentos" className="text-xs sm:text-sm whitespace-nowrap">Departamentos</TabsTrigger>
+          </TabsList>
+        </div>
         
         {/* Categorías de Egresos */}
         <TabsContent value="gastos" className="space-y-4">
