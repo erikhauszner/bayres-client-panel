@@ -285,13 +285,26 @@ export default function AdminLeadsPage() {
       setError(null)
       
       try {
-        // Obtener los leads paginados para la tabla
-        const result = await leadService.getLeads({
-          status: statusFilter === "todos" ? undefined : statusFilter,
-          search: searchTerm,
-          page: currentPage,
-          limit: 10
-        })
+        let result;
+        
+        // Si estamos en la pestaña de desaprobados, hacer consulta específica
+        if (activeTab === "disapproved") {
+          result = await leadService.getLeads({
+            isApproved: false,
+            status: JSON.stringify({ $ne: 'nuevo' }),
+            search: searchTerm,
+            page: currentPage,
+            limit: 10
+          });
+        } else {
+          // Para otras pestañas, usar la consulta normal
+          result = await leadService.getLeads({
+            status: statusFilter === "todos" ? undefined : statusFilter,
+            search: searchTerm,
+            page: currentPage,
+            limit: 10
+          });
+        }
         
         setLeads(result.data)
         setTotalLeads(result.total)
@@ -301,6 +314,7 @@ export default function AdminLeadsPage() {
         // 1. Leads nuevos: status=nuevo
         const pendingApprovalLeads = await leadService.getLeads({
           status: 'nuevo',
+          isApproved: false, // Solo los que están pendientes de aprobación
           limit: 1 // Solo necesitamos el conteo total, no los datos
         })
         
@@ -322,15 +336,15 @@ export default function AdminLeadsPage() {
         setApprovedCount(approvedLeads.total)
         setDisapprovedCount(disapprovedLeads.total)
         
-        // Aplicar filtro de asignación
+        // Para pestañas que no sean "disapproved", aplicar filtro de asignación
         let filtered = [...result.data]
         
-        if (assignedFilter === "asignados") {
-          filtered = filtered.filter(lead => lead.assignedTo)
-        } else if (assignedFilter === "no_asignados") {
-          filtered = filtered.filter(lead => !lead.assignedTo)
-        } else if (assignedFilter === "desaprobados") {
-          filtered = filtered.filter(lead => lead.isApproved === false && lead.status !== 'nuevo')
+        if (activeTab !== "disapproved") {
+          if (assignedFilter === "asignados") {
+            filtered = filtered.filter(lead => lead.assignedTo)
+          } else if (assignedFilter === "no_asignados") {
+            filtered = filtered.filter(lead => !lead.assignedTo)
+          }
         }
         
         setFilteredLeads(filtered)
@@ -344,7 +358,7 @@ export default function AdminLeadsPage() {
     }
     
     fetchLeads()
-  }, [currentPage, searchTerm, statusFilter, assignedFilter, refreshFlag])
+  }, [currentPage, searchTerm, statusFilter, assignedFilter, refreshFlag, activeTab])
   
   // Cargar empleados
   useEffect(() => {
