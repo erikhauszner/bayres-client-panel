@@ -6,13 +6,29 @@ import { useEffect, useState } from "react";
  * @param permission El permiso a verificar en formato 'module:action'
  * @returns Un booleano que indica si el usuario tiene el permiso
  */
-export function useHasPermission(permission: string): boolean {
-  const { employee } = useAuth();
-  const [hasPermission, setHasPermission] = useState(false);
+export function useHasPermission(permission: string): boolean | undefined {
+  const { employee, loading } = useAuth();
+  const [hasPermission, setHasPermission] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
     const checkPermission = () => {
+      console.log(`🔐 useHasPermission(${permission}) - Estado:`, {
+        loading,
+        hasEmployee: !!employee,
+        employeeRole: employee?.role,
+        employeePermissions: employee?.permissions?.length || 0
+      });
+
+      // Si aún está cargando, mantener undefined
+      if (loading) {
+        console.log(`🔐 ${permission}: Loading = true, manteniendo undefined`);
+        setHasPermission(undefined);
+        return;
+      }
+
+      // Si no hay empleado después de cargar, definitivamente no tiene permisos
       if (!employee) {
+        console.log(`🔐 ${permission}: No employee, estableciendo false`);
         setHasPermission(false);
         return;
       }
@@ -22,6 +38,7 @@ export function useHasPermission(permission: string): boolean {
       
       // Si el usuario es admin, tiene todos los permisos
       if (isAdmin) {
+        console.log(`🔐 ${permission}: Usuario es admin, estableciendo true`);
         setHasPermission(true);
         return;
       }
@@ -33,11 +50,18 @@ export function useHasPermission(permission: string): boolean {
       const [module] = permission.split(':');
       const hasManagePermission = permissions.includes(`${module}:manage`);
       
-      setHasPermission(hasSpecificPermission || hasManagePermission);
+      const finalPermission = hasSpecificPermission || hasManagePermission;
+      console.log(`🔐 ${permission}: Verificación completa`, {
+        hasSpecificPermission,
+        hasManagePermission,
+        finalPermission
+      });
+      
+      setHasPermission(finalPermission);
     };
 
     checkPermission();
-  }, [employee, permission]);
+  }, [employee, permission, loading]);
 
   return hasPermission;
 }

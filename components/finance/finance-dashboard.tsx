@@ -65,54 +65,62 @@ export default function FinanceDashboard() {
     <div className="space-y-8">
       {/* Métricas Clave */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total por Cobrar</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{financeService.formatCurrency(summaryData.totalPending)}</div>
-            <div className="text-xs text-muted-foreground pt-1">
-              {summaryData.pendingCount} {summaryData.pendingCount === 1 ? 'factura pendiente' : 'facturas pendientes'}
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Total por Cobrar</p>
+              <div className="text-2xl font-bold text-blue-700 dark:text-blue-200">{financeService.formatCurrency(summaryData.totalPending)}</div>
+              <div className="text-xs text-blue-600 dark:text-blue-400 pt-1">
+                {summaryData.pendingCount} {summaryData.pendingCount === 1 ? 'factura pendiente' : 'facturas pendientes'}
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Cobros Vencidos</CardTitle>
-            <TrendingDown className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{financeService.formatCurrency(summaryData.overdue)}</div>
-            <div className="text-xs text-muted-foreground pt-1">
-              {summaryData.overdueCount} {summaryData.overdueCount === 1 ? 'factura vencida' : 'facturas vencidas'}
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50 border-red-200 dark:border-red-800">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
+              <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-300" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-red-900 dark:text-red-100">Cobros Vencidos</p>
+              <div className="text-2xl font-bold text-red-700 dark:text-red-200">{financeService.formatCurrency(summaryData.overdue)}</div>
+              <div className="text-xs text-red-600 dark:text-red-400 pt-1">
+                {summaryData.overdueCount} {summaryData.overdueCount === 1 ? 'factura vencida' : 'facturas vencidas'}
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos Recurrentes</CardTitle>
-            <Briefcase className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{financeService.formatCurrency(summaryData.recurringTotal)}</div>
-            <div className="text-xs text-muted-foreground pt-1">
-              {summaryData.recurringCount} {summaryData.recurringCount === 1 ? 'plan activo' : 'planes activos'}
+        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/50 dark:to-indigo-900/50 border-indigo-200 dark:border-indigo-800">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-indigo-200 dark:bg-indigo-800 flex items-center justify-center">
+              <Briefcase className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-indigo-900 dark:text-indigo-100">Ingresos Recurrentes</p>
+              <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-200">{financeService.formatCurrency(summaryData.recurringTotal)}</div>
+              <div className="text-xs text-indigo-600 dark:text-indigo-400 pt-1">
+                {summaryData.recurringCount} {summaryData.recurringCount === 1 ? 'plan activo' : 'planes activos'}
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Próximos Ingresos</CardTitle>
-            <Activity className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{financeService.formatCurrency(summaryData.upcomingTotal)}</div>
-            <div className="text-xs text-muted-foreground pt-1">
-              {summaryData.upcomingCount} {summaryData.upcomingCount === 1 ? 'factura en 7 días' : 'facturas en 7 días'}
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
+              <Activity className="h-5 w-5 text-green-600 dark:text-green-300" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-green-900 dark:text-green-100">Próximos Ingresos</p>
+              <div className="text-2xl font-bold text-green-700 dark:text-green-200">{financeService.formatCurrency(summaryData.upcomingTotal)}</div>
+              <div className="text-xs text-green-600 dark:text-green-400 pt-1">
+                {summaryData.upcomingCount} {summaryData.upcomingCount === 1 ? 'factura en 7 días' : 'facturas en 7 días'}
+              </div>
             </div>
           </CardContent>
         </Card>

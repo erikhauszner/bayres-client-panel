@@ -80,6 +80,7 @@ import {
   Edit,
   ShieldCheck,
   Check,
+  Ban,
   X
 } from "lucide-react"
 import Header from "@/components/header"
@@ -265,6 +266,10 @@ export default function AdminLeadsPage() {
   const [approvedCount, setApprovedCount] = useState(0)
   const [disapprovedCount, setDisapprovedCount] = useState(0)
   
+  // Estados para el modal de razón de anulación
+  const [showAnnulationReasonModal, setShowAnnulationReasonModal] = useState(false)
+  const [selectedAnnulationReason, setSelectedAnnulationReason] = useState("")
+  
   // Permisos para acciones
   const canApproveLeads = useHasPermission("leads:approve");
   const canRejectLeads = useHasPermission("leads:reject");
@@ -434,6 +439,7 @@ export default function AdminLeadsPage() {
       case "rechazado": return "Rechazado"
       case "asignado": return "Asignado"
       case "convertido": return "Convertido"
+      case "anulado": return "Anulado"
       default: return status
     }
   }
@@ -481,6 +487,8 @@ export default function AdminLeadsPage() {
         return "bg-purple-950/30 text-purple-400 border border-purple-800/30"
       case "convertido":
         return "bg-amber-950/30 text-amber-400 border border-amber-800/30"
+      case "anulado":
+        return "bg-orange-950/30 text-orange-400 border border-orange-800/30"
       default:
         return "bg-slate-950/30 text-slate-400 border border-slate-800/30"
     }
@@ -633,6 +641,18 @@ export default function AdminLeadsPage() {
     }
   }
   
+  // Función para truncar texto y abrir modal
+  const truncateText = (text: string, maxLength: number = 50) => {
+    if (!text) return ""
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text
+  }
+  
+  // Función para abrir el modal de razón de anulación
+  const handleShowAnnulationReason = (reason: string) => {
+    setSelectedAnnulationReason(reason)
+    setShowAnnulationReasonModal(true)
+  }
+  
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -690,68 +710,58 @@ export default function AdminLeadsPage() {
             
             {/* Tarjetas de resumen */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Leads</p>
-                      <h3 className="mt-1 text-2xl font-bold">{totalLeads}</h3>
-                    </div>
-                    <div className="rounded-full bg-primary/10 p-2 text-primary">
-                      <User className="h-5 w-5" />
-                    </div>
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
+                <CardContent className="p-6 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
+                    <User className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Total Leads</p>
+                    <h3 className="mt-1 text-2xl font-bold text-blue-700 dark:text-blue-200">{totalLeads}</h3>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Por Aprobar</p>
-                      <h3 className="mt-1 text-2xl font-bold">{pendingApprovalCount}</h3>
-                    </div>
-                    <div className="rounded-full bg-yellow-500/10 p-2 text-yellow-500">
-                      <Clock className="h-5 w-5" />
-                    </div>
+              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/50 dark:to-yellow-900/50 border-yellow-200 dark:border-yellow-800">
+                <CardContent className="p-6 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-yellow-200 dark:bg-yellow-800 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-900 dark:text-yellow-100">Por Aprobar</p>
+                    <h3 className="mt-1 text-2xl font-bold text-yellow-700 dark:text-yellow-200">{pendingApprovalCount}</h3>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Aprobados</p>
-                      <h3 className="mt-1 text-2xl font-bold">{approvedCount}</h3>
-                    </div>
-                    <div className="rounded-full bg-green-500/10 p-2 text-green-500">
-                      <CheckCircle className="h-5 w-5" />
-                    </div>
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
+                <CardContent className="p-6 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
+                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-900 dark:text-green-100">Aprobados</p>
+                    <h3 className="mt-1 text-2xl font-bold text-green-700 dark:text-green-200">{approvedCount}</h3>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Desaprobados</p>
-                      <h3 className="mt-1 text-2xl font-bold">{disapprovedCount}</h3>
-                    </div>
-                    <div className="rounded-full bg-red-500/10 p-2 text-red-500">
-                      <XCircle className="h-5 w-5" />
-                    </div>
+              <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50 border-red-200 dark:border-red-800">
+                <CardContent className="p-6 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
+                    <XCircle className="h-5 w-5 text-red-600 dark:text-red-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-red-900 dark:text-red-100">Desaprobados</p>
+                    <h3 className="mt-1 text-2xl font-bold text-red-700 dark:text-red-200">{disapprovedCount}</h3>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Empleados</p>
-                      <h3 className="mt-1 text-2xl font-bold">{employees.length}</h3>
-                    </div>
-                    <div className="rounded-full bg-blue-500/10 p-2 text-blue-500">
-                      <Users className="h-5 w-5" />
-                    </div>
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800">
+                <CardContent className="p-6 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-purple-200 dark:bg-purple-800 flex items-center justify-center">
+                    <Users className="h-5 w-5 text-purple-600 dark:text-purple-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Empleados</p>
+                    <h3 className="mt-1 text-2xl font-bold text-purple-700 dark:text-purple-200">{employees.length}</h3>
                   </div>
                 </CardContent>
               </Card>
@@ -772,6 +782,10 @@ export default function AdminLeadsPage() {
                   <TabsTrigger value="disapproved" className="text-xs sm:text-sm whitespace-nowrap">
                     <XCircle className="mr-2 h-4 w-4" />
                     <span>Desaprobados</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="cancelled" className="text-xs sm:text-sm whitespace-nowrap">
+                    <Ban className="mr-2 h-4 w-4" />
+                    <span>Anulados</span>
                   </TabsTrigger>
                   <TabsTrigger value="employees" className="text-xs sm:text-sm whitespace-nowrap">
                     <Users className="mr-2 h-4 w-4" />
@@ -807,6 +821,7 @@ export default function AdminLeadsPage() {
                             <SelectItem value="rechazado">Rechazado</SelectItem>
                             <SelectItem value="asignado">Asignado</SelectItem>
                             <SelectItem value="convertido">Convertido</SelectItem>
+                            <SelectItem value="anulado">Anulado</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1479,6 +1494,148 @@ export default function AdminLeadsPage() {
                 </Card>
               </TabsContent>
               
+              {/* Contenido: Leads anulados */}
+              <TabsContent value="cancelled" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Leads Anulados</CardTitle>
+                    <CardDescription>
+                      Leads que han sido marcados como anulados por algún empleado
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[40px]">
+                              <Checkbox
+                                checked={filteredLeads.filter(lead => lead.status === 'anulado').length > 0 &&
+                                  filteredLeads.filter(lead => lead.status === 'anulado').every(lead =>
+                                    selectedLeads.includes(lead._id || "")
+                                  )}
+                                onCheckedChange={() => {
+                                  const cancelledLeads = filteredLeads.filter(lead => lead.status === 'anulado');
+                                  if (cancelledLeads.every(lead => selectedLeads.includes(lead._id || ""))) {
+                                    setSelectedLeads(prev => prev.filter(id =>
+                                      !cancelledLeads.some(lead => lead._id === id)
+                                    ));
+                                  } else {
+                                    setSelectedLeads(prev => [
+                                      ...prev,
+                                      ...cancelledLeads
+                                        .filter(lead => !selectedLeads.includes(lead._id || ""))
+                                        .map(lead => lead._id || "")
+                                    ]);
+                                  }
+                                }}
+                              />
+                            </TableHead>
+                            <TableHead>Nombre</TableHead>
+                            <TableHead>Contacto</TableHead>
+                            <TableHead>Fecha Anulación</TableHead>
+                            <TableHead>Razón</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {isLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="h-24 text-center">
+                                <div className="flex items-center justify-center">
+                                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                  <span className="ml-2">Cargando leads anulados...</span>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredLeads.filter(lead => lead.status === 'anulado').length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="h-24 text-center">
+                                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                                  <CheckCircle className="h-10 w-10 text-green-500" />
+                                  <h3 className="mt-4 text-lg font-medium">¡No hay leads anulados!</h3>
+                                  <p className="mt-2 text-sm text-muted-foreground">
+                                    No se han registrado leads en estado anulado.
+                                  </p>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredLeads.filter(lead => lead.status === 'anulado').map((lead) => (
+                              <TableRow key={lead._id} className={selectedLeads.includes(lead._id || "") ? "bg-primary/5" : ""}>
+                                <TableCell>
+                                  <Checkbox 
+                                    checked={selectedLeads.includes(lead._id || "")}
+                                    onCheckedChange={() => toggleSelectLead(lead._id || "")}
+                                    aria-label={`Seleccionar ${lead.firstName}`}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarFallback>{`${lead.firstName.charAt(0)}${lead.lastName?.charAt(0) || ""}`.toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <div className="font-medium">{`${lead.firstName} ${lead.lastName}`}</div>
+                                      {lead.company && <div className="text-xs text-muted-foreground">{lead.company}</div>}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col text-xs">
+                                    <span>{lead.email}</span>
+                                    {lead.phone && <span>{lead.phone}</span>}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {formatDate(lead.updatedAt)}
+                                </TableCell>
+                                <TableCell>
+                                  {(() => {
+                                    const reason = (lead as any).annulationReason || (lead as any).reason || "No especificada"
+                                    const truncatedReason = truncateText(reason, 50)
+                                    const isLong = reason.length > 50
+                                    
+                                    return (
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="bg-orange-50 text-orange-800">
+                                          {truncatedReason}
+                                        </Badge>
+                                        {isLong && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800"
+                                            onClick={() => handleShowAnnulationReason(reason)}
+                                          >
+                                            Ver más
+                                          </Button>
+                                        )}
+                                      </div>
+                                    )
+                                  })()}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => router.push(`/leads/${lead._id}`)}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
               {/* Contenido: Empleados y asignaciones */}
               <TabsContent value="employees">
                 <Card>
@@ -1653,7 +1810,7 @@ export default function AdminLeadsPage() {
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-4 animate-spin" />
                         Asignando...
                       </>
                     ) : (
@@ -1701,15 +1858,45 @@ export default function AdminLeadsPage() {
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-4 animate-spin" />
                         <span>Eliminando...</span>
                       </>
                     ) : (
                       <>
-                        <Trash2 className="mr-2 h-4 w-4" />
+                        <Trash2 className="mr-2 h-4" />
                         <span>Eliminar</span>
                       </>
                     )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            {/* Modal para mostrar la razón completa de anulación */}
+            <Dialog open={showAnnulationReasonModal} onOpenChange={setShowAnnulationReasonModal}>
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Ban className="h-5 w-5 text-orange-600" />
+                    Razón de Anulación
+                  </DialogTitle>
+                  <DialogDescription>
+                    Motivo detallado por el cual se anuló este lead
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                    <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
+                      {selectedAnnulationReason}
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    onClick={() => setShowAnnulationReasonModal(false)}
+                    className="w-full sm:w-auto"
+                  >
+                    Cerrar
                   </Button>
                 </DialogFooter>
               </DialogContent>

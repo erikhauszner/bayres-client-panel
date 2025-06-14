@@ -278,55 +278,47 @@ export default function ProjectsDashboard() {
 
       {/* Tarjetas de resumen */}
       <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
-        <Card className="netflix-card">
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Proyectos</p>
-                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalProjects}</h3>
-              </div>
-              <div className="rounded-full bg-primary/10 p-1 sm:p-2 text-primary">
-                <Briefcase className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
+              <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-300" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">Total Proyectos</p>
+              <h3 className="mt-1 text-lg sm:text-2xl font-bold text-blue-700 dark:text-blue-200">{totalProjects}</h3>
             </div>
           </CardContent>
         </Card>
-        <Card className="netflix-card">
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">En Progreso</p>
-                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{activeProjects}</h3>
-              </div>
-              <div className="rounded-full bg-blue-500/10 p-1 sm:p-2 text-blue-500">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
+        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50 border-amber-200 dark:border-amber-800">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-amber-200 dark:bg-amber-800 flex items-center justify-center">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-300" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100">En Progreso</p>
+              <h3 className="mt-1 text-lg sm:text-2xl font-bold text-amber-700 dark:text-amber-200">{activeProjects}</h3>
             </div>
           </CardContent>
         </Card>
-        <Card className="netflix-card">
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Completados</p>
-                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{completedProjects}</h3>
-              </div>
-              <div className="rounded-full bg-green-500/10 p-1 sm:p-2 text-green-500">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
+              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-300" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-green-900 dark:text-green-100">Completados</p>
+              <h3 className="mt-1 text-lg sm:text-2xl font-bold text-green-700 dark:text-green-200">{completedProjects}</h3>
             </div>
           </CardContent>
         </Card>
-        <Card className="netflix-card">
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Retrasados</p>
-                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{delayedProjects}</h3>
-              </div>
-              <div className="rounded-full bg-amber-500/10 p-1 sm:p-2 text-amber-500">
-                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50 border-red-200 dark:border-red-800">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-300" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-red-900 dark:text-red-100">Retrasados</p>
+              <h3 className="mt-1 text-lg sm:text-2xl font-bold text-red-700 dark:text-red-200">{delayedProjects}</h3>
             </div>
           </CardContent>
         </Card>

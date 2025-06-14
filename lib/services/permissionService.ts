@@ -26,10 +26,13 @@ export class PermissionService {
     const grouped: { [key: string]: Permission[] } = {}
     
     permissions.forEach(permission => {
-      if (!grouped[permission.module]) {
-        grouped[permission.module] = []
+      // Usar 'otros' como fallback para permisos sin módulo definido
+      const module = permission.module || 'otros'
+      
+      if (!grouped[module]) {
+        grouped[module] = []
       }
-      grouped[permission.module].push(permission)
+      grouped[module].push(permission)
     })
     
     return grouped

@@ -43,6 +43,15 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(null)
 
+    // Limpiar cualquier token potencialmente problemático antes de intentar login
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('tokenExpiry');
+      localStorage.removeItem('user');
+      localStorage.removeItem('permissions');
+      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    }
+
     // Si el servidor está offline, mostrar error y no intentar login
     if (serverStatus === 'offline') {
       setError('El servidor no está disponible. Por favor, inténtalo más tarde.');
@@ -128,6 +137,30 @@ function LoginContent({
   setServerStatus,
   handleSubmit
 }: LoginContentProps) {
+  
+  // Limpiar tokens potencialmente expirados al cargar la página de login
+  useEffect(() => {
+    // Limpiar tokens solo si hay errores relacionados con tokens en localStorage
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      const tokenExpiry = localStorage.getItem('tokenExpiry');
+      
+      if (token && tokenExpiry) {
+        const expiryTime = parseInt(tokenExpiry);
+        const currentTime = new Date().getTime();
+        
+        // Si el token está expirado o a punto de expirar (menos de 10 minutos), limpiarlo
+        if (currentTime > expiryTime - (10 * 60 * 1000)) {
+          console.log('🧹 Limpiando token potencialmente expirado al entrar a login');
+          localStorage.removeItem('token');
+          localStorage.removeItem('tokenExpiry');
+          localStorage.removeItem('user');
+          localStorage.removeItem('permissions');
+          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        }
+      }
+    }
+  }, []);
   
   // Verificar si el servidor está disponible al cargar la página
   useEffect(() => {

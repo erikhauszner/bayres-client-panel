@@ -151,40 +151,40 @@ export default function EmployeesPanel() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="netflix-card">
-          <CardContent className="pt-6 p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Total Empleados</p>
-                <p className="text-xl sm:text-2xl font-bold">{totalEmployees}</p>
-              </div>
-              <Users className="w-8 h-8 text-gray-400" />
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
+          <CardContent className="pt-6 p-4 sm:p-6 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Total Empleados</p>
+              <p className="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-200">{totalEmployees}</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="netflix-card">
-          <CardContent className="pt-6 p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Empleados Activos</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {(employees || []).filter(e => e?.isActive).length}
-                </p>
-              </div>
-              <CheckCircle2 className="w-8 h-8 text-green-400" />
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
+          <CardContent className="pt-6 p-4 sm:p-6 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-300" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-green-900 dark:text-green-100">Empleados Activos</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-200">
+                {(employees || []).filter(e => e?.isActive).length}
+              </p>
             </div>
           </CardContent>
         </Card>
-        <Card className="netflix-card">
-          <CardContent className="pt-6 p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Empleados Inactivos</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {(employees || []).filter(e => !e?.isActive).length}
-                </p>
-              </div>
-              <XCircle className="w-8 h-8 text-red-400" />
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50 border-red-200 dark:border-red-800">
+          <CardContent className="pt-6 p-4 sm:p-6 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
+              <XCircle className="w-5 h-5 text-red-600 dark:text-red-300" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-red-900 dark:text-red-100">Empleados Inactivos</p>
+              <p className="text-xl sm:text-2xl font-bold text-red-700 dark:text-red-200">
+                {(employees || []).filter(e => !e?.isActive).length}
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -16,8 +16,8 @@ const nextConfig = {
   // Configurar proxy para archivos estáticos
   async rewrites() {
     // Asegurar que siempre hay un valor válido para UPLOADS_URL
-    //const uploadsUrl = process.env.NEXT_PUBLIC_UPLOADS_URL || 'https://api.bayreshub.com/uploads';
-    const uploadsUrl = process.env.NEXT_PUBLIC_UPLOADS_URL || 'https://localhost:3000/uploads';
+    const uploadsUrl = process.env.NEXT_PUBLIC_UPLOADS_URL || 'https://api.bayreshub.com/uploads';
+    //const uploadsUrl = process.env.NEXT_PUBLIC_UPLOADS_URL || 'https://localhost:3000/uploads';
  
     return [
       {

@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, UserCircle, Briefcase, Settings, Menu, X, ChevronRight, BookOpen, DollarSign, Activity, UserCheck, Smartphone } from "lucide-react"
+import { LayoutDashboard, Users, UserCircle, Briefcase, Settings, Menu, X, ChevronRight, BookOpen, DollarSign, Activity, UserCheck, Smartphone, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -17,10 +17,11 @@ import { BreakToggle } from "@/components/ui/break-toggle"
 const routePermissions: Record<string, string> = {
   "/dashboard": "dashboard:view_tab",
   "/leads": "leads:view_tab",
+  "/oportunidades": "opportunities:view_tab",
   "/clientes": "clients:view_tab",
   "/proyectos": "projects:view_tab",
   "/finanzas": "finances:view_tab",
-  "/admin/app": "apps:view_tab",
+  "/admin/automatizaciones": "automations:view_tab",
   "/empleados": "employees:view_tab",
   "/admin/leads": "leads:view_admin_tab",
   "/monitoreo": "metrics:view_tab",
@@ -155,6 +156,13 @@ export default function Sidebar() {
                 permission="leads:view_tab"
               />
               <NavItem 
+                href="/oportunidades" 
+                icon={<Target className="h-4 w-4" />} 
+                title="Oportunidades" 
+                collapsed={collapsed} 
+                permission="opportunities:view_tab"
+              />
+              <NavItem 
                 href="/clientes" 
                 icon={<Users className="h-4 w-4" />} 
                 title="Clientes" 
@@ -176,11 +184,11 @@ export default function Sidebar() {
                 permission="finances:view_tab"
               />
               <NavItem 
-                href="/admin/app" 
+                href="/admin/automatizaciones" 
                 icon={<Smartphone className="h-4 w-4" />} 
-                title="Apps" 
+                title="Automatizaciones" 
                 collapsed={collapsed}
-                permission="apps:view_tab"
+                permission="automations:view_tab"
               />
             </div>
           </div>

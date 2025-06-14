@@ -218,7 +218,7 @@ const AuditTab: React.FC<AuditTabProps> = ({ onRefresh }) => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
                 <CardContent className="p-4 flex flex-col items-center justify-center space-y-2">
                   <div className="bg-primary/20 p-3 rounded-full">
                     <List className="h-8 w-8 text-primary" />
@@ -231,7 +231,7 @@ const AuditTab: React.FC<AuditTabProps> = ({ onRefresh }) => {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/50 dark:to-indigo-900/50 border-indigo-200 dark:border-indigo-800">
                 <CardContent className="p-4 flex flex-col items-center justify-center space-y-2">
                   <div className="bg-blue-500/20 p-3 rounded-full">
                     <UserCheck className="h-8 w-8 text-blue-500" />
@@ -244,7 +244,7 @@ const AuditTab: React.FC<AuditTabProps> = ({ onRefresh }) => {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
                 <CardContent className="p-4 flex flex-col items-center justify-center space-y-2">
                   <div className="bg-green-500/20 p-3 rounded-full">
                     <CheckCircle2 className="h-8 w-8 text-green-500" />
@@ -257,7 +257,7 @@ const AuditTab: React.FC<AuditTabProps> = ({ onRefresh }) => {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 border-orange-200 dark:border-orange-800">
                 <CardContent className="p-4 flex flex-col items-center justify-center space-y-2">
                   <div className="bg-orange-500/20 p-3 rounded-full">
                     <Info className="h-8 w-8 text-orange-500" />

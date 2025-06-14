@@ -92,23 +92,83 @@ interface EmployeeActivityTabProps {
 
 const EmployeeActivityTab: React.FC<EmployeeActivityTabProps> = ({ onRefresh }) => {
   const [monitoredEmployees, setMonitoredEmployees] = useState<MonitoredEmployee[]>([]);
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [totalOnlineEmployees, setTotalOnlineEmployees] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showAllEmployees, setShowAllEmployees] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
 
   // Carga los datos de monitoreo de empleados
   useEffect(() => {
-    fetchEmployeeStatus();
+    // En la carga inicial, obtenemos todos los empleados para tener el conteo correcto
+    // pero solo mostramos los primeros 10
+    fetchInitialData();
   }, []);
 
-  const fetchEmployeeStatus = async () => {
+  // Función para cargar datos iniciales con conteo correcto
+  const fetchInitialData = async () => {
     try {
       setIsLoading(true);
-      // Obtener empleados de la API
-      const employeesResponse = await EmployeeService.getEmployees({} as EmployeeFilters);
+      
+      // Primero obtenemos todos los empleados para el conteo total
+      const allEmployeesResponse = await EmployeeService.getEmployees({ limit: 1000 });
+      const allEmployees = allEmployeesResponse.data || [];
+      setTotalEmployees(allEmployeesResponse.total || 0);
+      
+      // Obtenemos los estados de todos los empleados
+      const statusesResponse = await EmployeeStatusService.getAllEmployeesStatus();
+      const statuses = statusesResponse || [];
+      
+      console.log("fetchInitialData - Todos los empleados:", allEmployees.length);
+      console.log("fetchInitialData - Estados obtenidos:", statuses.length);
+      
+      // Calculamos el total de empleados en línea usando la MISMA lógica que la tabla
+      let totalOnline = 0;
+      allEmployees.forEach(employee => {
+        const status = statuses.find(s => s._id === employee._id);
+        const employeeStatus = status?.status || 'offline';
+        const isOnlineByStatus = employeeStatus === 'online';
+        const isOnlineByFlag = status?.isOnline || false;
+        
+        console.log(`Empleado ${employee.firstName} ${employee.lastName}: status=${employeeStatus}, isOnline=${isOnlineByFlag}`);
+        
+        // Usar la misma lógica que usa la tabla: si el status es 'online', entonces está en línea
+        if (employeeStatus === 'online') {
+          totalOnline++;
+        }
+      });
+      
+      console.log("fetchInitialData - Total empleados en línea calculado:", totalOnline);
+      setTotalOnlineEmployees(totalOnline);
+      
+      // Ahora cargamos solo los primeros 10 para mostrar (sin recalcular el total online)
+      await fetchEmployeeStatusForDisplay(false);
+    } catch (error) {
+      console.error("Error al cargar datos iniciales:", error);
+      setIsLoading(false);
+    }
+  };
+
+  // Función para cargar empleados para mostrar (sin recalcular totales globales)
+  const fetchEmployeeStatusForDisplay = async (loadAll: boolean = false) => {
+    try {
+      setIsLoading(true);
+      // Obtener empleados de la API - si loadAll es true, obtenemos todos sin límite
+      const filters: EmployeeFilters = loadAll ? { limit: 1000 } : { limit: 10, page: currentPage };
+      const employeesResponse = await EmployeeService.getEmployees(filters);
       const employees = employeesResponse.data || [];
+      
+      // Guardar información de paginación solo si no tenemos el total ya
+      if (!totalEmployees) {
+        setTotalEmployees(employeesResponse.total || 0);
+      }
+      setTotalPages(employeesResponse.pages || 1);
+      
       // Obtener estados de los empleados
       const statusesResponse = await EmployeeStatusService.getAllEmployeesStatus();
       const statuses = statusesResponse || [];
@@ -166,6 +226,10 @@ const EmployeeActivityTab: React.FC<EmployeeActivityTabProps> = ({ onRefresh }) 
       });
 
       setMonitoredEmployees(monitored);
+      // Solo actualizamos el total de empleados online si estamos cargando todos los empleados
+      if (loadAll) {
+        setTotalOnlineEmployees(monitored.filter(emp => emp.isOnline).length);
+      }
       setIsLoading(false);
     } catch (error) {
       console.error("Error al cargar los datos de monitoreo:", error);
@@ -174,10 +238,25 @@ const EmployeeActivityTab: React.FC<EmployeeActivityTabProps> = ({ onRefresh }) 
     }
   };
 
+  const fetchEmployeeStatus = async (loadAll: boolean = false) => {
+    await fetchEmployeeStatusForDisplay(loadAll);
+  };
+
   // Función para manejar el refresco de datos
   const handleLocalRefresh = () => {
-    fetchEmployeeStatus();
+    if (showAllEmployees) {
+      fetchEmployeeStatus(true);
+    } else {
+      // Si no estamos mostrando todos, refrescamos con la lógica inicial completa
+      fetchInitialData();
+    }
     if (onRefresh) onRefresh();
+  };
+
+  // Función para manejar el botón "Ver Todos"
+  const handleViewAll = () => {
+    setShowAllEmployees(true);
+    fetchEmployeeStatus(true);
   };
 
   // Formato de fecha/hora para lastLogin
@@ -318,7 +397,7 @@ const EmployeeActivityTab: React.FC<EmployeeActivityTabProps> = ({ onRefresh }) 
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Resumen de actividad */}
-        <Card>
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
           <CardContent className="p-6 flex flex-col items-center justify-center space-y-2">
             <div className="bg-green-500/20 p-3 rounded-full">
               <UserCheck className="h-8 w-8 text-green-500" />
@@ -328,13 +407,13 @@ const EmployeeActivityTab: React.FC<EmployeeActivityTabProps> = ({ onRefresh }) 
                 Empleados En Línea
               </p>
               <p className="text-3xl font-bold">
-                {monitoredEmployees.filter(emp => emp.isOnline).length}
+                {totalOnlineEmployees}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50 border-amber-200 dark:border-amber-800">
           <CardContent className="p-6 flex flex-col items-center justify-center space-y-2">
             <div className="bg-amber-500/20 p-3 rounded-full">
               <Timer className="h-8 w-8 text-amber-500" />
@@ -359,7 +438,7 @@ const EmployeeActivityTab: React.FC<EmployeeActivityTabProps> = ({ onRefresh }) 
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
           <CardContent className="p-6 flex flex-col items-center justify-center space-y-2">
             <div className="bg-blue-500/20 p-3 rounded-full">
               <Zap className="h-8 w-8 text-blue-500" />
@@ -378,7 +457,7 @@ const EmployeeActivityTab: React.FC<EmployeeActivityTabProps> = ({ onRefresh }) 
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800">
           <CardContent className="p-6 flex flex-col items-center justify-center space-y-2">
             <div className="bg-purple-500/20 p-3 rounded-full">
               <CheckCircle2 className="h-8 w-8 text-purple-500" />
@@ -467,7 +546,10 @@ const EmployeeActivityTab: React.FC<EmployeeActivityTabProps> = ({ onRefresh }) 
             Empleados Monitoreados
           </CardTitle>
           <CardDescription>
-            {filteredEmployees.length} empleados encontrados
+            {showAllEmployees 
+              ? `${filteredEmployees.length} de ${totalEmployees} empleados encontrados`
+              : `Mostrando ${filteredEmployees.length} de ${totalEmployees} empleados`
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -587,9 +669,20 @@ const EmployeeActivityTab: React.FC<EmployeeActivityTabProps> = ({ onRefresh }) 
             <Button variant="outline" size="sm" className="mr-2">
               Exportar
             </Button>
-            <Button size="sm">
-              Ver Todos
-            </Button>
+            {!showAllEmployees && totalEmployees > 10 && (
+              <Button size="sm" onClick={handleViewAll}>
+                Ver Todos ({totalEmployees})
+              </Button>
+            )}
+            {showAllEmployees && (
+              <Button size="sm" variant="outline" onClick={() => {
+                setShowAllEmployees(false);
+                setCurrentPage(1);
+                fetchEmployeeStatus(false);
+              }}>
+                Mostrar Menos
+              </Button>
+            )}
           </div>
         </CardFooter>
       </Card>

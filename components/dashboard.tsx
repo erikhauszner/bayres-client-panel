@@ -16,6 +16,8 @@ import {
   AlertCircle,
   CheckCircle,
   UserPlus,
+  Star,
+  Activity,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,17 +28,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
 import UpcomingNotifications from "./upcoming-notifications"
 import RecentActivity from "./recent-activity"
-import api from "@/lib/api"
-import { EmployeeStatusService } from "@/lib/services/employeeStatusService"
+import { dashboardService, DashboardStats as DashboardStatsApi } from "@/lib/services/dashboard.service"
 import { useHasPermission } from "@/hooks/useHasPermission"
 
-interface DashboardStats {
-  employeesOnline: number
-  assignedLeads: number
-  pendingTasks: number
-  leadsToReview: number
-  leadsToAssign: number
-}
+type DashboardStats = DashboardStatsApi
 
 export default function Dashboard() {
   const [isLoaded, setIsLoaded] = useState(false)
@@ -45,7 +40,9 @@ export default function Dashboard() {
     assignedLeads: 0,
     pendingTasks: 0,
     leadsToReview: 0,
-    leadsToAssign: 0
+    leadsToAssign: 0,
+    myOpportunities: 0,
+    activeOpportunities: 0
   })
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -58,6 +55,8 @@ export default function Dashboard() {
   const canViewProximasNotificaciones = useHasPermission("dashboard:proximas_notificaciones")
   const canViewLeadsPorRevisar = useHasPermission("dashboard:leads_por_revisar")
   const canViewLeadsPorAsignar = useHasPermission("dashboard:leads_por_asignar")
+  const canViewMisOportunidades = useHasPermission("dashboard:mis_oportunidades")
+  const canViewOportunidadesActivas = useHasPermission("dashboard:oportunidades_activas")
 
   useEffect(() => {
     setIsLoaded(true)
@@ -67,67 +66,10 @@ export default function Dashboard() {
   const loadDashboardStats = async () => {
     try {
       setLoading(true)
-      
-      // Obtener información del empleado actual
-      const currentUser = await api.get('/auth/me')
-      const currentEmployeeId = currentUser.data._id
-      
-      // Cargar estadísticas en paralelo (por ahora solo empleados online funcionará completamente)
-      const [employeesData] = await Promise.all([
-        EmployeeStatusService.getAllEmployeesStatus(), // Usar el servicio existente
-      ])
-
-      // Contar empleados online
-      const onlineCount = employeesData.filter((emp: any) => emp.status === 'online').length
-
-      // Para leads y tareas, vamos a obtener todos y filtrar en el frontend por ahora
-      try {
-        const leadsResponse = await api.get('/leads', { params: { assignedTo: currentEmployeeId, limit: 1000 } })
-        const assignedLeads = leadsResponse.data.total || leadsResponse.data.data?.length || 0
-        
-        setStats(prev => ({ ...prev, assignedLeads }))
-      } catch (error) {
-        console.error('Error cargando leads:', error)
-      }
-
-      try {
-        const tasksResponse = await api.get('/tasks')
-        // Filtrar tareas asignadas al usuario actual y pendientes en el frontend
-        const allTasks = tasksResponse.data || []
-        const userTasks = allTasks.filter((task: any) => 
-          task.assignedTo && task.assignedTo._id === currentEmployeeId &&
-          (task.status === 'pending' || task.status === 'in_progress' || !task.status)
-        )
-        
-        setStats(prev => ({ ...prev, pendingTasks: userTasks.length }))
-      } catch (error) {
-        console.error('Error cargando tareas:', error)
-      }
-
-      // Cargar leads por revisar (pendientes de aprobación)
-      try {
-        const leadsToReviewResponse = await api.get('/leads', { params: { status: 'pending', limit: 1000 } })
-        const leadsToReview = leadsToReviewResponse.data.total || leadsToReviewResponse.data.data?.length || 0
-        
-        setStats(prev => ({ ...prev, leadsToReview }))
-      } catch (error) {
-        console.error('Error cargando leads por revisar:', error)
-      }
-
-      // Cargar leads por asignar (aprobados sin asignar)
-      try {
-        const leadsToAssignResponse = await api.get('/leads', { params: { status: 'approved', assignedTo: null, limit: 1000 } })
-        const leadsToAssign = leadsToAssignResponse.data.total || leadsToAssignResponse.data.data?.length || 0
-        
-        setStats(prev => ({ ...prev, leadsToAssign }))
-      } catch (error) {
-        console.error('Error cargando leads por asignar:', error)
-      }
-
-      setStats(prev => ({ ...prev, employeesOnline: onlineCount }))
+      const data = await dashboardService.getStats()
+      setStats(data)
     } catch (error) {
       console.error('Error cargando estadísticas del dashboard:', error)
-      // Mantener valores por defecto en caso de error
     } finally {
       setLoading(false)
     }
@@ -160,23 +102,21 @@ export default function Dashboard() {
         
         if (canViewEmpleadosOnline) {
           visibleCards.push(
-            <Card key="empleados-online">
-              <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-4">
-                <CardTitle className="text-xs sm:text-sm font-medium">Empleados Online</CardTitle>
-                <Wifi className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
-              </CardHeader>
-              <CardContent className="pb-3 sm:pb-4 pt-0 px-3 sm:px-4">
-                <div className="text-lg sm:text-2xl font-bold">
+            <Card key="empleados-online" className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
+                  <Wifi className="h-5 w-5 text-green-600 dark:text-green-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-green-900 dark:text-green-100">Empleados Online</p>
                   {loading ? (
-                    <div className="animate-pulse bg-muted rounded h-6 w-8"></div>
+                    <div className="animate-pulse bg-green-300 dark:bg-green-700 rounded h-6 w-8"></div>
                   ) : (
-                    stats.employeesOnline
+                    <p className="text-lg font-bold text-green-700 dark:text-green-200">
+                      {stats.employeesOnline}
+                    </p>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">
-                  <TrendingUp className="mr-1 h-3 w-3 sm:h-4 sm:w-4 text-green-500 inline" />
-                  Conectados ahora
-                </p>
               </CardContent>
             </Card>
           )
@@ -184,23 +124,21 @@ export default function Dashboard() {
         
         if (canViewLeadsAsignados) {
           visibleCards.push(
-            <Card key="leads-asignados">
-              <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-4">
-                <CardTitle className="text-xs sm:text-sm font-medium">Leads Asignados</CardTitle>
-                <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500" />
-              </CardHeader>
-              <CardContent className="pb-3 sm:pb-4 pt-0 px-3 sm:px-4">
-                <div className="text-lg sm:text-2xl font-bold">
+            <Card key="leads-asignados" className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50 border-amber-200 dark:border-amber-800">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-amber-200 dark:bg-amber-800 flex items-center justify-center">
+                  <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-amber-900 dark:text-amber-100">Leads Asignados</p>
                   {loading ? (
-                    <div className="animate-pulse bg-muted rounded h-6 w-8"></div>
+                    <div className="animate-pulse bg-amber-300 dark:bg-amber-700 rounded h-6 w-8"></div>
                   ) : (
-                    stats.assignedLeads
+                    <p className="text-lg font-bold text-amber-700 dark:text-amber-200">
+                      {stats.assignedLeads}
+                    </p>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">
-                  <TrendingUp className="mr-1 h-3 w-3 sm:h-4 sm:w-4 text-amber-500 inline" />
-                  Asignados a ti
-                </p>
               </CardContent>
             </Card>
           )
@@ -208,23 +146,21 @@ export default function Dashboard() {
         
         if (canViewTareasPendientes) {
           visibleCards.push(
-            <Card key="tareas-pendientes">
-              <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-4">
-                <CardTitle className="text-xs sm:text-sm font-medium">Tareas Pendientes</CardTitle>
-                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" />
-              </CardHeader>
-              <CardContent className="pb-3 sm:pb-4 pt-0 px-3 sm:px-4">
-                <div className="text-lg sm:text-2xl font-bold">
+            <Card key="tareas-pendientes" className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50 border-red-200 dark:border-red-800">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-red-600 dark:text-red-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-red-900 dark:text-red-100">Tareas Pendientes</p>
                   {loading ? (
-                    <div className="animate-pulse bg-muted rounded h-6 w-8"></div>
+                    <div className="animate-pulse bg-red-300 dark:bg-red-700 rounded h-6 w-8"></div>
                   ) : (
-                    stats.pendingTasks
+                    <p className="text-lg font-bold text-red-700 dark:text-red-200">
+                      {stats.pendingTasks}
+                    </p>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">
-                  <TrendingUp className="mr-1 h-3 w-3 sm:h-4 sm:w-4 text-red-500 inline" />
-                  Vencen esta semana
-                </p>
               </CardContent>
             </Card>
           )
@@ -232,23 +168,21 @@ export default function Dashboard() {
         
         if (canViewLeadsPorRevisar) {
           visibleCards.push(
-            <Card key="leads-por-revisar" className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/admin/leads/aprobar')}>
-              <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-4">
-                <CardTitle className="text-xs sm:text-sm font-medium">Leads por Revisar</CardTitle>
-                <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
-              </CardHeader>
-              <CardContent className="pb-3 sm:pb-4 pt-0 px-3 sm:px-4">
-                <div className="text-lg sm:text-2xl font-bold">
+            <Card key="leads-por-revisar" className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800 cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/admin/leads/aprobar')}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Leads por Revisar</p>
                   {loading ? (
-                    <div className="animate-pulse bg-muted rounded h-6 w-8"></div>
+                    <div className="animate-pulse bg-blue-300 dark:bg-blue-700 rounded h-6 w-8"></div>
                   ) : (
-                    stats.leadsToReview
+                    <p className="text-lg font-bold text-blue-700 dark:text-blue-200">
+                      {stats.leadsToReview}
+                    </p>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">
-                  <TrendingUp className="mr-1 h-3 w-3 sm:h-4 sm:w-4 text-blue-500 inline" />
-                  Pendientes de aprobación
-                </p>
               </CardContent>
             </Card>
           )
@@ -256,23 +190,65 @@ export default function Dashboard() {
         
         if (canViewLeadsPorAsignar) {
           visibleCards.push(
-            <Card key="leads-por-asignar" className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/admin/leads/asignar')}>
-              <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-4">
-                <CardTitle className="text-xs sm:text-sm font-medium">Leads por Asignar</CardTitle>
-                <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-500" />
-              </CardHeader>
-              <CardContent className="pb-3 sm:pb-4 pt-0 px-3 sm:px-4">
-                <div className="text-lg sm:text-2xl font-bold">
+            <Card key="leads-por-asignar" className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800 cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/admin/leads/asignar')}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-purple-200 dark:bg-purple-800 flex items-center justify-center">
+                  <UserPlus className="h-5 w-5 text-purple-600 dark:text-purple-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Leads por Asignar</p>
                   {loading ? (
-                    <div className="animate-pulse bg-muted rounded h-6 w-8"></div>
+                    <div className="animate-pulse bg-purple-300 dark:bg-purple-700 rounded h-6 w-8"></div>
                   ) : (
-                    stats.leadsToAssign
+                    <p className="text-lg font-bold text-purple-700 dark:text-purple-200">
+                      {stats.leadsToAssign}
+                    </p>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">
-                  <TrendingUp className="mr-1 h-3 w-3 sm:h-4 sm:w-4 text-purple-500 inline" />
-                  Aprobados sin asignar
-                </p>
+              </CardContent>
+            </Card>
+          )
+        }
+        
+        if (canViewMisOportunidades) {
+          visibleCards.push(
+            <Card key="mis-oportunidades" className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/50 dark:to-yellow-900/50 border-yellow-200 dark:border-yellow-800 cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/oportunidades')}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-yellow-200 dark:bg-yellow-800 flex items-center justify-center">
+                  <Star className="h-5 w-5 text-yellow-600 dark:text-yellow-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-yellow-900 dark:text-yellow-100">Mis Oportunidades</p>
+                  {loading ? (
+                    <div className="animate-pulse bg-yellow-300 dark:bg-yellow-700 rounded h-6 w-8"></div>
+                  ) : (
+                    <p className="text-lg font-bold text-yellow-700 dark:text-yellow-200">
+                      {stats.myOpportunities}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        }
+        
+        if (canViewOportunidadesActivas) {
+          visibleCards.push(
+            <Card key="oportunidades-activas" className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50 border-emerald-200 dark:border-emerald-800 cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/oportunidades')}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-emerald-200 dark:bg-emerald-800 flex items-center justify-center">
+                  <Activity className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">Oportunidades Activas</p>
+                  {loading ? (
+                    <div className="animate-pulse bg-emerald-300 dark:bg-emerald-700 rounded h-6 w-8"></div>
+                  ) : (
+                    <p className="text-lg font-bold text-emerald-700 dark:text-emerald-200">
+                      {stats.activeOpportunities}
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           )
@@ -282,7 +258,9 @@ export default function Dashboard() {
                             : visibleCards.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-2xl'
                             : visibleCards.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
                             : visibleCards.length === 4 ? 'grid-cols-2 lg:grid-cols-4'
-                            : 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+                            : visibleCards.length === 5 ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+                            : visibleCards.length === 6 ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'
+                            : 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
         
         return (
           <div className={`grid gap-2 sm:gap-4 ${gridColsClass}`}>

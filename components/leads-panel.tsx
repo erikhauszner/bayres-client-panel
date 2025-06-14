@@ -18,7 +18,6 @@ import {
   AlertCircle,
   Loader2,
   Plus,
-  Building2,
   Pencil,
   UserMinus,
   FileSpreadsheet
@@ -160,31 +159,7 @@ export default function LeadsPanel() {
     }
   }
 
-  const handleConvertToPersonalClient = async (leadId: string | undefined) => {
-    if (!leadId) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se puede convertir un lead sin ID"
-      });
-      return;
-    }
 
-    router.push(`/leads/${leadId}/convertir`);
-  };
-
-  const handleConvertToBusinessClient = async (leadId: string | undefined) => {
-    if (!leadId) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se puede convertir un lead sin ID"
-      });
-      return;
-    }
-
-    router.push(`/leads/${leadId}/convertir`);
-  };
 
   const toggleSelectLead = (id: string) => {
     setSelectedLeads((prev) => (prev.includes(id) ? prev.filter((leadId) => leadId !== id) : [...prev, id]))
@@ -280,55 +255,47 @@ export default function LeadsPanel() {
 
       {/* Tarjetas de resumen */}
       <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Leads</p>
-                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalLeads}</h3>
-              </div>
-              <div className="rounded-full bg-primary/10 p-1 sm:p-2 text-primary">
-                <User className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
+              <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-300" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">Total Leads</p>
+              <h3 className="mt-1 text-lg sm:text-2xl font-bold text-blue-700 dark:text-blue-200">{totalLeads}</h3>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Nuevos</p>
-                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalNewLeads}</h3>
-              </div>
-              <div className="rounded-full bg-blue-500/10 p-1 sm:p-2 text-blue-500">
-                <User className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50 border-emerald-200 dark:border-emerald-800">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-emerald-200 dark:bg-emerald-800 flex items-center justify-center">
+              <User className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-300" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Nuevos</p>
+              <h3 className="mt-1 text-lg sm:text-2xl font-bold text-emerald-700 dark:text-emerald-200">{totalNewLeads}</h3>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">En Proceso</p>
-                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalInProcessLeads}</h3>
-              </div>
-              <div className="rounded-full bg-purple-500/10 p-1 sm:p-2 text-purple-500">
-                <User className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-purple-200 dark:bg-purple-800 flex items-center justify-center">
+              <User className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 dark:text-purple-300" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-purple-900 dark:text-purple-100">En Proceso</p>
+              <h3 className="mt-1 text-lg sm:text-2xl font-bold text-purple-700 dark:text-purple-200">{totalInProcessLeads}</h3>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Calificados</p>
-                <h3 className="mt-1 text-lg sm:text-2xl font-bold">{totalQualifiedLeads}</h3>
-              </div>
-              <div className="rounded-full bg-green-500/10 p-1 sm:p-2 text-green-500">
-                <User className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
+              <User className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-300" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-green-900 dark:text-green-100">Calificados</p>
+              <h3 className="mt-1 text-lg sm:text-2xl font-bold text-green-700 dark:text-green-200">{totalQualifiedLeads}</h3>
             </div>
           </CardContent>
         </Card>
@@ -528,20 +495,7 @@ export default function LeadsPanel() {
                               <Edit className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               <span>Editar</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleConvertToPersonalClient(lead._id)}
-                              className="text-xs sm:text-sm"
-                            >
-                              <User className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                              <span>Convertir a Cliente Personal</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleConvertToBusinessClient(lead._id)}
-                              className="text-xs sm:text-sm"
-                            >
-                              <Building2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                              <span>Convertir a Cliente Empresa</span>
-                            </DropdownMenuItem>
+
                             <DropdownMenuItem
                               onClick={() => handleDelete(lead._id || "")}
                               className="text-red-600 text-xs sm:text-sm"

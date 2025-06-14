@@ -179,12 +179,32 @@ class LeadService {
     }
   }
 
+  async updateTaskStatus(leadId: string, taskId: string, status: string): Promise<Lead> {
+    try {
+      const response = await api.put<Lead>(`/leads/${leadId}/tasks/${taskId}/status`, { status });
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating task status ${taskId} for lead with ID ${leadId}:`, error);
+      throw error;
+    }
+  }
+
   async deleteTask(leadId: string, taskId: string): Promise<Lead> {
     try {
       const response = await api.delete<Lead>(`/leads/${leadId}/tasks/${taskId}`);
       return response.data;
     } catch (error) {
       console.error(`Error deleting task ${taskId} for lead with ID ${leadId}:`, error);
+      throw error;
+    }
+  }
+
+  async assignTask(leadId: string, taskId: string, assignedTo: string | null): Promise<Lead> {
+    try {
+      const response = await api.put<Lead>(`/leads/${leadId}/tasks/${taskId}/assign`, { assignedTo });
+      return response.data;
+    } catch (error) {
+      console.error(`Error assigning task ${taskId} for lead with ID ${leadId}:`, error);
       throw error;
     }
   }
@@ -230,9 +250,9 @@ class LeadService {
   }
 
   // Métodos para gestionar notas
-  async addNote(id: string, note: string): Promise<Lead> {
+  async addNote(id: string, content: string): Promise<Lead> {
     try {
-      const response = await api.post<Lead>(`/leads/${id}/notes`, { notes: note });
+      const response = await api.post<Lead>(`/leads/${id}/notes`, { content });
       return response.data;
     } catch (error) {
       console.error(`Error adding note to lead with ID ${id}:`, error);
@@ -240,9 +260,9 @@ class LeadService {
     }
   }
 
-  async updateNote(id: string, note: string): Promise<Lead> {
+  async updateNote(id: string, noteId: string, content: string): Promise<Lead> {
     try {
-      const response = await api.put<Lead>(`/leads/${id}/notes`, { notes: note });
+      const response = await api.put<Lead>(`/leads/${id}/notes/${noteId}`, { content });
       return response.data;
     } catch (error) {
       console.error(`Error updating note for lead with ID ${id}:`, error);
@@ -250,9 +270,9 @@ class LeadService {
     }
   }
 
-  async deleteNote(id: string): Promise<Lead> {
+  async deleteNote(id: string, noteId: string): Promise<Lead> {
     try {
-      const response = await api.delete<Lead>(`/leads/${id}/notes`);
+      const response = await api.delete<Lead>(`/leads/${id}/notes/${noteId}`);
       return response.data;
     } catch (error) {
       console.error(`Error deleting note for lead with ID ${id}:`, error);
@@ -295,6 +315,16 @@ class LeadService {
     } catch (error) {
       console.error(`Error fetching leads count for employee ${employeeId}:`, error);
       return 0; // En caso de error, devolver 0 como fallback
+    }
+  }
+
+  async annulLead(id: string, reason: string): Promise<{ message: string; lead: Lead }> {
+    try {
+      const response = await api.put<{ message: string; lead: Lead }>(`/leads/${id}/annul`, { reason });
+      return response.data;
+    } catch (error) {
+      console.error(`Error annulling lead with ID ${id}:`, error);
+      throw error;
     }
   }
 }

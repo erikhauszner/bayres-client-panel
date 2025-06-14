@@ -79,10 +79,27 @@ export interface Lead {
   }[];
 
   // Información Adicional
-  notes?: string;
+  notes?: {
+    _id?: string;
+    content: string;
+    createdAt: Date;
+    user: Employee | string;
+  }[];
   attachments?: string[];
   interactionHistory?: LeadInteraction[];
   tasks?: LeadTask[];
+  followUps?: {
+    _id?: string;
+    title: string;
+    description?: string;
+    scheduledDate: string;
+    status: 'pendiente' | 'completado' | 'cancelado';
+    createdBy: {
+      firstName: string;
+      lastName: string;
+    };
+    createdAt: string;
+  }[];
   documents?: LeadDocument[];
   lastActivity?: Date;
   nextContactDate?: Date;
@@ -96,6 +113,16 @@ export interface Lead {
   createdBy?: Employee | string;
   createdAt?: Date;
   updatedAt?: Date;
+
+  // Campos de anulación
+  annulationReason?: string;
+  annulationDate?: Date;
+  annulatedBy?: Employee | string;
+
+  // Campos para Oportunidades
+  canMoveToSales?: boolean;
+  movedToOpportunities?: boolean;
+  opportunityId?: string;
 }
 
 export interface LeadFilters {
@@ -153,8 +180,9 @@ export interface LeadTask {
   title: string;
   description?: string;
   dueDate: Date;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pendiente' | 'en_progreso' | 'completada' | 'cancelada';
   priority: 'baja' | 'media' | 'alta';
+  assignedTo?: Employee | string;
   user?: Employee | string;
   createdAt?: Date;
 }

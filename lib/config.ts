@@ -13,7 +13,7 @@ function getRequiredEnvVar(name: string): string {
       'NEXT_PUBLIC_WEBHOOK_URL': 'https://api.bayreshub.com/external/',
       'NEXT_PUBLIC_NOTIFICATIONS_URL': 'https://api.bayreshub.com/notifications',
       'NEXT_PUBLIC_HEALTH_CHECK_URL': 'https://api.bayreshub.com/health',
-      'NEXT_PUBLIC_UPLOADS_URL': 'https://api.bayreshub.com/uploads',
+     'NEXT_PUBLIC_UPLOADS_URL': 'https://api.bayreshub.com/uploads',
 //      'NEXT_PUBLIC_API_URL': 'http://localhost:3000/api',
 //      'NEXT_PUBLIC_CLIENT_URL': 'http://localhost:3001',
 //      'NEXT_PUBLIC_WEBHOOK_URL': 'http://localhost:3000/external/',
@@ -47,7 +47,7 @@ export const HEALTH_CHECK_URL = getRequiredEnvVar('NEXT_PUBLIC_HEALTH_CHECK_URL'
 export const UPLOADS_URL = getRequiredEnvVar('NEXT_PUBLIC_UPLOADS_URL');
 
 // Tiempo de caducidad del token JWT en segundos
-export const TOKEN_EXPIRY = 86400; // 24 horas
+export const TOKEN_EXPIRY = 259200; // 72 horas (3 días)
 
 // Número máximo de intentos de inicio de sesión
 export const MAX_LOGIN_ATTEMPTS = 5;

@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/contexts/auth-context"
 import NotificationsDropdown from "@/components/notifications-dropdown"
+import SessionStatus from "@/components/SessionStatus"
 
 export function Header() {
   const router = useRouter()
@@ -60,6 +61,7 @@ export function Header() {
         <h1 className="text-base sm:text-xl font-bold">Bayres Panel</h1>
       </div>
       <div className="flex items-center gap-1 sm:gap-2">
+        <SessionStatus />
         <NotificationsDropdown />
         <ThemeToggle />
         <DropdownMenu>

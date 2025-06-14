@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 import Cookies from 'js-cookie';
-import { API_URL } from './config';
+import { API_URL, TOKEN_EXPIRY } from './config';
 
 // Crear una instancia de axios con la URL base de la API
 console.log('API_URL configurada en:', API_URL);
@@ -19,7 +19,55 @@ const api = axios.create({
 const clearSession = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token');
+    localStorage.removeItem('tokenExpiry');
+    localStorage.removeItem('user');
+    localStorage.removeItem('permissions');
     Cookies.remove('token');
+    
+    // Limpiar cualquier otro dato de sesión
+    localStorage.removeItem('lastActivity');
+    localStorage.removeItem('sessionId');
+    
+    console.log('🧹 Sesión limpiada completamente');
+  }
+};
+
+// Función para verificar si el token está expirado
+const isTokenExpired = () => {
+  if (typeof window === 'undefined') return false;
+
+  const token = localStorage.getItem('token');
+  const tokenExpiry = localStorage.getItem('tokenExpiry');
+
+  if (!token) return true;
+
+  if (tokenExpiry) {
+    const expiryTime = parseInt(tokenExpiry);
+    const currentTime = new Date().getTime();
+    return currentTime > expiryTime;
+  }
+
+  return false; // Si no hay información de expiración, asumir que es válido
+};
+
+// Función para redirigir al login
+const redirectToLogin = (reason?: string) => {
+  if (typeof window !== 'undefined') {
+    console.warn('Sesión expirada. Redirigiendo a login...', reason);
+    
+    // Limpiar datos de sesión
+    clearSession();
+    
+    // Evitar redirección infinita si ya estamos en login
+    if (!window.location.pathname.includes('/login')) {
+      // Mostrar toast de error si está disponible
+      if (typeof toast === 'function') {
+        toast.error(reason || 'Sesión expirada. Por favor, inicia sesión nuevamente.');
+      }
+      
+      // Redirigir al login
+      window.location.href = '/login';
+    }
   }
 };
 
@@ -31,6 +79,48 @@ api.interceptors.request.use(
     let token;
     
     if (isClient) {
+      // No verificar el token para rutas de autenticación
+      const isAuthRoute = config.url && [
+        '/auth/login', 
+        'auth/login', 
+        '/auth/register', 
+        'auth/register',
+        '/auth/me',
+        'auth/me',
+        '/auth/forgot-password',
+        'auth/forgot-password',
+        '/auth/reset-password',
+        'auth/reset-password'
+      ].some(
+        route => config.url?.includes(route)
+      );
+      
+      // Verificar si el token está expirado antes de hacer la petición (excepto para rutas de auth)
+      if (!isAuthRoute && isTokenExpired()) {
+        console.warn('Token expirado detectado en interceptor de petición - ejecutando logout automático');
+        
+        // **LOGOUT AUTOMÁTICO**: Intentar hacer logout en el servidor antes de redirigir
+        const expiredToken = localStorage.getItem('token');
+        if (expiredToken) {
+          // Hacer logout en el servidor de manera asíncrona sin bloquear
+          fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${expiredToken}`
+            },
+            body: JSON.stringify({})
+          }).then(() => {
+            console.log('✅ Logout automático por token expirado ejecutado');
+          }).catch((logoutError) => {
+            console.warn('⚠️ Error durante logout automático por token expirado:', logoutError);
+          });
+        }
+        
+        redirectToLogin('Token expirado - logout automático ejecutado');
+        return Promise.reject(new Error('Token expirado'));
+      }
+      
       // Cliente: Obtener token del localStorage o cookie del cliente
       token = localStorage.getItem('token') || Cookies.get('token');
     } else {
@@ -62,8 +152,10 @@ api.interceptors.response.use(
       // Actualizar el token en localStorage y cookies
       localStorage.setItem('token', newToken);
       
+      // Calcular fecha de expiración basada en el TOKEN_EXPIRY (72 horas = 3 días)
+      const expiryDays = 3;
+      
       // Actualizar cookie con nueva fecha de expiración
-      const expiryDays = 1;
       Cookies.set('token', newToken, { 
         expires: expiryDays,
         secure: process.env.NODE_ENV === 'production',
@@ -71,13 +163,14 @@ api.interceptors.response.use(
       });
       
       // Actualizar timestamp de expiración para verificación local
+      // Usar el tiempo de expiración exacto del TOKEN_EXPIRY en segundos
       const expiryTime = new Date();
-      expiryTime.setDate(expiryTime.getDate() + expiryDays);
+      expiryTime.setTime(expiryTime.getTime() + (TOKEN_EXPIRY * 1000)); // TOKEN_EXPIRY es en segundos
       localStorage.setItem('tokenExpiry', expiryTime.getTime().toString());
       
       // Mostrar notificación discreta de renovación (opcional)
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Sesión renovada automáticamente');
+        console.log('✅ Sesión renovada automáticamente hasta', expiryTime.toLocaleString());
       }
     }
     
@@ -138,15 +231,69 @@ api.interceptors.response.use(
       if (error.response.status === 401) {
         console.error('Error de autenticación: Token inválido o expirado');
         
-        // Limpiar datos de sesión
-        clearSession();
+        // Usar la función centralizada de redirección
+        redirectToLogin('Token inválido o expirado');
         
-        // Solo redirigir a login si estamos en el cliente y no estamos ya en la página de login
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-          console.warn('Sesión expirada. Redirigiendo a login...');
+        return Promise.reject(error);
+      }
+      
+      // Manejar error 403 (Prohibido)
+      if (error.response.status === 403) {
+        console.error('Error de autorización: Sin permisos suficientes');
+        
+        // **MEJORADO**: Verificar si el servidor indica que se requiere logout
+        const errorData = error.response.data || {};
+        const requiresLogout = errorData.action === 'logout_required';
+        
+        // **MÁS ESPECÍFICO**: Solo hacer logout automático en casos muy específicos
+        const errorMessage = errorData.message || '';
+        const isTokenError = 
+          requiresLogout ||
+          errorMessage.includes('Token inválido') || 
+          errorMessage.includes('Token no proporcionado') ||
+          errorMessage.includes('Sesión expirada') ||
+          errorMessage.includes('Empleado inactivo');
+        
+        // **EVITAR BUCLES**: No hacer logout automático para errores de permisos normales
+        const isNormalPermissionError = 
+          errorMessage.includes('No autorizado') ||
+          errorMessage.includes('Sin permisos suficientes') ||
+          errorMessage.includes('permisos insuficientes');
+        
+        if (isTokenError && !isNormalPermissionError) {
+          console.warn('Error 403 de token/sesión detectado, ejecutando logout automático');
           
-          // Forzar recarga completa para asegurar que se limpien todos los estados
-          window.location.href = '/login';
+          // **LOGOUT AUTOMÁTICO**: Llamar al endpoint de logout antes de redirigir
+          try {
+            const token = localStorage.getItem('token');
+            if (token) {
+              // Intentar hacer logout en el servidor
+              await api.post('/auth/logout', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              console.log('✅ Logout automático ejecutado correctamente');
+            }
+          } catch (logoutError) {
+            console.warn('⚠️ Error durante logout automático:', logoutError);
+            // Continuar con la limpieza aunque falle el logout del servidor
+          }
+          
+          redirectToLogin('Sesión expirada - logout automático ejecutado');
+          return Promise.reject(error);
+        }
+        
+        // **LOGGING DETALLADO**: Para debuggear errores 403 que no son de token
+        console.warn('Error 403 que NO es de token:', {
+          url: error.config.url,
+          message: errorMessage,
+          requiresLogout,
+          isTokenError,
+          isNormalPermissionError
+        });
+        
+        // Para otros errores 403, solo mostrar toast
+        if (typeof toast === 'function') {
+          toast.error('No tienes permisos para realizar esta acción');
         }
       }
     } else if (error.request) {

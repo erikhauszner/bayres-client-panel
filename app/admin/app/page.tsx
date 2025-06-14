@@ -439,7 +439,6 @@ export default function AdminAppPage() {
                               <SelectItem value="*">Acceso completo</SelectItem>
                               <SelectItem value="read">Solo lectura</SelectItem>
                               <SelectItem value="write">Solo escritura</SelectItem>
-                              <SelectItem value="read,write">Lectura y escritura</SelectItem>
                             </SelectContent>
                           </Select>
                           <p className="text-xs text-muted-foreground">
