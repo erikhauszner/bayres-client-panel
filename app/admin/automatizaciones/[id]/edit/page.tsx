@@ -589,8 +589,11 @@ export default function EditAutomationPage() {
                       checked={sendLeadData}
                       onCheckedChange={setSendLeadData}
                     />
-                    <Label>Incluir datos del lead</Label>
+                    <Label>Incluir ID del empleado</Label>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Si está activado, incluirá el ID del empleado en el webhook. El empleado será identificado automáticamente mediante autenticación.
+                  </p>
 
                   <div className="space-y-2">
                     <Label>Payload personalizado (JSON)</Label>

@@ -321,7 +321,7 @@ export default function LeadsAppConfigPage() {
                         <Label htmlFor="sendEmployeeId">Enviar ID de empleado</Label>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Si está activado, incluirá el ID del empleado que creó el lead en la solicitud
+                        Si está activado, incluirá el ID del empleado autenticado en la solicitud (null si es un webhook público)
                       </p>
                     </CardContent>
                   </Card>
