@@ -43,7 +43,7 @@ export default function AutomationFormPage() {
   const loadAutomation = async () => {
     try {
       setLoading(true);
-      const data = await AutomationService.getById(automationId);
+      const data = await AutomationService.getForForm(automationId);
       
       if (data.status !== 'active') {
         toast.error('Esta automatización no está disponible');

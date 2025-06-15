@@ -49,6 +49,20 @@ export class AutomationService {
   }
 
   /**
+   * Obtener automatización para formulario (solo requiere automations:submit)
+   */
+  static async getForForm(id: string): Promise<Automation> {
+    const response = await api.get<AutomationResponse>(
+      `/automations/${id}/form`
+    );
+
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    throw new Error('Automatización no encontrada');
+  }
+
+  /**
    * Obtener automatización por nombre (público)
    */
   static async getByName(name: string): Promise<Partial<Automation>> {
