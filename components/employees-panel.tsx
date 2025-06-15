@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MoreVertical, Filter, Clock, Users, UserPlus, List, Grid, Edit, Trash2, CheckCircle2, XCircle, Phone, Building, Shield, Eye, User, Plus, Key, FileText, Loader2, Briefcase } from "lucide-react"
+import { Search, MoreVertical, Filter, Clock, Users, UserPlus, List, Grid, Edit, Trash2, CheckCircle2, XCircle, Phone, Building, Shield, Eye, User, Plus, Key, FileText, Loader2, Briefcase, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Sidebar from "@/components/sidebar"
 import Header from "@/components/header"
 import { toast } from "sonner"
@@ -26,27 +27,78 @@ export default function EmployeesPanel() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [totalEmployees, setTotalEmployees] = useState(0)
   const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   useEffect(() => {
     fetchEmployees()
-  }, [searchTerm])
+  }, [searchTerm, currentPage, itemsPerPage])
 
   const fetchEmployees = async () => {
     try {
       setLoading(true)
       const response = await EmployeeService.getEmployees({
         search: searchTerm,
-        page: 1,
-        limit: 100
+        page: currentPage,
+        limit: itemsPerPage
       })
       setEmployees(response.data)
       setTotalEmployees(response.total)
+      setTotalPages(response.pages)
     } catch (error) {
       console.error("Error fetching employees:", error)
       toast.error("Error al cargar los empleados")
     } finally {
       setLoading(false)
     }
+  }
+
+  // Funciones de paginación
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage: string) => {
+    setItemsPerPage(parseInt(newItemsPerPage))
+    setCurrentPage(1) // Resetear a la primera página
+  }
+
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
+
+  const goToFirstPage = () => setCurrentPage(1)
+  const goToLastPage = () => setCurrentPage(totalPages)
+  const goToPreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1))
+  const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages))
+
+  // Generar números de página para mostrar
+  const getPageNumbers = () => {
+    const delta = 2 // Número de páginas a mostrar a cada lado de la página actual
+    const range = []
+    const rangeWithDots = []
+
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      range.push(i)
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...')
+    } else {
+      rangeWithDots.push(1)
+    }
+
+    rangeWithDots.push(...range)
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages)
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages)
+    }
+
+    return rangeWithDots.filter((item, index, arr) => arr.indexOf(item) === index)
   }
 
   const handleDelete = async (id: string) => {
@@ -407,6 +459,140 @@ export default function EmployeesPanel() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Paginación Mejorada */}
+      {(totalPages > 1 || totalEmployees > 0) && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+              {/* Información de paginación y selector de elementos por página */}
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <span>
+                    Mostrando{" "}
+                    <span className="font-medium">
+                      {((currentPage - 1) * itemsPerPage) + 1}
+                    </span>{" "}
+                    a{" "}
+                    <span className="font-medium">
+                      {Math.min(currentPage * itemsPerPage, totalEmployees)}
+                    </span>{" "}
+                    de{" "}
+                    <span className="font-medium">{totalEmployees}</span> empleados
+                  </span>
+                  {loading && (
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Mostrar:</span>
+                  <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                    <SelectTrigger className="w-20 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-muted-foreground">por página</span>
+                </div>
+              </div>
+
+              {/* Controles de navegación - Solo mostrar si hay más de una página */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  {/* Botón Primera Página */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={goToFirstPage}
+                    disabled={currentPage === 1}
+                    title="Primera página"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-4 w-4 -ml-2" />
+                  </Button>
+
+                  {/* Botón Página Anterior */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    title="Página anterior"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  {/* Números de página */}
+                  <div className="flex items-center gap-1">
+                    {getPageNumbers().map((pageNumber, index) => (
+                      <div key={index}>
+                        {pageNumber === '...' ? (
+                          <span className="px-2 py-1 text-sm text-muted-foreground">...</span>
+                        ) : (
+                          <Button
+                            variant={currentPage === pageNumber ? "default" : "outline"}
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handlePageChange(pageNumber as number)}
+                          >
+                            {pageNumber}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Botón Página Siguiente */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    title="Página siguiente"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+
+                  {/* Botón Última Página */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={goToLastPage}
+                    disabled={currentPage === totalPages}
+                    title="Última página"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 -ml-2" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Información adicional en móvil */}
+            <div className="mt-3 lg:hidden text-center">
+              <span className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+                {loading && (
+                  <span className="ml-2 inline-flex items-center">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  </span>
+                )}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

@@ -41,7 +41,17 @@ import {
   X, 
   ChevronLeft, 
   ChevronRight,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  User,
+  Mail,
+  Phone,
+  Building,
+  Briefcase,
+  Shield,
+  Edit,
+  Trash2,
+  AlertCircle,
+  XCircle
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, addWeeks, subWeeks } from "date-fns";
@@ -49,6 +59,7 @@ import { es } from "date-fns/locale";
 import { EmployeeService } from "@/lib/services/employeeService";
 import { EmployeeStatusService, DailyStats } from "@/lib/services/employeeStatusService";
 import auditService from "@/lib/services/auditService";
+import RoleService from "@/lib/services/roleService";
 import { Employee } from "@/lib/types/employee";
 import { EmployeeStatus } from "@/lib/types/employeeStatus";
 import { AuditLog } from "@/lib/services/auditService";
@@ -58,6 +69,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
 
 interface DailyActivity {
   date: Date;
@@ -85,14 +109,17 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({
   onClose,
   isFullPage = false
 }) => {
+  const router = useRouter();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [dailyActivities, setDailyActivities] = useState<DailyActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("resumen");
+  const [activeTab, setActiveTab] = useState("informacion");
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [activityPeriod, setActivityPeriod] = useState<"week" | "month">("week");
+  const [rolePermissions, setRolePermissions] = useState<any>(null);
+  const [loadingPermissions, setLoadingPermissions] = useState(false);
 
   // Cargar datos del empleado
   useEffect(() => {
@@ -124,6 +151,11 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({
       const auditResponse = await auditService.getUserActivityHistory(employeeId);
       setAuditLogs(auditResponse.data);
       
+      // Cargar permisos del rol
+      if (employeeData?.role) {
+        await loadRolePermissions(employeeData.role);
+      }
+      
       // Cargar actividad diaria
       await loadEmployeeActivity();
       
@@ -131,6 +163,152 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({
     } catch (error) {
       console.error("Error al cargar datos del empleado:", error);
       setIsLoading(false);
+    }
+  };
+
+  const loadRolePermissions = async (roleId: string) => {
+    try {
+      setLoadingPermissions(true);
+      
+      // Obtener el rol y sus permisos directamente
+      const roleData = await RoleService.getRoleById(roleId);
+      
+      if (roleData && roleData.permissions) {
+        setRolePermissions({
+          role: {
+            id: roleData._id,
+            name: roleData.name,
+            description: roleData.description
+          },
+          permissions: roleData.permissions
+        });
+      } else {
+        // Si no podemos obtener el rol por ID, intentamos obtener permisos
+        const permissions = await RoleService.getRolePermissions(roleId);
+        
+        if (permissions && permissions.length > 0) {
+          setRolePermissions({
+            role: {
+              id: roleId,
+              name: getRoleName(roleId),
+              description: getDefaultRoleDescription(roleId)
+            },
+            permissions: permissions
+          });
+        } else {
+          setRolePermissions({
+            role: {
+              id: roleId,
+              name: getRoleName(roleId),
+              description: getDefaultRoleDescription(roleId)
+            },
+            permissions: []
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error al cargar los permisos:", error);
+      setRolePermissions({
+        role: {
+          id: roleId,
+          name: getRoleName(roleId),
+          description: getDefaultRoleDescription(roleId)
+        },
+        permissions: []
+      });
+    } finally {
+      setLoadingPermissions(false);
+    }
+  };
+
+  // Función para obtener el nombre del rol
+  const getRoleName = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "Administrador";
+      case "manager":
+        return "Gerente";
+      case "employee":
+        return "Empleado";
+      case "appointment_setter":
+        return "Agente de citas";
+      case "client":
+        return "Cliente";
+      case "user":
+        return "Usuario";
+      default:
+        return "Rol desconocido";
+    }
+  };
+  
+  // Función para obtener la descripción predeterminada del rol
+  const getDefaultRoleDescription = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "Administrador del sistema con acceso total";
+      case "manager":
+        return "Gerente con acceso a gestión de empleados y leads";
+      case "employee":
+        return "Empleado con permisos limitados";
+      case "appointment_setter":
+        return "Agente de citas con acceso a leads y actividades";
+      case "client":
+        return "Cliente con acceso limitado a su información";
+      case "user":
+        return "Usuario estándar";
+      default:
+        return "Rol del sistema";
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!employee?._id) return;
+
+    try {
+      await EmployeeService.deleteEmployee(employee._id);
+      toast({
+        title: "Empleado eliminado",
+        description: "El empleado ha sido eliminado exitosamente",
+      });
+      router.push("/empleados");
+    } catch (error) {
+      console.error("Error al eliminar empleado:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el empleado",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!employee?._id) return;
+
+    try {
+      if (employee.isActive) {
+        await EmployeeService.deactivateEmployee(employee._id);
+        toast({
+          title: "Empleado desactivado",
+          description: "El empleado ha sido desactivado exitosamente",
+        });
+      } else {
+        await EmployeeService.activateEmployee(employee._id);
+        toast({
+          title: "Empleado activado",
+          description: "El empleado ha sido activado exitosamente",
+        });
+      }
+      
+      // Recargar datos del empleado
+      const updatedEmployee = await EmployeeService.getEmployee(employee._id);
+      setEmployee(updatedEmployee);
+    } catch (error) {
+      console.error("Error al cambiar estado del empleado:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo cambiar el estado del empleado",
+        variant: "destructive",
+      });
     }
   };
 
@@ -301,7 +479,7 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({
 
             {/* Pestañas */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3">
+                              <TabsList className="grid grid-cols-4">
                 <TabsTrigger value="resumen">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Resumen
@@ -314,7 +492,11 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({
                   <FileText className="h-4 w-4 mr-2" />
                   Registros de Auditoría
                 </TabsTrigger>
-              </TabsList>
+                 <TabsTrigger value="informacion">
+                   <User className="h-4 w-4 mr-2" />
+                   Información
+                 </TabsTrigger>
+                </TabsList>
 
               {/* Pestaña de Resumen */}
               <TabsContent value="resumen" className="space-y-4">
@@ -635,6 +817,258 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({
                   </CardFooter>
                 </Card>
               </TabsContent>
+
+                             {/* Pestaña de Información */}
+               <TabsContent value="informacion" className="space-y-4">
+                 {/* Información Personal */}
+                 <Card>
+                   <CardHeader>
+                     <div className="flex justify-between items-center">
+                       <div>
+                         <CardTitle>Información del Empleado</CardTitle>
+                         <CardDescription>
+                           Datos personales y de contacto
+                         </CardDescription>
+                       </div>
+                       <div className="flex space-x-2">
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => router.push(`/empleados/${employeeId}/edit`)}
+                         >
+                           <Edit className="h-4 w-4 mr-2" />
+                           Editar
+                         </Button>
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => router.push(`/empleados/${employeeId}/password`)}
+                         >
+                           <Shield className="h-4 w-4 mr-2" />
+                           Contraseña
+                         </Button>
+                       </div>
+                     </div>
+                   </CardHeader>
+                   <CardContent>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                       <div className="space-y-3">
+                         <h4 className="font-medium text-sm text-muted-foreground">INFORMACIÓN BÁSICA</h4>
+                         <div className="space-y-2">
+                           <div className="flex items-center space-x-2">
+                             <User className="h-4 w-4 text-muted-foreground" />
+                             <span className="text-sm font-medium">Nombre:</span>
+                             <span>{employee?.firstName} {employee?.lastName}</span>
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <Mail className="h-4 w-4 text-muted-foreground" />
+                             <span className="text-sm font-medium">Email:</span>
+                             <span>{employee?.email || "No disponible"}</span>
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <Phone className="h-4 w-4 text-muted-foreground" />
+                             <span className="text-sm font-medium">Teléfono:</span>
+                             <span>{employee?.phone || "No disponible"}</span>
+                           </div>
+                         </div>
+                       </div>
+ 
+                       <div className="space-y-3">
+                         <h4 className="font-medium text-sm text-muted-foreground">INFORMACIÓN LABORAL</h4>
+                         <div className="space-y-2">
+                           <div className="flex items-center space-x-2">
+                             <Briefcase className="h-4 w-4 text-muted-foreground" />
+                             <span className="text-sm font-medium">Cargo:</span>
+                             <span>{employee?.position || "Sin cargo"}</span>
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <Building className="h-4 w-4 text-muted-foreground" />
+                             <span className="text-sm font-medium">Departamento:</span>
+                             <span>{employee?.department || "Sin departamento"}</span>
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <Shield className="h-4 w-4 text-muted-foreground" />
+                             <span className="text-sm font-medium">Rol:</span>
+                             <span>{employee?.roleName || employee?.role || "Sin asignar"}</span>
+                           </div>
+                         </div>
+                       </div>
+ 
+                       <div className="space-y-3">
+                         <h4 className="font-medium text-sm text-muted-foreground">ESTADO Y FECHAS</h4>
+                         <div className="space-y-2">
+                           <div className="flex items-center space-x-2">
+                             <Activity className="h-4 w-4 text-muted-foreground" />
+                             <span className="text-sm font-medium">Estado:</span>
+                             <Badge variant={employee?.isActive ? "default" : "secondary"}>
+                               {employee?.isActive ? "Activo" : "Inactivo"}
+                             </Badge>
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <Calendar className="h-4 w-4 text-muted-foreground" />
+                             <span className="text-sm font-medium">Creado:</span>
+                             <span>{employee?.createdAt ? format(new Date(employee.createdAt), 'dd/MM/yyyy') : "No disponible"}</span>
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <Clock className="h-4 w-4 text-muted-foreground" />
+                             <span className="text-sm font-medium">Último acceso:</span>
+                             <span>{employee?.lastAccess ? format(new Date(employee.lastAccess), 'dd/MM/yyyy HH:mm') : "Nunca"}</span>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+
+                     {/* Información adicional si está disponible */}
+                     {(employee?.address || employee?.city || employee?.birthDate) && (
+                       <div className="mt-6 pt-6 border-t">
+                         <h4 className="font-medium text-sm text-muted-foreground mb-3">INFORMACIÓN ADICIONAL</h4>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           {employee?.address && (
+                             <div className="flex justify-between">
+                               <span className="text-sm font-medium">Dirección:</span>
+                               <span>{employee.address}</span>
+                             </div>
+                           )}
+                           {employee?.city && (
+                             <div className="flex justify-between">
+                               <span className="text-sm font-medium">Ciudad:</span>
+                               <span>{employee.city}</span>
+                             </div>
+                           )}
+                           {employee?.birthDate && (
+                             <div className="flex justify-between">
+                               <span className="text-sm font-medium">Fecha de nacimiento:</span>
+                               <span>{format(new Date(employee.birthDate), 'dd/MM/yyyy')}</span>
+                             </div>
+                           )}
+                           {employee?.documentId && (
+                             <div className="flex justify-between">
+                               <span className="text-sm font-medium">Documento:</span>
+                               <span>{employee.documentId}</span>
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                     )}
+                   </CardContent>
+                 </Card>
+
+                 {/* Rol y Permisos */}
+                 <Card>
+                   <CardHeader>
+                     <CardTitle>Rol y Permisos</CardTitle>
+                     <CardDescription>
+                       Información sobre el rol asignado y permisos del empleado
+                     </CardDescription>
+                   </CardHeader>
+                   <CardContent>
+                     {loadingPermissions ? (
+                       <div className="flex justify-center items-center p-4">
+                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800"></div>
+                         <span className="ml-2">Cargando permisos...</span>
+                       </div>
+                     ) : rolePermissions ? (
+                       <div className="space-y-4">
+                         <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                           <div>
+                             <h4 className="font-medium">{rolePermissions.role.name}</h4>
+                             <p className="text-sm text-muted-foreground">{rolePermissions.role.description}</p>
+                           </div>
+                           <Badge variant="outline">{rolePermissions.permissions.length} permisos</Badge>
+                         </div>
+                         
+                         {rolePermissions.permissions.length > 0 && (
+                           <div>
+                             <h5 className="font-medium mb-2">Permisos asignados:</h5>
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                               {rolePermissions.permissions.map((permission: any, index: number) => (
+                                 <Badge key={index} variant="secondary" className="text-xs">
+                                   {permission.name || permission}
+                                 </Badge>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                     ) : (
+                       <p className="text-muted-foreground">No se pudieron cargar los permisos del rol.</p>
+                     )}
+                   </CardContent>
+                 </Card>
+
+                 {/* Acciones */}
+                 <Card>
+                   <CardHeader>
+                     <CardTitle>Acciones</CardTitle>
+                     <CardDescription>
+                       Acciones disponibles para este empleado
+                     </CardDescription>
+                   </CardHeader>
+                   <CardContent>
+                     <div className="flex flex-wrap gap-2">
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => router.push(`/empleados/${employeeId}/edit`)}
+                       >
+                         <Edit className="h-4 w-4 mr-2" />
+                         Editar Empleado
+                       </Button>
+                       
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => router.push(`/empleados/${employeeId}/password`)}
+                       >
+                         <Shield className="h-4 w-4 mr-2" />
+                         Cambiar Contraseña
+                       </Button>
+
+                       <Button
+                         variant={employee?.isActive ? "secondary" : "default"}
+                         size="sm"
+                         onClick={handleToggleStatus}
+                       >
+                         {employee?.isActive ? (
+                           <>
+                             <XCircle className="h-4 w-4 mr-2" />
+                             Desactivar
+                           </>
+                         ) : (
+                           <>
+                             <CheckCircle2 className="h-4 w-4 mr-2" />
+                             Activar
+                           </>
+                         )}
+                       </Button>
+
+                       <AlertDialog>
+                         <AlertDialogTrigger asChild>
+                           <Button variant="destructive" size="sm">
+                             <Trash2 className="h-4 w-4 mr-2" />
+                             Eliminar
+                           </Button>
+                         </AlertDialogTrigger>
+                         <AlertDialogContent>
+                           <AlertDialogHeader>
+                             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                             <AlertDialogDescription>
+                               Esta acción no se puede deshacer. Esto eliminará permanentemente al empleado
+                               y todos sus datos asociados.
+                             </AlertDialogDescription>
+                           </AlertDialogHeader>
+                           <AlertDialogFooter>
+                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                               Eliminar
+                             </AlertDialogAction>
+                           </AlertDialogFooter>
+                         </AlertDialogContent>
+                       </AlertDialog>
+                     </div>
+                   </CardContent>
+                 </Card>
+               </TabsContent>
             </Tabs>
           </div>
         )}

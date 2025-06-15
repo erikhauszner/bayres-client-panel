@@ -106,14 +106,18 @@ const AuditTab: React.FC<AuditTabProps> = ({ onRefresh }) => {
     try {
       setStatsLoading(true)
       
-      // Crear filtros para las estadísticas
+      // Crear filtros para las estadísticas (incluir filtro de actividades del sistema)
       const statsFilters: any = {}
       if (auditFilters.startDate) statsFilters.startDate = auditFilters.startDate
       if (auditFilters.endDate) statsFilters.endDate = auditFilters.endDate
+      if (auditFilters.includeSystemActivities !== undefined) {
+        statsFilters.includeSystemActivities = auditFilters.includeSystemActivities
+      }
       
       const stats = await auditService.getStatistics(
         statsFilters.startDate,
-        statsFilters.endDate
+        statsFilters.endDate,
+        statsFilters.includeSystemActivities
       )
       
       // Calcular las estadísticas para los cards
@@ -390,6 +394,37 @@ const AuditTab: React.FC<AuditTabProps> = ({ onRefresh }) => {
                   >
                     <Search size={18} />
                   </Button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Filtros adicionales */}
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Mostrar actividades del sistema</label>
+                  <p className="text-xs text-muted-foreground">
+                    Incluir actividades automáticas y del sistema
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="includeSystemActivities"
+                    checked={auditFilters.includeSystemActivities || false}
+                    onChange={(e) => {
+                      const newFilters = {
+                        ...auditFilters,
+                        includeSystemActivities: e.target.checked,
+                        page: 1 // Resetear página al cambiar filtro
+                      };
+                      setAuditFilters(newFilters);
+                    }}
+                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="includeSystemActivities" className="text-sm">
+                    Incluir
+                  </label>
                 </div>
               </div>
             </div>

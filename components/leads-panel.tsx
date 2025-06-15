@@ -56,6 +56,7 @@ export default function LeadsPanel() {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
@@ -77,7 +78,7 @@ export default function LeadsPanel() {
           priority: priorityFilter as 'baja' | 'media' | 'alta' | undefined,
           search: searchTerm,
           page: currentPage,
-          limit: 10,
+          limit: itemsPerPage,
           assignedTo: employee?._id // Filtrar por el ID del empleado actual
         })
         
@@ -109,10 +110,57 @@ export default function LeadsPanel() {
       setLoading(false)
       setError("Debes iniciar sesión para ver tus leads asignados.")
     }
-  }, [currentPage, searchTerm, statusFilter, priorityFilter, refreshFlag, employee])
+  }, [currentPage, searchTerm, statusFilter, priorityFilter, refreshFlag, employee, itemsPerPage])
 
   const handleRefresh = () => {
     setRefreshFlag(prev => prev + 1)
+  }
+
+  // Funciones de paginación
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage: string) => {
+    setItemsPerPage(parseInt(newItemsPerPage))
+    setCurrentPage(1) // Resetear a la primera página
+  }
+
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, statusFilter, priorityFilter])
+
+  const goToFirstPage = () => setCurrentPage(1)
+  const goToLastPage = () => setCurrentPage(totalPages)
+  const goToPreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1))
+  const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages))
+
+  // Generar números de página para mostrar
+  const getPageNumbers = () => {
+    const delta = 2 // Número de páginas a mostrar a cada lado de la página actual
+    const range = []
+    const rangeWithDots = []
+
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      range.push(i)
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...')
+    } else {
+      rangeWithDots.push(1)
+    }
+
+    rangeWithDots.push(...range)
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages)
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages)
+    }
+
+    return rangeWithDots.filter((item, index, arr) => arr.indexOf(item) === index)
   }
 
   const handleDelete = async (id: string) => {
@@ -515,36 +563,138 @@ export default function LeadsPanel() {
         </CardContent>
       </Card>
 
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-          <div className="text-xs sm:text-sm text-muted-foreground">
-            Mostrando <span className="font-medium">{leads.length}</span> de{" "}
-            <span className="font-medium">{totalLeads}</span> leads
-          </div>
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">Página anterior</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-              <span className="sr-only">Página siguiente</span>
-            </Button>
-          </div>
-        </div>
+      {/* Paginación Mejorada */}
+      {(totalPages > 1 || totalLeads > 0) && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+              {/* Información de paginación y selector de elementos por página */}
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <span>
+                    Mostrando{" "}
+                    <span className="font-medium">
+                      {((currentPage - 1) * itemsPerPage) + 1}
+                    </span>{" "}
+                    a{" "}
+                    <span className="font-medium">
+                      {Math.min(currentPage * itemsPerPage, totalLeads)}
+                    </span>{" "}
+                    de{" "}
+                    <span className="font-medium">{totalLeads}</span> leads
+                  </span>
+                  {loading && (
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Mostrar:</span>
+                  <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                    <SelectTrigger className="w-20 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-muted-foreground">por página</span>
+                </div>
+              </div>
+
+              {/* Controles de navegación - Solo mostrar si hay más de una página */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  {/* Botón Primera Página */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={goToFirstPage}
+                    disabled={currentPage === 1}
+                    title="Primera página"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-4 w-4 -ml-2" />
+                  </Button>
+
+                  {/* Botón Página Anterior */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    title="Página anterior"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  {/* Números de página */}
+                  <div className="flex items-center gap-1">
+                    {getPageNumbers().map((pageNumber, index) => (
+                      <div key={index}>
+                        {pageNumber === '...' ? (
+                          <span className="px-2 py-1 text-sm text-muted-foreground">...</span>
+                        ) : (
+                          <Button
+                            variant={currentPage === pageNumber ? "default" : "outline"}
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handlePageChange(pageNumber as number)}
+                          >
+                            {pageNumber}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Botón Página Siguiente */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    title="Página siguiente"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+
+                  {/* Botón Última Página */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={goToLastPage}
+                    disabled={currentPage === totalPages}
+                    title="Última página"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 -ml-2" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Información adicional en móvil */}
+            <div className="mt-3 lg:hidden text-center">
+              <span className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+                {loading && (
+                  <span className="ml-2 inline-flex items-center">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  </span>
+                )}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

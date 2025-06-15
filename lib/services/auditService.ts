@@ -1,5 +1,6 @@
 import { AxiosInstance } from 'axios';
 import api from '@/lib/api';
+import { API_URL } from '@/lib/config';
 
 export interface AuditLog {
   _id: string;
@@ -31,6 +32,7 @@ export interface AuditLogFilters {
   page?: number;
   limit?: number;
   sortBy?: string;
+  includeSystemActivities?: boolean;
 }
 
 export interface PaginatedResponse<T> {
@@ -88,11 +90,12 @@ export class AuditService {
   /**
    * Obtiene estadísticas de auditoría
    */
-  async getStatistics(startDate?: string, endDate?: string): Promise<AuditStatistics> {
+  async getStatistics(startDate?: string, endDate?: string, includeSystemActivities?: boolean): Promise<AuditStatistics> {
     try {
       const params: any = {};
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
+      if (includeSystemActivities !== undefined) params.includeSystemActivities = includeSystemActivities;
 
       const response = await this.api.get('/audit/statistics', { params });
       return response.data.data;
@@ -105,11 +108,14 @@ export class AuditService {
   /**
    * Obtiene actividades recientes
    */
-  async getRecentActivity(limit: number = 10): Promise<AuditLog[]> {
+  async getRecentActivity(limit: number = 10, includeSystemActivities?: boolean): Promise<AuditLog[]> {
     try {
-      const response = await this.api.get('/audit/recent-activity', { 
-        params: { limit } 
-      });
+      const params: any = { limit };
+      if (includeSystemActivities !== undefined) {
+        params.includeSystemActivities = includeSystemActivities;
+      }
+      
+      const response = await this.api.get('/audit/recent-activity', { params });
       return response.data.data;
     } catch (error) {
       console.error('Error al obtener actividades recientes:', error);
@@ -182,7 +188,7 @@ export const logAuditAction = async (data: AuditActionData): Promise<void> => {
       details: data.details
     };
 
-    const response = await fetch('/api/audit/log-action', {
+    const response = await fetch(`${API_URL}/audit/log-action`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -207,7 +213,7 @@ export const getActivityStats = async (): Promise<any> => {
     const token = localStorage.getItem('token');
     if (!token) return null;
 
-    const response = await fetch('/api/audit/user-activity-stats', {
+    const response = await fetch(`${API_URL}/audit/user-activity-stats`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
