@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/header';
 import Sidebar from '@/components/sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,12 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Send, Loader2, CheckCircle } from 'lucide-react';
+import { Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { AutomationService } from '@/lib/services/automationService';
 import { Automation, AutomationField } from '@/lib/types/automation';
+import { useHasPermission } from '@/hooks/useHasPermission';
 
 export default function AutomationFormPage() {
   const params = useParams();
+  const router = useRouter();
   const automationId = params.id as string;
   
   const [loading, setLoading] = useState(true);
@@ -23,17 +25,27 @@ export default function AutomationFormPage() {
   const [submitted, setSubmitted] = useState(false);
   const [automation, setAutomation] = useState<Automation | null>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
+  
+  // Verificar permisos
+  const hasSubmitPermission = useHasPermission('automations:submit');
 
   useEffect(() => {
+    // Verificar permisos primero
+    if (!hasSubmitPermission) {
+      toast.error('No tienes permisos para usar automatizaciones');
+      router.push('/dashboard');
+      return;
+    }
+    
     loadAutomation();
-  }, [automationId]);
+  }, [automationId, hasSubmitPermission, router]);
 
   const loadAutomation = async () => {
     try {
       setLoading(true);
-      const data = await AutomationService.getPublic(automationId);
+      const data = await AutomationService.getById(automationId);
       
-      if (!data.isActive) {
+      if (data.status !== 'active') {
         toast.error('Esta automatización no está disponible');
         return;
       }
@@ -162,6 +174,33 @@ export default function AutomationFormPage() {
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                 <p className="text-muted-foreground">Cargando formulario...</p>
               </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasSubmitPermission) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <Header />
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
+            <div className="flex items-center justify-center min-h-full">
+              <Card className="w-full max-w-md">
+                <CardContent className="pt-6 text-center">
+                  <AlertCircle className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">Sin permisos</h2>
+                  <p className="text-muted-foreground mb-4">
+                    No tienes permisos para usar automatizaciones.
+                  </p>
+                  <Button onClick={() => router.push('/dashboard')}>
+                    Volver al Dashboard
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </main>
         </div>

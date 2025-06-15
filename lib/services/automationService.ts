@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '@/lib/api';
 import { API_ENDPOINT } from '@/lib/config';
 import {
   Automation,
@@ -9,10 +9,6 @@ import {
   AutomationsResponse,
   AutomationStatsResponse
 } from '@/lib/types/automation';
-
-const getAuthHeaders = () => ({
-  'Authorization': `Bearer ${localStorage.getItem('token')}`
-});
 
 export class AutomationService {
   /**
@@ -28,9 +24,8 @@ export class AutomationService {
     if (filters?.search) params.append('search', filters.search);
     if (filters?.createdBy) params.append('createdBy', filters.createdBy);
 
-    const response = await axios.get<AutomationsResponse>(
-      `${API_ENDPOINT}/automations?${params}`,
-      { headers: getAuthHeaders() }
+    const response = await api.get<AutomationsResponse>(
+      `/automations?${params}`
     );
 
     if (response.data.success) {
@@ -43,9 +38,8 @@ export class AutomationService {
    * Obtener automatización por ID
    */
   static async getById(id: string): Promise<Automation> {
-    const response = await axios.get<AutomationResponse>(
-      `${API_ENDPOINT}/automations/${id}`,
-      { headers: getAuthHeaders() }
+    const response = await api.get<AutomationResponse>(
+      `/automations/${id}`
     );
 
     if (response.data.success && response.data.data) {
@@ -58,8 +52,8 @@ export class AutomationService {
    * Obtener automatización por nombre (público)
    */
   static async getByName(name: string): Promise<Partial<Automation>> {
-    const response = await axios.get<AutomationResponse>(
-      `${API_ENDPOINT}/automations/public/${name}`
+    const response = await api.get<AutomationResponse>(
+      `/automations/public/${name}`
     );
 
     if (response.data.success && response.data.data) {
@@ -72,10 +66,9 @@ export class AutomationService {
    * Crear nueva automatización
    */
   static async create(data: CreateAutomationData): Promise<Automation> {
-    const response = await axios.post<AutomationResponse>(
-      `${API_ENDPOINT}/automations`,
-      data,
-      { headers: getAuthHeaders() }
+    const response = await api.post<AutomationResponse>(
+      `/automations`,
+      data
     );
 
     if (response.data.success && response.data.data) {
@@ -88,10 +81,9 @@ export class AutomationService {
    * Actualizar automatización
    */
   static async update(id: string, data: UpdateAutomationData): Promise<Automation> {
-    const response = await axios.put<AutomationResponse>(
-      `${API_ENDPOINT}/automations/${id}`,
-      data,
-      { headers: getAuthHeaders() }
+    const response = await api.put<AutomationResponse>(
+      `/automations/${id}`,
+      data
     );
 
     if (response.data.success && response.data.data) {
@@ -104,9 +96,8 @@ export class AutomationService {
    * Eliminar automatización
    */
   static async delete(id: string): Promise<void> {
-    const response = await axios.delete<AutomationResponse>(
-      `${API_ENDPOINT}/automations/${id}`,
-      { headers: getAuthHeaders() }
+    const response = await api.delete<AutomationResponse>(
+      `/automations/${id}`
     );
 
     if (!response.data.success) {
@@ -118,10 +109,9 @@ export class AutomationService {
    * Cambiar estado de automatización
    */
   static async changeStatus(id: string, status: 'active' | 'inactive' | 'draft'): Promise<Automation> {
-    const response = await axios.patch<AutomationResponse>(
-      `${API_ENDPOINT}/automations/${id}/status`,
-      { status },
-      { headers: getAuthHeaders() }
+    const response = await api.patch<AutomationResponse>(
+      `/automations/${id}/status`,
+      { status }
     );
 
     if (response.data.success && response.data.data) {
@@ -134,10 +124,9 @@ export class AutomationService {
    * Duplicar automatización
    */
   static async duplicate(id: string, newName: string): Promise<Automation> {
-    const response = await axios.post<AutomationResponse>(
-      `${API_ENDPOINT}/automations/${id}/duplicate`,
-      { newName },
-      { headers: getAuthHeaders() }
+    const response = await api.post<AutomationResponse>(
+      `/automations/${id}/duplicate`,
+      { newName }
     );
 
     if (response.data.success && response.data.data) {
@@ -150,9 +139,8 @@ export class AutomationService {
    * Obtener automatizaciones activas
    */
   static async getActive(): Promise<Automation[]> {
-    const response = await axios.get<AutomationsResponse>(
-      `${API_ENDPOINT}/automations/active`,
-      { headers: getAuthHeaders() }
+    const response = await api.get<AutomationsResponse>(
+      `/automations/active`
     );
 
     if (response.data.success) {
@@ -165,9 +153,8 @@ export class AutomationService {
    * Obtener estadísticas
    */
   static async getStats(): Promise<AutomationStats> {
-    const response = await axios.get<AutomationStatsResponse>(
-      `${API_ENDPOINT}/automations/stats`,
-      { headers: getAuthHeaders() }
+    const response = await api.get<AutomationStatsResponse>(
+      `/automations/stats`
     );
 
     if (response.data.success) {
@@ -188,8 +175,8 @@ export class AutomationService {
    * Obtener automatización pública por ID
    */
   static async getPublic(id: string): Promise<Automation> {
-    const response = await axios.get<AutomationResponse>(
-      `${API_ENDPOINT}/automations/public/id/${id}`
+    const response = await api.get<AutomationResponse>(
+      `/automations/public/id/${id}`
     );
 
     if (response.data.success && response.data.data) {
@@ -202,8 +189,8 @@ export class AutomationService {
    * Enviar formulario de automatización
    */
   static async submit(id: string, data: Record<string, string>): Promise<void> {
-    const response = await axios.post<AutomationResponse>(
-      `${API_ENDPOINT}/automations/${id}/submit`,
+    const response = await api.post<AutomationResponse>(
+      `/automations/${id}/submit`,
       data
     );
 
