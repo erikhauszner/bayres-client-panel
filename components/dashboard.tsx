@@ -18,6 +18,7 @@ import {
   UserPlus,
   Star,
   Activity,
+  RefreshCw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -84,6 +85,16 @@ export default function Dashboard() {
           <p className="text-xs sm:text-sm text-muted-foreground">Bienvenido al panel de control de Bayres CRM</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 sm:h-9 text-xs sm:text-sm"
+            onClick={loadDashboardStats}
+            disabled={loading}
+          >
+            <RefreshCw className={`mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden xs:inline">Actualizar</span>
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 

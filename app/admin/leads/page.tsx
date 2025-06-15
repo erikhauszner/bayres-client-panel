@@ -296,6 +296,14 @@ export default function AdminLeadsPage() {
             page: currentPage,
             limit: 10
           });
+        } else if (activeTab === "cancelled") {
+          // Para la pestaña de anulados, hacer consulta específica
+          result = await leadService.getLeads({
+            status: 'anulado',
+            search: searchTerm,
+            page: currentPage,
+            limit: 10
+          });
         } else {
           // Para otras pestañas, usar la consulta normal
           result = await leadService.getLeads({
@@ -336,10 +344,10 @@ export default function AdminLeadsPage() {
         setApprovedCount(approvedLeads.total)
         setDisapprovedCount(disapprovedLeads.total)
         
-        // Para pestañas que no sean "disapproved", aplicar filtro de asignación
+        // Para pestañas que no sean "disapproved" o "cancelled", aplicar filtro de asignación
         let filtered = [...result.data]
         
-        if (activeTab !== "disapproved") {
+        if (activeTab !== "disapproved" && activeTab !== "cancelled") {
           if (assignedFilter === "asignados") {
             filtered = filtered.filter(lead => lead.assignedTo)
           } else if (assignedFilter === "no_asignados") {
@@ -359,6 +367,11 @@ export default function AdminLeadsPage() {
     
     fetchLeads()
   }, [currentPage, searchTerm, statusFilter, assignedFilter, refreshFlag, activeTab])
+  
+  // Resetear página cuando cambie la pestaña
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab])
   
   // Cargar empleados
   useEffect(() => {
@@ -1506,6 +1519,36 @@ export default function AdminLeadsPage() {
                     </div>
                   </CardContent>
                 </Card>
+                
+                {/* Paginación para leads desaprobados */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      Mostrando <span className="font-medium">{filteredLeads.filter(lead => lead.isApproved === false && lead.status !== 'nuevo').length}</span> de{" "}
+                      <span className="font-medium">{totalLeads}</span> leads desaprobados
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="sr-only">Página anterior</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                        <span className="sr-only">Página siguiente</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </TabsContent>
               
               {/* Contenido: Leads anulados */}
@@ -1648,6 +1691,36 @@ export default function AdminLeadsPage() {
                     </div>
                   </CardContent>
                 </Card>
+                
+                {/* Paginación para leads anulados */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      Mostrando <span className="font-medium">{filteredLeads.filter(lead => lead.status === 'anulado').length}</span> de{" "}
+                      <span className="font-medium">{totalLeads}</span> leads anulados
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="sr-only">Página anterior</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                        <span className="sr-only">Página siguiente</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </TabsContent>
               
               {/* Contenido: Empleados y asignaciones */}

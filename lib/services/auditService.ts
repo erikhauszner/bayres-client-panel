@@ -133,4 +133,91 @@ export class AuditService {
   }
 }
 
-export default new AuditService(); 
+export default new AuditService();
+
+/**
+ * Servicio de Auditoría para Frontend
+ * Se conecta con el sistema de auditoría del backend
+ */
+
+interface AuditActionData {
+  action: string;
+  description: string;
+  targetType: string;
+  module: string;
+  details?: any;
+  targetId?: string;
+  previousData?: any;
+  newData?: any;
+}
+
+/**
+ * Registra una acción en el sistema de auditoría
+ */
+export const logAuditAction = async (data: AuditActionData): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.warn('No hay token disponible para registrar auditoría');
+      return;
+    }
+
+    // Obtener información del empleado actual del token
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const employeeId = payload.employeeId || payload.id;
+    const employeeName = payload.firstName && payload.lastName 
+      ? `${payload.firstName} ${payload.lastName}` 
+      : payload.email || 'Usuario desconocido';
+
+    const auditData = {
+      userId: employeeId,
+      userName: employeeName,
+      action: data.action,
+      description: data.description,
+      targetType: data.targetType,
+      targetId: data.targetId || employeeId, // Si no se especifica, usar el ID del empleado
+      previousData: data.previousData,
+      newData: data.newData,
+      module: data.module,
+      details: data.details
+    };
+
+    const response = await fetch('/api/audit/log-action', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(auditData)
+    });
+
+    if (!response.ok) {
+      console.error('Error al registrar auditoría:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error al registrar acción de auditoría:', error);
+  }
+};
+
+/**
+ * Obtiene estadísticas de actividad del usuario actual
+ */
+export const getActivityStats = async (): Promise<any> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    const response = await fetch('/api/audit/user-activity-stats', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error('Error al obtener estadísticas de actividad:', error);
+  }
+  return null;
+}; 

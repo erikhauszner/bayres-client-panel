@@ -3,16 +3,27 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Badge } from '@/components/ui/badge'
-import { Clock, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Clock, CheckCircle, AlertTriangle, Wifi, WifiOff } from 'lucide-react'
+import { EmployeeStatusService } from '@/lib/services/employeeStatusService'
 
 export default function SessionStatus() {
   const { isTokenExpired } = useAuth()
   const [timeLeft, setTimeLeft] = useState<string>('')
-  const [status, setStatus] = useState<'active' | 'warning' | 'expired'>('active')
+  const [status, setStatus] = useState<'active' | 'warning' | 'expired' | 'offline'>('active')
+  const [employeeStatus, setEmployeeStatus] = useState<'online' | 'offline' | 'break'>('offline')
 
   useEffect(() => {
-    const updateStatus = () => {
+    const updateStatus = async () => {
       if (typeof window === 'undefined') return
+
+      // Primero obtener el estado del empleado
+      try {
+        const empStatus = await EmployeeStatusService.getCurrentEmployeeStatus()
+        setEmployeeStatus(empStatus.status)
+      } catch (error) {
+        console.error('Error al obtener estado del empleado:', error)
+        setEmployeeStatus('offline')
+      }
 
       const tokenExpiry = localStorage.getItem('tokenExpiry')
       
@@ -29,6 +40,13 @@ export default function SessionStatus() {
       if (timeDiff <= 0) {
         setStatus('expired')
         setTimeLeft('Expirado')
+        return
+      }
+
+      // Si el empleado está offline, mostrar estado offline independientemente del token
+      if (employeeStatus === 'offline') {
+        setStatus('offline')
+        setTimeLeft('')
         return
       }
 
@@ -52,7 +70,7 @@ export default function SessionStatus() {
     const interval = setInterval(updateStatus, 60000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [employeeStatus])
 
   // No mostrar en rutas públicas
   if (typeof window !== 'undefined' && window.location.pathname.includes('/login')) {
@@ -81,6 +99,20 @@ export default function SessionStatus() {
           icon: Clock,
           text: 'Sesión expirada',
           className: 'bg-red-500/10 text-red-500 border-red-500/20'
+        }
+      case 'offline':
+        return {
+          variant: 'secondary' as const,
+          icon: WifiOff,
+          text: 'Desconectado',
+          className: 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+        }
+      default:
+        return {
+          variant: 'default' as const,
+          icon: CheckCircle,
+          text: 'Estado desconocido',
+          className: 'bg-gray-500/10 text-gray-500 border-gray-500/20'
         }
     }
   }

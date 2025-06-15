@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/toaster"
 import WebSocketListener from "@/components/websocket-listener"
 import AuthGuard from "@/components/AuthGuard"
+import ActivityTrackerProvider from "@/components/ActivityTrackerProvider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -32,6 +33,8 @@ export default function RootLayout({
             <Toaster />
             {/* Usando WebSockets para notificaciones en tiempo real */}
             <WebSocketListener />
+            {/* Sistema de rastreo de actividad automático */}
+            <ActivityTrackerProvider />
           </AuthProvider>
         </ThemeProvider>
       </body>
