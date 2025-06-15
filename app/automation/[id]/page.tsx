@@ -30,22 +30,18 @@ export default function AutomationFormPage() {
   const hasSubmitPermission = useHasPermission('automations:submit');
 
   useEffect(() => {
-    // Verificar permisos primero
-    if (!hasSubmitPermission) {
-      toast.error('No tienes permisos para usar automatizaciones');
-      router.push('/dashboard');
-      return;
-    }
-    
+    // Para el formulario público, cargamos la automatización primero
+    // y luego verificamos permisos si es necesario
     loadAutomation();
-  }, [automationId, hasSubmitPermission, router]);
+  }, [automationId, router]);
 
   const loadAutomation = async () => {
     try {
       setLoading(true);
-      const data = await AutomationService.getForForm(automationId);
+      // Usar la ruta pública existente que funciona en producción
+      const data = await AutomationService.getPublic(automationId);
       
-      if (data.status !== 'active') {
+      if (!data.isActive) {
         toast.error('Esta automatización no está disponible');
         return;
       }
@@ -77,6 +73,13 @@ export default function AutomationFormPage() {
     e.preventDefault();
     
     if (!automation) return;
+
+    // Verificar permisos al momento de enviar
+    if (!hasSubmitPermission) {
+      toast.error('No tienes permisos para enviar automatizaciones');
+      router.push('/dashboard');
+      return;
+    }
 
     // Validar campos requeridos
     const requiredFields = automation.fields?.filter(field => field.required) || [];
@@ -181,32 +184,7 @@ export default function AutomationFormPage() {
     );
   }
 
-  if (!hasSubmitPermission) {
-    return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <Header />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
-            <div className="flex items-center justify-center min-h-full">
-              <Card className="w-full max-w-md">
-                <CardContent className="pt-6 text-center">
-                  <AlertCircle className="h-16 w-16 text-orange-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold mb-2">Sin permisos</h2>
-                  <p className="text-muted-foreground mb-4">
-                    No tienes permisos para usar automatizaciones.
-                  </p>
-                  <Button onClick={() => router.push('/dashboard')}>
-                    Volver al Dashboard
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
+
 
   if (!automation) {
     return (
