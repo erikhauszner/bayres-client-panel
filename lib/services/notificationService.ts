@@ -57,7 +57,7 @@ class NotificationService {
           if (latestNotification._id && !this.shownNotifications.has(latestNotification._id)) {
             console.log('🔄 Notificación no leída detectada:', latestNotification.title);
             
-            // Verificar si es una notificación externa o de leads
+            // Verificar si es una notificación externa (prioritario) o de leads
             const isLeadRelated = 
               (latestNotification.title || '').toLowerCase().includes('lead') || 
               (latestNotification.message || '').toLowerCase().includes('lead') ||
@@ -65,6 +65,7 @@ class NotificationService {
             
             const isExternal = 
               latestNotification.metadata?.isExternalNotification === true ||
+              (latestNotification as any).isExternalNotification === true ||
               isLeadRelated;
             
             // Asegurar que tenga metadatos
@@ -260,19 +261,22 @@ class NotificationService {
     // Duración personalizada o predeterminada
     const duration = notification.metadata?.duration || 5000;
     
-    // Verificar si es una notificación externa o de leads
+    // Verificar si es una notificación externa (prioritario) o relacionada con leads
     const isLeadRelated = 
       (notification.title || '').toLowerCase().includes('lead') || 
       (notification.message || '').toLowerCase().includes('lead') ||
       (notification.title || '').includes('Obteniendo');
     
+    // PRIORIDAD: Si está marcada como externa, siempre tratarla como tal
     const isExternal = 
       notification.metadata?.isExternalNotification === true ||
+      (notification as any).isExternalNotification === true ||
       isLeadRelated;
     
     console.log('🔍 Verificación de tipo de notificación:', {
       isLeadRelated,
       isExternalFromMeta: notification.metadata?.isExternalNotification === true,
+      isExternalFromProperty: (notification as any).isExternalNotification === true,
       isExternal,
       title: notification.title
     });
@@ -416,6 +420,44 @@ class NotificationService {
       console.error('Error al guardar notificación en localStorage:', error);
     }
   }
+
+  // FUNCIÓN DE PRUEBA: Simular una notificación externa
+  testExternalNotification(title: string = "Prueba de Notificación Externa", message: string = "Esta es una notificación de prueba para verificar el sistema de toast emergente") {
+    console.log('🧪 Ejecutando prueba de notificación externa...');
+    
+    // Crear una notificación simulada con estructura externa
+    const testNotification: AppNotification = {
+      _id: `test_${Date.now()}`,
+      userId: 'test_user',
+      type: 'system',
+      title: title,
+      message: message,
+      status: 'unread',
+      createdAt: new Date(),
+      metadata: {
+        variant: 'success',
+        duration: 8000,
+        isExternalNotification: true,
+        action: {
+          label: "Ver detalles",
+          url: "#"
+        }
+      }
+    };
+    
+    console.log('🧪 Notificación de prueba creada:', testNotification);
+    
+    // Mostrar como toast externo
+    this.showExternalNotificationToast(testNotification);
+    
+    console.log('✅ Prueba de notificación externa completada');
+  }
 }
 
-export const notificationService = new NotificationService(); 
+export const notificationService = new NotificationService();
+
+// Exponer el servicio globalmente para pruebas desde consola
+if (typeof window !== 'undefined') {
+  (window as any).notificationService = notificationService;
+  console.log('🌐 notificationService expuesto globalmente para pruebas');
+} 
