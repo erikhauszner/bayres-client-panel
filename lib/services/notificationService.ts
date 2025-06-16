@@ -1,6 +1,7 @@
 import api from '../api';
 import type { Notification as AppNotification, NotificationPreferences } from '../types/notification';
 import { toast } from "@/components/ui/use-toast";
+import { toast as sonnerToast } from "sonner";
 import React from 'react';
 import { API_URL, NOTIFICATIONS_URL } from '../config';
 
@@ -211,8 +212,16 @@ class NotificationService {
 
   // Método para mostrar una notificación como toast
   showToast(notification: AppNotification) {
+    console.log('🎯 showToast llamado con notificación:', {
+      title: notification.title,
+      _id: notification._id,
+      metadata: notification.metadata,
+      hasMetadata: !!notification.metadata
+    });
+    
     // Verificar si ya mostramos esta notificación
     if (notification._id && this.shownNotifications.has(notification._id)) {
+      console.log('⚠️ Notificación ya mostrada anteriormente, ignorando:', notification._id);
       return;
     }
     
@@ -261,31 +270,55 @@ class NotificationService {
       notification.metadata?.isExternalNotification === true ||
       isLeadRelated;
     
+    console.log('🔍 Verificación de tipo de notificación:', {
+      isLeadRelated,
+      isExternalFromMeta: notification.metadata?.isExternalNotification === true,
+      isExternal,
+      title: notification.title
+    });
+    
     // Si es notificación externa, mostrar con el método especializado
     if (isExternal) {
+      console.log('🌟 Redirigiendo a showExternalNotificationToast');
       this.showExternalNotificationToast(notification);
       return;
     }
     
+    console.log('📢 Mostrando toast normal con configuración:', { variant, duration });
+    
     // Mostrar la notificación como toast
-    toast({
-      title: notification.title,
-      description: notification.message,
-      variant: variant,
-      duration: duration
-    });
+    try {
+      toast({
+        title: notification.title,
+        description: notification.message,
+        variant: variant,
+        duration: duration
+      });
+      console.log('✅ Toast normal ejecutado');
+    } catch (error) {
+      console.warn('⚠️ Error con toast normal, usando sonner:', error);
+      // Respaldo con sonner
+      sonnerToast.info(notification.title, {
+        description: notification.message,
+        duration: duration
+      });
+    }
   }
   
   // Método para mostrar una notificación externa como toast con mayor prioridad
   showExternalNotificationToast(notification: AppNotification) {
+    console.log('🌟⚡ showExternalNotificationToast iniciado para:', notification.title);
+    
     // Verificar si ya mostramos esta notificación
     if (notification._id && this.shownNotifications.has(notification._id)) {
+      console.log('⚠️ Notificación externa ya mostrada, ignorando:', notification._id);
       return;
     }
     
     // Marcar como mostrada
     if (notification._id) {
       this.shownNotifications.add(notification._id);
+      console.log('✅ Notificación marcada como mostrada:', notification._id);
     }
     
     // Obtener variante de los metadatos o usar una específica para notificaciones externas
@@ -302,15 +335,53 @@ class NotificationService {
     // Mayor duración para notificaciones externas
     const duration = notification.metadata?.duration || 8000;
     
-    console.log('🔔 Mostrando NOTIFICACIÓN EXTERNA como toast:', notification.title);
-    
-    // Mostrar la notificación como toast (MÉTODO ÚNICO para evitar duplicación)
-    toast({
-      title: `⚡ ${notification.title}`,
-      description: notification.message,
-      variant: variant,
-      duration: duration
+    console.log('🔔 EJECUTANDO toast() para NOTIFICACIÓN EXTERNA:', {
+      title: notification.title,
+      variant,
+      duration
     });
+    
+    // Intentar mostrar con el toast de shadcn/ui primero
+    try {
+      toast({
+        title: `⚡ ${notification.title}`,
+        description: notification.message,
+        variant: variant,
+        duration: duration
+      });
+      console.log('✅ Toast shadcn/ui ejecutado exitosamente');
+    } catch (error) {
+      console.warn('⚠️ Error con toast shadcn/ui, usando sonner como backup:', error);
+    }
+    
+    // SIEMPRE usar sonner como respaldo para garantizar que aparezca
+    try {
+      // Usar diferentes métodos de sonner según la variante
+      const toastTitle = `⚡ ${notification.title}`;
+      const toastOptions = {
+        description: notification.message,
+        duration: duration,
+        position: "bottom-right" as const
+      };
+      
+      switch (variant) {
+        case 'destructive':
+          sonnerToast.error(toastTitle, toastOptions);
+          break;
+        case 'warning':
+          sonnerToast.warning(toastTitle, toastOptions);
+          break;
+        case 'success':
+          sonnerToast.success(toastTitle, toastOptions);
+          break;
+        default:
+          sonnerToast.info(toastTitle, toastOptions);
+          break;
+      }
+      console.log('✅ Sonner toast ejecutado exitosamente con variante:', variant);
+    } catch (error) {
+      console.error('❌ Error con ambos toast systems:', error);
+    }
     
     // Si hay una acción pero NO tiene URL (para evitar recargas), crear un segundo toast con la acción
     const action = notification.metadata?.action;

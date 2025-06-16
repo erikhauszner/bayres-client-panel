@@ -145,22 +145,46 @@ class SocketService {
 
     // Manejar notificaciones
     this.socket.on('new_notification', (data) => {
-      console.log('Nueva notificación recibida:', data);
+      console.log('🔔 Nueva notificación recibida por Socket.IO:', data);
       
       // Mostrar la notificación si está marcada para mostrarse como toast
       if (data.notification && data.notification.showAsToast) {
-        // Usar el objeto de notificación completo para mostrar el toast
-        notificationService.showToast(data.notification);
+        console.log('📤 Procesando notificación para toast:', {
+          title: data.notification.title,
+          isExternal: data.notification.isExternalNotification,
+          isLeadRelated: data.notification.isLeadRelated,
+          hasMetadata: !!data.notification.metadata
+        });
+        
+        // Asegurar que tenga la estructura de metadatos correcta
+        const processedNotification = {
+          ...data.notification,
+          metadata: {
+            ...data.notification.metadata,
+            variant: data.notification.variant,
+            action: data.notification.action,
+            duration: data.notification.duration,
+            isExternalNotification: data.notification.isExternalNotification,
+            isLeadRelated: data.notification.isLeadRelated
+          }
+        };
+        
+        console.log('🚀 Enviando notificación procesada a showToast:', processedNotification);
+        
+        // Usar el objeto de notificación procesado para mostrar el toast
+        notificationService.showToast(processedNotification);
         
         // Refrescar el conteo de notificaciones no leídas
         notificationService.getUnreadCount().then(count => {
-          console.log(`Notificaciones no leídas: ${count}`);
+          console.log(`📊 Notificaciones no leídas: ${count}`);
         });
         
         // Actualizar la lista de notificaciones
         setTimeout(() => {
           notificationService.getNotifications(5, 0);
         }, 500);
+      } else {
+        console.log('⚠️ Notificación recibida pero no marcada para toast:', data);
       }
     });
   }
